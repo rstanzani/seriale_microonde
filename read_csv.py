@@ -127,3 +127,20 @@ def read_and_plot(filepath, showfig=False, savefig=False):
 # button = Button(text="Open",command=openFile)
 # button.pack()
 # window.mainloop()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

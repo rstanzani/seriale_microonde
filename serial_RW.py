@@ -4,10 +4,25 @@ Created on Thu Feb 23 17:20:07 2023
 
 @author: ronny
 """
-import time
+# import time
 import random
 from ast import literal_eval
 import struct
+import serial
+import time
+from binascii import hexlify
+
+
+def connect_serial(comport="COM11"):
+    # comport = "COM11"
+    try:
+        ser = serial.Serial(comport, 250000, timeout=0.1, bytesize=8) #nota: se metto un timeout dopo quel tempo mi legge tutto quello che ha ricevuto
+        time.sleep(3)
+        if (ser.isOpen()):
+            print("Correctly opened port: {}".format(ser.name))
+        return ser
+    except:
+        print("Error, maybe the port is already open.")
 
 def rnd_hex_freq(randomize=True, list_val=[2420, 2480]):
     '''Return the hex of a random frequency in the range 2420-2480 MHz.
@@ -117,7 +132,7 @@ def send_cmd_string(ser, string, value=0):
         send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x16, 0x00000000)
     elif string == "RNDFREQ":
         hex_freq = rnd_hex_freq(True)
-        print("Send freq {}".format(hex_freq))
+        # print("Send freq {}".format(hex_freq))
         send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x09, hex_freq)
     elif string == "READ_PWR":
         send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x06, 0x00000000)
@@ -132,17 +147,27 @@ def send_cmd_string(ser, string, value=0):
         send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x51, value) # set value
     elif string == "FLDBCK_READ":
         send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x51, 0x00000000)
+    elif string == "ERROR_READ":
+        send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x09, 0x00000000)
     elif string == "PWM_READ":
         send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x08, 0x0)
     elif string == "V_READ":
         send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x04, 0x0)
     elif string == "PWR":
+        # print("Set power to: {}".format(value))
         if value != 0:
             value = float_to_hex(value)
             value = literal_eval(value)
         else:
             value = 0x00000000
         send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0E,  value)
+    elif string == "PWM":
+        if value != 0:
+            value = hex(value)
+            value = literal_eval(value)
+        else:
+            value = 0x00000000
+        send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x08,  value)
     elif string == "FREQ":
         if value != 0:
             value = float_to_hex(value)
@@ -176,6 +201,106 @@ def read_reply_values(reply):
             value = payload[4:12]
             if (len(payload) *  len(typee) *  len(operand) * len(value) != 0):
                 payload_list.append([typee, operand, value])
-                print(value)
+                # print(value)
     return payload_list
+
+#%% Updte status values
+
+def empty_buffer(ser, status, wait=2):
+
+    # read response
+    start_waiting = time.time()
+
+    send_cmd_string(ser,"STATUS")
+    while time.time() <= start_waiting + wait:
+        r = ser.read(100)
+        if len(r) == 0:
+            continue      
+
+
+def read_param(ser, status, param="STATUS", wait=1):
+    # read response
+    start_waiting = time.time()
+
+    send_cmd_string(ser, param)
+    while time.time() <= start_waiting + wait:
+        r = ser.read(100)
+        if len(r) == 0:
+            continue      
+        
+        r_hex = hexlify(r)
+        prova_int = int(r_hex, 16)
+        
+        # List of elements read from the serial
+        payload_list = read_reply_values(prova_int)
+        if len(payload_list) == 0:
+            continue
+        set_status_values(status, payload_list, False)
+        print_status(status, 2)
+    # return payload_list
+
+
+def set_status_values (status, payload_list, verbose=False):
+    for i in range(0, len(payload_list)):
+        operand = payload_list[i][1]
+        if operand == "01":
+            if verbose: print("Temperature")
+            status["Temperature"] = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
+            
+        elif operand == "02":
+            if verbose: print("PLL")
+            status["PLL"] = int(payload_list[i][2], 16)  # conversion from Unsigned Long
+            
+        elif operand == "03":
+            if verbose: print("Current")
+            status["Current"] = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
+            
+        elif operand == "04":
+            if verbose: print("Voltage")
+            status["Voltage"] = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
+            
+        elif operand == "05":
+            if verbose: print("Reflected Power")
+            status["Reflected Power"] = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
+            
+        elif operand == "06":
+           if verbose: print("Forward Power")
+           status["Forward Power"] = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
+           
+        elif operand == "08":
+           if verbose: print("PWM")
+           status["PWM"] = int(payload_list[i][2], 16)
+            
+        elif operand == "0B" or operand == "0b":
+           if verbose: print("On Off")
+           status["On Off"] = int(payload_list[i][2], 16)
+           
+        elif operand == "26":
+           if verbose: print("Enable foldback")
+           status["Enable foldback"] = int(payload_list[i][2], 16)
+           
+        elif operand == "51":
+           if verbose: print("Foldback in")
+           status["Foldback in"] = int(payload_list[i][2], 16)
+
+        elif operand == "17":
+           if verbose: print("Error")
+           status["Error"] = int(payload_list[i][2], 16)
+           
+        
+           
+    if verbose:
+        print("Status updated")
+
+def print_status(status, verbose=0):
+    '''Verbose level [0,1,2] serves to select how many values to plot.'''
+
+    if verbose == 0: # Do NOT remove ending spaces, they are useful when printing on and old and longer line
+        print("\r", "On Off: {} || Reflected Power: {} [W] || Forward Power: {} [W] || Enable foldback: {} || Error: {}      ".format(status["On Off"], status["Reflected Power"], status["Forward Power"], status["Enable foldback"], status["Error"]), end="\r")
+
+    if verbose == 1:
+        print("\r", "On Off: {} || Temperature: {} [C] ||  Current: {} [A] || Voltage: {} [V] || Reflected Power: {} [W] || Forward Power: {} [W] || Enable foldback: {} || Foldback in {} [W] || Error: {}      ".format(status["On Off"],status["Temperature"], status["Current"], status["Voltage"], status["Reflected Power"], status["Forward Power"], status["Enable foldback"], status["Foldback in"], status["Error"]), end="\r")
+
+    if verbose == 2:
+        print("\r", "On Off: {} || Temperature: {} [C] || PLL: {} || Current: {} [A] || Voltage: {} [V] || Reflected Power: {} [W] || Forward Power: {} [W] || PWM: {} || Enable foldback: {} || Foldback in {} [W] || Error: {}      ".format(status["On Off"],status["Temperature"], status["PLL"], status["Current"], status["Voltage"], status["Reflected Power"], status["Forward Power"], status["PWM"], status["Enable foldback"], status["Foldback in"], status["Error"]), end="\r")
 
