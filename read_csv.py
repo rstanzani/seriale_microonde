@@ -28,7 +28,7 @@ def read_and_plot(filepath, showfig=False, savefig=False):
             if i == 0:
                 label.append([lines[i].split(",")[0], lines[i].split(",")[1], lines[i].split(",")[2]])
                 continue
-            duration.append(abs(int(lines[i].split(",")[0])))
+            duration.append(abs(float(lines[i].split(",")[0])))
             freq.append(int(lines[i].split(",")[1]))
             power.append(int(re.split(r"\D+", lines[i].split(",")[2])[0]))
     
@@ -36,7 +36,7 @@ def read_and_plot(filepath, showfig=False, savefig=False):
         maxfreq = max(freq)
         minpower = min(power)
         maxpower = max(power)
-        # minduration = min(foldback)
+        minduration = min(duration)
         # maxfoldback = max(foldback)
         
         # validate the inserted values
@@ -54,6 +54,9 @@ def read_and_plot(filepath, showfig=False, savefig=False):
                 print("ERROR: odd value for frequency. Tip: the numbers for the frequency should be even.")
                 error = True
                 continue
+        if minduration < 1:
+            print("ERROR: the minimum duration should be 1 s")
+            error = True
     
         if not error:
             # step_duration = 5 # seconds
@@ -103,8 +106,8 @@ def read_and_plot(filepath, showfig=False, savefig=False):
                 print("The image was not created, please enable showfig parameter")
 
     else:
-        print("ERROR: the file is wrong. Please retry with another one.")
-    return duration, freq, power
+        print("ERROR: the file has the wrong name. Please retry with another one.")
+    return duration, freq, power, error
 
 
 #%% Main

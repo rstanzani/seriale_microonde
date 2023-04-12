@@ -296,11 +296,11 @@ def print_status(status, verbose=0):
     '''Verbose level [0,1,2] serves to select how many values to plot.'''
 
     if verbose == 0: # Do NOT remove ending spaces, they are useful when printing on and old and longer line
-        print("\r", "On Off: {} || Reflected Power: {} [W] || Forward Power: {} [W] || Enable foldback: {} || Error: {}      ".format(status["On Off"], status["Reflected Power"], status["Forward Power"], status["Enable foldback"], status["Error"]), end="\r")
+        print("\r", "On Off: {} || Reflected Power: {} [W] || Forward Power: {} [W] || Enable foldback: {} || Error: {}      \r".format(status["On Off"], status["Reflected Power"], status["Forward Power"], status["Enable foldback"], status["Error"]))
 
     if verbose == 1:
-        print("\r", "On Off: {} || Temperature: {} [C] ||  Current: {} [A] || Voltage: {} [V] || Reflected Power: {} [W] || Forward Power: {} [W] || Enable foldback: {} || Foldback in {} [W] || Error: {}      ".format(status["On Off"],status["Temperature"], status["Current"], status["Voltage"], status["Reflected Power"], status["Forward Power"], status["Enable foldback"], status["Foldback in"], status["Error"]), end="\r")
+        print("\r", "On Off: {} || Temperature: {} [C] ||  Current: {} [A] || Voltage: {} [V] || Reflected Power: {} [W] || Forward Power: {} [W] || Enable foldback: {} || Foldback in {} [W] || Error: {}      \r".format(status["On Off"],status["Temperature"], status["Current"], status["Voltage"], status["Reflected Power"], status["Forward Power"], status["Enable foldback"], status["Foldback in"], status["Error"]))
 
     if verbose == 2:
-        print("\r", "On Off: {} || Temperature: {} [C] || PLL: {} || Current: {} [A] || Voltage: {} [V] || Reflected Power: {} [W] || Forward Power: {} [W] || PWM: {} || Enable foldback: {} || Foldback in {} [W] || Error: {}      ".format(status["On Off"],status["Temperature"], status["PLL"], status["Current"], status["Voltage"], status["Reflected Power"], status["Forward Power"], status["PWM"], status["Enable foldback"], status["Foldback in"], status["Error"]), end="\r")
+        print("\r", "On Off: {} || Temperature: {} [C] || PLL: {} || Current: {} [A] || Voltage: {} [V] || Reflected Power: {} [W] || Forward Power: {} [W] || PWM: {} || Enable foldback: {} || Foldback in {} [W] || Error: {}      \r".format(status["On Off"],status["Temperature"], status["PLL"], status["Current"], status["Voltage"], status["Reflected Power"], status["Forward Power"], status["PWM"], status["Enable foldback"], status["Foldback in"], status["Error"]))
 

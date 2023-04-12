@@ -5,7 +5,7 @@ Created on Wed Feb 22 15:55:06 2023
 @author: ronny
 """
 
-
+import serial
 import glob
 import sys
 
@@ -42,9 +42,9 @@ print(serial_ports())
 
 
 
-## https://stackoverflow.com/questions/12090503/listing-available-com-ports-with-python
-import serial.tools.list_ports
-ports = serial.tools.list_ports.comports()
+# ## https://stackoverflow.com/questions/12090503/listing-available-com-ports-with-python
+# import serial.tools.list_ports
+# ports = serial.tools.list_ports.comports()
 
-for port, desc, hwid in sorted(ports):
-        print("{}: {} [{}]".format(port, desc, hwid))
+# for port, desc, hwid in sorted(ports):
+#         print("{}: {} [{}]".format(port, desc, hwid))
