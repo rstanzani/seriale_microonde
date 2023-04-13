@@ -4,6 +4,8 @@ Created on Tue Mar 28 08:57:22 2023
 
 @author: ronny
 """
+
+import pandas #USED ONLY TO AVOID AN IMPORT ERROR FROM MATPLOTLIB IN SOME CONFIGURATIONS
 import matplotlib.pyplot as plt
 import re
 
@@ -72,33 +74,28 @@ def read_and_plot(filepath, showfig=False, savefig=False):
             # time = np.linspace(0, sum(duration), sum(duration))
             
             if showfig:
-                fig,ax = plt.subplots()
+                fig,ax = plt.subplots(2)
 
-                # axis for frequency step function
-                ax.step(time, freq, color='blue', alpha=0.5, where='post')
-                ax.set_xlabel("Time [s]", fontsize=14)
-                ax.set_ylabel("{}".format(label[0][1]), color="blue", fontsize=14)
-                ax.tick_params(axis='y', colors='blue')
-                ax.fill_between(time, freq, step="post", alpha=0.2, color="blue")
-                ax.set_ylim([minfreq-0.1*(maxfreq-minfreq), maxfreq+0.1*(maxfreq-minfreq)])
+                ax[0].step(time, freq, color='blue', alpha=0.5, where='post', zorder=-2)
+                ax[0].set_ylabel("{}".format(label[0][1]), color="blue", fontsize=13, labelpad=10)
+                ax[0].tick_params(axis='y', colors='blue', labelsize=9)
+                ax[0].fill_between(time, freq, step="post", alpha=0.2, color="blue")
+                ax[0].set_ylim([minfreq-0.1*(maxfreq-minfreq), maxfreq+0.1*(maxfreq-minfreq)])
+                ax[0].grid(linestyle = '--', linewidth = 0.4, zorder=-1)
 
-                # axis for power step function
-                ax2 = ax.twinx()
-                ax2.step(time, power, color='orange', alpha=0.5, where='post')
-                ax2.set_ylabel("{}".format(label[0][2]), color="orange", fontsize=14)
-                ax2.tick_params(axis='y', colors='orange')
-                ax2.fill_between(time, power, step="post", alpha=0.2, color="orange")
-                ax2.set_ylim([minpower-0.1*(maxpower-minpower), maxpower+0.1*(maxpower-minpower)])
+                ax[0].scatter(time, freq, facecolor='white', edgecolor='blue', marker="o", alpha=1)
+                ax[0].set_ylim([minfreq-0.1*(maxfreq-minfreq), maxfreq+0.1*(maxfreq-minfreq)])
+                
+                ax[1].step(time, power, color='orange', alpha=0.5, where='post', zorder=-2)
+                ax[1].set_xlabel("Time [s]", fontsize=9, labelpad=6)
+                ax[1].set_ylabel("{}".format(label[0][2]), color="orange", fontsize=13, labelpad=1)
+                ax[1].tick_params(axis='y', colors='orange', labelsize=9)
+                ax[1].fill_between(time, power, step="post", alpha=0.2, color="orange")
+                ax[1].set_ylim([minpower-0.1*(maxpower-minpower), maxpower+0.1*(maxpower-minpower)])
+                ax[1].grid(linestyle = '--', linewidth = 0.4, zorder=-1)
 
-                # axes for scatter plots in front of previous       
-                ax3 = ax.twinx()
-                ax3.get_yaxis().set_visible(False)
-                ax3.scatter(time, freq, facecolor='white', edgecolor='blue', marker="o", alpha=1)
-                ax3.set_ylim([minfreq-0.1*(maxfreq-minfreq), maxfreq+0.1*(maxfreq-minfreq)])
-                ax4 = ax.twinx()
-                ax4.get_yaxis().set_visible(False)
-                ax4.scatter(time, power, facecolor='white', edgecolor='orange', marker="o", alpha=1)
-                ax4.set_ylim([minpower-0.1*(maxpower-minpower), maxpower+0.1*(maxpower-minpower)])
+                ax[1].scatter(time, power, facecolor='white', edgecolor='orange', marker="o", alpha=1)
+                ax[1].set_ylim([minpower-0.1*(maxpower-minpower), maxpower+0.1*(maxpower-minpower)])
         
                 if savefig:
                     fig.savefig('plot.jpg', format='jpeg', dpi=300)
