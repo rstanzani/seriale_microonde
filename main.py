@@ -22,10 +22,26 @@ signal.signal(signal.SIGINT, handler)
 def save_error_log():
     global status
     global error_history
+    to_add = False
 
-    if status["Error"] != "ND":
-        error_history.append([datetime.now().strftime("%d/%m/%Y %H:%M:%S"), status['Error']])
-        status["Error"] = "ND"
+    if status["Error"] != "No error":
+        if len(error_history) != 0:
+            if error_history[-1][1] != status["Error"]:
+                print("Add: new value")
+                to_add = True
+            elif time.time()-error_history[-1][0] >= 60:
+                print("Add with {} seconds!".format(time.time()-error_history[-1][0]))
+                to_add = True
+        else:
+            print("Add: first elem")
+            to_add = True
+
+        if to_add:
+            error_history.append([time.time(), status['Error']])
+    status["Error"] = "No error"
+            
+        # convert timestamp to readable with: time.gmtime(1681401590.5839448)    
+        # error_history.append([datetime.now().strftime("%d/%m/%Y %H:%M:%S"), status['Error']])
 
 ########### TKINTER ####################
 '''
