@@ -17,6 +17,7 @@ def read_and_plot(filepath, showfig=False, savefig=False):
     duration = []
     freq = []
     power = []
+    msg = 'File correctly imported'
 
     if filepath[-7:] == ".rf.csv":
         execute = True
@@ -43,21 +44,25 @@ def read_and_plot(filepath, showfig=False, savefig=False):
         
         # validate the inserted values
         if  minfreq<2400 or maxfreq>2500:
-            print("ERROR: wrong range for frequency. Correct range: 2400÷2500 MHz.")
+            msg = "ERROR: wrong range for frequency. Correct range: 2400÷2500 MHz."
+            # print(msg)
             error = True
         if  minpower<0 or maxpower>300:
-            print("ERROR: wrong range for power. Correct range: 0÷300 W.")
+            msg = "ERROR: wrong range for power. Correct range: 0÷300 W."
+            # print(msg)
             error = True
         # if  minfoldback<0 or maxfoldback>250:
         #     print("ERROR: wrong range for foldback. Correct range: 0÷250 W.")
         #     error = True
         for i in freq:
             if i % 2 != 0:
-                print("ERROR: odd value for frequency. Tip: the numbers for the frequency should be even.")
+                msg = "ERROR: odd value for frequency. Tip: the numbers for the frequency should be even."
+                # print(msg)
                 error = True
                 continue
         if minduration < 1:
-            print("ERROR: the minimum duration should be 1 s")
+            msg = "ERROR: the minimum duration should be 1 s"
+            # print(msg)
             error = True
     
         if not error:
@@ -100,11 +105,14 @@ def read_and_plot(filepath, showfig=False, savefig=False):
                 if savefig:
                     fig.savefig('plot.jpg', format='jpeg', dpi=300)
             if savefig and not showfig:
-                print("The image was not created, please enable showfig parameter")
+                msg = "The image was not created, please enable showfig parameter"
+                # print(msg)
 
     else:
-        print("ERROR: the file has the wrong name. Please retry with another one.")
-    return duration, freq, power, error
+        msg = "ERROR: the file has the wrong name. Please retry with another one."
+        # print(msg)
+        error = True
+    return duration, freq, power, error, msg
 
 
 #%% Main

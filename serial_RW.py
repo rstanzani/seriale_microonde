@@ -237,6 +237,7 @@ def read_param(ser, status, param="STATUS", wait=1):
             continue
         set_status_values(status, payload_list, False)
         print_status(status, 2)
+        return status
     # return payload_list
 
 

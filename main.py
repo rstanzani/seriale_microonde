@@ -100,8 +100,10 @@ ser = srw.connect_serial("COM11")
 status = {"Temperature":"ND","PLL":"ND","Current":"ND","Voltage":"ND","Reflected Power":"ND", 
           "Forward Power":"ND", "PWM":"ND", "On Off":"ND", "Enable foldback":"ND", "Foldback in":"ND", "Error":"No error"}
 
+
+
 # Read parameters from csv file
-duration, freq_list, power_list, error = rcsv.read_and_plot("D:\Downloads\Book2.rf.csv", True, False)
+duration, freq_list, power_list, error, msg = rcsv.read_and_plot("D:\Downloads\Book2.rf.csv", True, False)
 
 if not error:
     error_history = []
