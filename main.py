@@ -95,7 +95,7 @@ root.mainloop()
 
 # Main ########################################################################
 print("Start RF generator...")
-ser = srw.connect_serial("COM11")
+ser = srw.connect_serial("COM9")
 
 status = {"Temperature":"ND","PLL":"ND","Current":"ND","Voltage":"ND","Reflected Power":"ND", 
           "Forward Power":"ND", "PWM":"ND", "On Off":"ND", "Enable foldback":"ND", "Foldback in":"ND", "Error":"No error"}

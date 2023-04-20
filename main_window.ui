@@ -6,15 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>620</width>
-    <height>597</height>
+    <width>477</width>
+    <height>565</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="play">
+   <widget class="QPushButton" name="Qplay">
     <property name="enabled">
      <bool>false</bool>
     </property>
@@ -30,13 +30,13 @@
      <string>PLAY</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="stop">
+   <widget class="QPushButton" name="Qstop">
     <property name="enabled">
      <bool>false</bool>
     </property>
     <property name="geometry">
      <rect>
-      <x>180</x>
+      <x>330</x>
       <y>90</y>
       <width>120</width>
       <height>28</height>
@@ -46,15 +46,15 @@
      <string>STOP</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pause">
+   <widget class="QPushButton" name="Qpause">
     <property name="enabled">
      <bool>false</bool>
     </property>
     <property name="geometry">
      <rect>
-      <x>340</x>
+      <x>170</x>
       <y>90</y>
-      <width>120</width>
+      <width>131</width>
       <height>28</height>
      </rect>
     </property>
@@ -62,12 +62,12 @@
      <string>PAUSE</string>
     </property>
    </widget>
-   <widget class="QPlainTextEdit" name="outputPlainTextEdit">
+   <widget class="QPlainTextEdit" name="QoutputPlainTextEdit">
     <property name="geometry">
      <rect>
       <x>20</x>
       <y>140</y>
-      <width>531</width>
+      <width>431</width>
       <height>101</height>
      </rect>
     </property>
@@ -80,7 +80,7 @@
      <bool>true</bool>
     </property>
    </widget>
-   <widget class="QLineEdit" name="GDML">
+   <widget class="QLineEdit" name="QGDML">
     <property name="geometry">
      <rect>
       <x>30</x>
@@ -107,7 +107,7 @@
      <bool>false</bool>
     </property>
    </widget>
-   <widget class="QDialogButtonBox" name="Open_CSV">
+   <widget class="QDialogButtonBox" name="QOpen_CSV">
     <property name="geometry">
      <rect>
       <x>360</x>
@@ -128,12 +128,12 @@
      <bool>true</bool>
     </property>
    </widget>
-   <widget class="QLabel" name="outputLabel">
+   <widget class="QLabel" name="QoutputLabel">
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>500</y>
-      <width>551</width>
+      <y>490</y>
+      <width>291</width>
       <height>31</height>
      </rect>
     </property>
@@ -144,13 +144,13 @@
      <enum>Qt::RichText</enum>
     </property>
    </widget>
-   <widget class="QCheckBox" name="enable_plot">
+   <widget class="QCheckBox" name="Qenable_plot">
     <property name="geometry">
      <rect>
       <x>120</x>
-      <y>20</y>
-      <width>20</width>
-      <height>20</height>
+      <y>9</y>
+      <width>81</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
@@ -160,7 +160,7 @@
      <bool>false</bool>
     </property>
    </widget>
-   <widget class="QLabel" name="infoLabel_2">
+   <widget class="QLabel" name="QinfoLabel_2">
     <property name="geometry">
      <rect>
       <x>30</x>
@@ -172,31 +172,35 @@
     <property name="font">
      <font>
       <pointsize>7</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
      </font>
     </property>
     <property name="text">
      <string>Plot the csv:</string>
     </property>
    </widget>
-   <widget class="QLabel" name="infoLabel_3">
+   <widget class="QLabel" name="QinfoLabel_3">
     <property name="geometry">
      <rect>
       <x>20</x>
       <y>330</y>
-      <width>131</width>
+      <width>81</width>
       <height>28</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <pointsize>7</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
      </font>
     </property>
     <property name="text">
      <string>Reflected power:</string>
     </property>
    </widget>
-   <widget class="QLabel" name="infoLabel_4">
+   <widget class="QLabel" name="QinfoLabel_4">
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -208,13 +212,15 @@
     <property name="font">
      <font>
       <pointsize>7</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
      </font>
     </property>
     <property name="text">
      <string>Voltage:</string>
     </property>
    </widget>
-   <widget class="QLabel" name="infoLabel_5">
+   <widget class="QLabel" name="QinfoLabel_5">
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -226,16 +232,18 @@
     <property name="font">
      <font>
       <pointsize>7</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
      </font>
     </property>
     <property name="text">
      <string>Temperature:</string>
     </property>
    </widget>
-   <widget class="QLabel" name="infoLabel_6">
+   <widget class="QLabel" name="QinfoLabel_6">
     <property name="geometry">
      <rect>
-      <x>30</x>
+      <x>20</x>
       <y>450</y>
       <width>81</width>
       <height>28</height>
@@ -244,17 +252,19 @@
     <property name="font">
      <font>
       <pointsize>7</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
      </font>
     </property>
     <property name="text">
      <string>PLL:</string>
     </property>
    </widget>
-   <widget class="QLabel" name="infoLabel_7">
+   <widget class="QLabel" name="QinfoLabel_7">
     <property name="geometry">
      <rect>
-      <x>310</x>
-      <y>340</y>
+      <x>260</x>
+      <y>370</y>
       <width>81</width>
       <height>28</height>
      </rect>
@@ -262,35 +272,19 @@
     <property name="font">
      <font>
       <pointsize>7</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
      </font>
     </property>
     <property name="text">
      <string>Current: </string>
     </property>
    </widget>
-   <widget class="QLabel" name="infoLabel_8">
+   <widget class="QLabel" name="QinfoLabel_8">
     <property name="geometry">
      <rect>
       <x>20</x>
       <y>290</y>
-      <width>121</width>
-      <height>28</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>7</pointsize>
-     </font>
-    </property>
-    <property name="text">
-     <string>Forward power:</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="infoLabel_9">
-    <property name="geometry">
-     <rect>
-      <x>310</x>
-      <y>380</y>
       <width>81</width>
       <height>28</height>
      </rect>
@@ -298,13 +292,35 @@
     <property name="font">
      <font>
       <pointsize>7</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Forward power:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="QinfoLabel_9">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>410</y>
+      <width>81</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>7</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
      </font>
     </property>
     <property name="text">
      <string>PWM:</string>
     </property>
    </widget>
-   <widget class="QLabel" name="infoLabel_10">
+   <widget class="QLabel" name="QinfoLabel_10">
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -316,70 +332,78 @@
     <property name="font">
      <font>
       <pointsize>7</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
      </font>
     </property>
     <property name="text">
      <string>On Off:</string>
     </property>
    </widget>
-   <widget class="QLabel" name="infoLabel_11">
+   <widget class="QLabel" name="QinfoLabel_11">
     <property name="geometry">
      <rect>
-      <x>310</x>
-      <y>260</y>
-      <width>121</width>
+      <x>260</x>
+      <y>290</y>
+      <width>81</width>
       <height>28</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <pointsize>7</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
      </font>
     </property>
     <property name="text">
      <string>Enable foldback:</string>
     </property>
    </widget>
-   <widget class="QLabel" name="infoLabel_12">
+   <widget class="QLabel" name="QinfoLabel_12">
     <property name="geometry">
      <rect>
-      <x>300</x>
-      <y>420</y>
-      <width>121</width>
+      <x>260</x>
+      <y>450</y>
+      <width>61</width>
       <height>28</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <pointsize>7</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
      </font>
     </property>
     <property name="text">
      <string>Foldback in:</string>
     </property>
    </widget>
-   <widget class="QLabel" name="infoLabel_13">
+   <widget class="QLabel" name="QinfoLabel_13">
     <property name="geometry">
      <rect>
-      <x>310</x>
-      <y>300</y>
-      <width>121</width>
+      <x>260</x>
+      <y>330</y>
+      <width>61</width>
       <height>28</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <pointsize>7</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
      </font>
     </property>
     <property name="text">
      <string>Error:</string>
     </property>
    </widget>
-   <widget class="QLabel" name="forwardpower_label">
+   <widget class="QLabel" name="Qforwardpower_label">
     <property name="geometry">
      <rect>
-      <x>140</x>
+      <x>120</x>
       <y>290</y>
       <width>121</width>
       <height>31</height>
@@ -392,10 +416,10 @@
      <enum>Qt::RichText</enum>
     </property>
    </widget>
-   <widget class="QLabel" name="reflectedpower_label">
+   <widget class="QLabel" name="Qreflectedpower_label">
     <property name="geometry">
      <rect>
-      <x>140</x>
+      <x>120</x>
       <y>330</y>
       <width>121</width>
       <height>31</height>
@@ -408,10 +432,10 @@
      <enum>Qt::RichText</enum>
     </property>
    </widget>
-   <widget class="QLabel" name="onoff_label">
+   <widget class="QLabel" name="Qonoff_label">
     <property name="geometry">
      <rect>
-      <x>140</x>
+      <x>120</x>
       <y>250</y>
       <width>121</width>
       <height>31</height>
@@ -424,10 +448,10 @@
      <enum>Qt::RichText</enum>
     </property>
    </widget>
-   <widget class="QLabel" name="temperature_label">
+   <widget class="QLabel" name="Qtemperature_label">
     <property name="geometry">
      <rect>
-      <x>140</x>
+      <x>120</x>
       <y>410</y>
       <width>121</width>
       <height>31</height>
@@ -440,10 +464,10 @@
      <enum>Qt::RichText</enum>
     </property>
    </widget>
-   <widget class="QLabel" name="voltage_label">
+   <widget class="QLabel" name="Qvoltage_label">
     <property name="geometry">
      <rect>
-      <x>140</x>
+      <x>120</x>
       <y>370</y>
       <width>121</width>
       <height>31</height>
@@ -456,11 +480,11 @@
      <enum>Qt::RichText</enum>
     </property>
    </widget>
-   <widget class="QLabel" name="pll_label">
+   <widget class="QLabel" name="Qpll_label">
     <property name="geometry">
      <rect>
-      <x>150</x>
-      <y>440</y>
+      <x>120</x>
+      <y>450</y>
       <width>121</width>
       <height>31</height>
      </rect>
@@ -472,11 +496,11 @@
      <enum>Qt::RichText</enum>
     </property>
    </widget>
-   <widget class="QLabel" name="foldbackin_label">
+   <widget class="QLabel" name="Qfoldbackin_label">
     <property name="geometry">
      <rect>
-      <x>390</x>
-      <y>420</y>
+      <x>360</x>
+      <y>450</y>
       <width>121</width>
       <height>31</height>
      </rect>
@@ -488,11 +512,11 @@
      <enum>Qt::RichText</enum>
     </property>
    </widget>
-   <widget class="QLabel" name="pwm_label">
+   <widget class="QLabel" name="Qpwm_label">
     <property name="geometry">
      <rect>
-      <x>400</x>
-      <y>370</y>
+      <x>360</x>
+      <y>410</y>
       <width>121</width>
       <height>31</height>
      </rect>
@@ -504,11 +528,11 @@
      <enum>Qt::RichText</enum>
     </property>
    </widget>
-   <widget class="QLabel" name="current_label">
+   <widget class="QLabel" name="Qcurrent_label">
     <property name="geometry">
      <rect>
-      <x>390</x>
-      <y>340</y>
+      <x>360</x>
+      <y>370</y>
       <width>121</width>
       <height>31</height>
      </rect>
@@ -520,11 +544,11 @@
      <enum>Qt::RichText</enum>
     </property>
    </widget>
-   <widget class="QLabel" name="erro_label">
+   <widget class="QLabel" name="Qerror_label">
     <property name="geometry">
      <rect>
-      <x>390</x>
-      <y>300</y>
+      <x>360</x>
+      <y>330</y>
       <width>121</width>
       <height>31</height>
      </rect>
@@ -536,11 +560,11 @@
      <enum>Qt::RichText</enum>
     </property>
    </widget>
-   <widget class="QLabel" name="enablefoldback_label">
+   <widget class="QLabel" name="Qenablefoldback_label">
     <property name="geometry">
      <rect>
-      <x>430</x>
-      <y>260</y>
+      <x>360</x>
+      <y>290</y>
       <width>121</width>
       <height>31</height>
      </rect>
@@ -552,14 +576,30 @@
      <enum>Qt::RichText</enum>
     </property>
    </widget>
+   <widget class="QPushButton" name="Qexit">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>320</x>
+      <y>490</y>
+      <width>120</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Exit</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>620</width>
-     <height>26</height>
+     <width>477</width>
+     <height>21</height>
     </rect>
    </property>
   </widget>

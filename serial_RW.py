@@ -218,7 +218,7 @@ def empty_buffer(ser, status, wait=2):
             continue      
 
 
-def read_param(ser, status, param="STATUS", wait=1):
+def read_param(ser, status, param="STATUS", wait=1, verbose=False):
     # read response
     start_waiting = time.time()
 
@@ -236,7 +236,8 @@ def read_param(ser, status, param="STATUS", wait=1):
         if len(payload_list) == 0:
             continue
         set_status_values(status, payload_list, False)
-        print_status(status, 2)
+        if verbose:
+            print_status(status, 2)
         return status
     # return payload_list
 
