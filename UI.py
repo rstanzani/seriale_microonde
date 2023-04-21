@@ -65,8 +65,8 @@ class Worker(QtCore.QObject):
     # progressed = QtCore.Signal(int)
     # messaged = QtCore.Signal(str)
     # progressed = QtCore.Signal(int)
-    messaged = QtCore.Signal(object)
-    finished = QtCore.Signal()
+    messaged = pyqtSignal(object)
+    finished = pyqtSignal()
     duration = 0
     freq_list = []
     power_list = []
