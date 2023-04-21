@@ -8,19 +8,154 @@ import sys
 from PyQt5.QtCore import QThread, pyqtSignal
 
 
+class RFdata:
+    Temperature = "ND"
+    PLL = "ND"
+    Current = "ND"
+    Voltage = "ND"
+    Reflected_Power= "ND"
+    Forward_Power= "ND"
+    PWM = "ND"
+    On_Off = "ND"
+    Enable_foldback = "ND"
+    Foldback_in = "ND"
+    Error = "No error"
+
+    # def __init__(self, rf_dict):
+    #     self.Temperature = rf_dict["Temperature"]
+    #     self.PLL = rf_dict["PLL"]
+    #     self.Current = rf_dict["Current"]
+    #     self.Voltage = rf_dict["Voltage"]
+    #     self.Reflected_Power = rf_dict["Reflected Power"]
+    #     self.Forward_Power = rf_dict["Forward Power"]
+    #     self.PWM = rf_dict["PWM"]
+    #     self.On_Off = rf_dict["On Off"]
+    #     self.Enable_foldback = rf_dict["Enable foldback"]
+    #     self.Foldback_in = rf_dict["Foldback in"]
+    #     self.Error = rf_dict["Error"]
+
+    def set_values(self, rf_dict):
+        self.Temperature = rf_dict["Temperature"]
+        self.PLL = rf_dict["PLL"]
+        self.Current = rf_dict["Current"]
+        self.Voltage = rf_dict["Voltage"]
+        self.Reflected_Power = rf_dict["Reflected Power"]
+        self.Forward_Power = rf_dict["Forward Power"]
+        self.PWM = rf_dict["PWM"]
+        self.On_Off = rf_dict["On Off"]
+        self.Enable_foldback = rf_dict["Enable foldback"]
+        self.Foldback_in = rf_dict["Foldback in"]
+        self.Error = rf_dict["Error"]
+
 
 class Worker(QtCore.QObject):
-    progressed = QtCore.Signal(int)
-    messaged = QtCore.Signal(str)
+
+    pippo = RFdata()
+    execution = False
+
+    duration = 0
+    freq_list = []
+    power_list = []
+    status = {"Temperature":"ND","PLL":"ND","Current":"ND","Voltage":"ND","Reflected Power":"ND",
+              "Forward Power":"ND", "PWM":"ND", "On Off":"ND", "Enable foldback":"ND", "Foldback in":"ND", "Error":"No error"}
+
+    # def __init__(self):
+
+
+    # progressed = QtCore.Signal(int)
+    # messaged = QtCore.Signal(str)
+    # progressed = QtCore.Signal(int)
+    messaged = QtCore.Signal(object)
     finished = QtCore.Signal()
+    duration = 0
+    freq_list = []
+    power_list = []
+
+    def stop_execution(self):
+        print("Stopped execution")
+        self.execution = False
+
+    def start_execution(self):
+        print("Started execution")
+        self.execution = True
+
+    def give_values(self, duration, freq_list, power_list):
+        print("Associating values")
+        self.duration = duration
+        self.freq_list = freq_list
+        self.power_list = power_list
+        print("The values are: {} {} {}".format( self.duration, self.freq_list, self.power_list))
 
     def run(self):
-        for i in range(1, 11):
-            self.progressed.emit(int(i*10))
-            self.messaged.emit(str(i))
-            time.sleep(0.5)
+        self.start_execution()
+        # global execution
+        print("Pippo va in città")
+        ser = srw.connect_serial("COM9")
+        # Initialize
+        index = 0
+        print("Index is: {}".format(index))
+        next_time = self.duration[0]
+        freq = self.freq_list[0]
+        power = self.power_list[0]
+
+        print("Next time: {}".format(next_time))
+        srw.send_cmd_string(ser,"ON")
+        srw.send_cmd_string(ser,"PWR", power)
+        srw.send_cmd_string(ser,"FREQ", freq)
+        self.status = srw.read_param(ser, self.status, "STATUS", False)
+
+        # Start the main functions
+        timestamp = time.time()
+        min_refresh = 1
+        init_time = time.time()
+
+        while self.execution:
+            # print("the condition is: {} {}".format(time.time(), timestamp + min_refresh))
+            if time.time() >= timestamp + min_refresh: # minimum refresh period
+                print("Send a command...")
+                if time.time()-init_time >= next_time:
+
+                    index += 1
+                    index = index % len(self.duration)  # set to 0 if is the last line in the csv
+
+                    next_time = next_time + self.duration[index]
+                    power = self.power_list[index]
+                    freq = self.freq_list[index]
+
+                    if index == 0:
+                        init_time = time.time()
+                        next_time = self.duration[index]
+
+                    srw.send_cmd_string(ser,"PWR", power)
+                    srw.send_cmd_string(ser,"FREQ", freq)
+                # print(type(self.status))
+                self.status = srw.read_param(ser, self.status, "STATUS", False)
+                self.status = srw.read_param(ser, self.status, "FLDBCK_READ", False)
+                # output = RFdata(self.status)
+                self.pippo.set_values(self.status)
+                self.messaged.emit(self.pippo)
+                # update_values_on_screen(MainWindow)
+                # save_error_log()
+                timestamp = time.time()
+            # else:
+            #     print("The conditions are not verified!")
+        # Soft turn off
+        print("\nStart soft shut down...")
+        srw.send_cmd_string(ser,"OFF")
+        srw.send_cmd_string(ser,"PWM", 0)
+        srw.empty_buffer(ser, self.status, wait=1)
+        # print("\nRead status to confirm shutdown:")
+        self.status = srw.read_param(ser, self.status, "STATUS")
+        # Close ports
+        ser.close()
+        # print("THE TYPE OF THE FILE IS:")
+        # print(type(self.status["Forward Power"]))
+        # self.update_values_on_screen(MainWindow)
+        self.pippo.set_values(self.status)
+        self.messaged.emit(self.pippo)
 
         self.finished.emit()
+
 
 
 class MainWindow(QMainWindow):
@@ -34,13 +169,13 @@ class MainWindow(QMainWindow):
               "Forward Power":"ND", "PWM":"ND", "On Off":"ND", "Enable foldback":"ND", "Foldback in":"ND", "Error":"No error"}
     error_history = []
     timestamp_old = 0
-    execution = False
+    # execution = False
 
     def __init__(self):
-        
+
         self.__thread = QtCore.QThread()
-        
-        
+
+
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -50,9 +185,9 @@ class MainWindow(QMainWindow):
         self.ui.Qexit.clicked.connect(lambda: self.close())
 
         self.ui.Qplay.clicked.connect(lambda: self.play_execution())
-        self.ui.Qpause.clicked.connect(lambda: self.pause_execution())
+        # self.ui.Qpause.clicked.connect(lambda: self.pause_execution())
         self.ui.Qstop.clicked.connect(lambda: self.stop_execution())
-        
+
         self.ui.button.clicked.connect(self.run_long_task)
 
 
@@ -60,24 +195,34 @@ class MainWindow(QMainWindow):
         if not self.__thread.isRunning():
             self.__thread = self.__get_thread()
             self.__thread.start()
-            
-            
+
+    worker = None
+    thread = None
+
     def __get_thread(self):
-        thread = QtCore.QThread()
-        worker = Worker()
-        worker.moveToThread(thread)
-        
+        self. thread = QtCore.QThread()
+        self.worker = Worker()
+        self.worker.give_values(self.duration, self.freq_list, self.power_list)
+        self.worker.moveToThread(self.thread)
+
         # this is essential when worker is in local scope!
-        thread.worker = worker
-        
-        thread.started.connect(worker.run)
-        worker.finished.connect(thread.quit)
-        
-        worker.progressed.connect(lambda value: update_progress(self.ui.progressBar, value))
-        worker.messaged.connect(lambda msg: update_status(self.statusBar(), msg))
-        
-        return thread
-    
+        self.thread.worker =  self.worker
+
+        self.thread.started.connect( self.worker.run)
+        self.worker.finished.connect(lambda: self.quit_and_disable_buttons())
+
+        # worker.progressed.connect(lambda value: update_progress(self.ui.progressBar, value))
+        # worker.messaged.connect(lambda msg: update_status(self.statusBar(), msg))
+        self.worker.messaged.connect(lambda msg: update_status(msg))
+
+        return self.thread
+
+    def quit_and_disable_buttons(self):
+        self.thread.quit
+        self.enablePlayButton()
+        self.disableStopButton()
+        self.disablePauseButton()
+
 
 
     def save_error_log(self):
@@ -114,123 +259,63 @@ class MainWindow(QMainWindow):
 
 
     def play_execution(self):
-
-        # thread = WorkerThread()
-        # thread.start()
-        
         self.disablePlayButton()
         self.enableStopButton()
         self.enablePauseButton()
-        self.execution = True
-        
-        ser = srw.connect_serial("COM9")
-        # Initialize
-        index = 0
-        next_time = self.duration[0]
-        freq = self.freq_list[0]
-        power = self.power_list[0]
+        self.run_long_task()
 
-        srw.send_cmd_string(ser,"ON")
-        srw.send_cmd_string(ser,"PWR", power)
-        srw.send_cmd_string(ser,"FREQ", freq)
-        self.status = srw.read_param(ser, self.status, "STATUS", False)
 
-        # Start the main functions
-        timestamp = time.time()
-        min_refresh = 1
-        init_time = time.time()
-        while self.execution:
-            if time.time() >= timestamp + min_refresh: # minimum refresh period
-               
-                if time.time()-init_time >= next_time:
-
-                    index += 1 
-                    index = index % len(self.duration)  # set to 0 if is the last line in the csv
-
-                    next_time = next_time + self.duration[index]
-                    power = self.power_list[index]
-                    freq = self.freq_list[index]
-
-                    if index == 0:
-                        init_time = time.time()
-                        next_time = self.duration[index]
-
-                    srw.send_cmd_string(ser,"PWR", power)
-                    srw.send_cmd_string(ser,"FREQ", freq)
-
-                self.status = srw.read_param(ser, self.status, "STATUS", False)
-                self.status = srw.read_param(ser, self.status, "FLDBCK_READ", False)
-                self.update_values_on_screen(MainWindow)
-                self.save_error_log()
-                timestamp = time.time()
-
-        # Soft turn off
-        print("\nStart soft shut down...")
-        srw.send_cmd_string(ser,"OFF")
-        srw.send_cmd_string(ser,"PWM", 0)
-        srw.empty_buffer(ser, self.status, wait=1)
-        print("\nRead status to confirm shutdown:")
-        self.status = srw.read_param(ser, self.status, "STATUS")
-        # Close ports
-        ser.close()
-        print("THE TYPE OF THE FILE IS:")
-        print(type(self.status["Forward Power"]))
-        self.update_values_on_screen(MainWindow)
-        
-        self.enablePlayButton()
-        self.disableStopButton()
-        self.disablePauseButton()
-
-        
     def pause_execution(self):
         #define pause
         return
-        
+
     def stop_execution(self):
-        self.execution = False
+        self.worker.stop_execution()
+        # self.execution = False
+
+    execution = True
 
 
-    def update_values_on_screen(self, MainWindow):
+    def update_values_on_screen(self, msg):
         _translate = QtCore.QCoreApplication.translate
-        self.ui.Qtemperature_label.setText(_translate("MainWindow", str(self.status["Temperature"])))
-        self.ui.Qpll_label.setText(_translate("MainWindow", str(self.status["PLL"])))
-        self.ui.Qcurrent_label.setText(_translate("MainWindow", str(self.status["Current"])))
-        self.ui.Qvoltage_label.setText(_translate("MainWindow", str(self.status["Voltage"])))
-        self.ui.Qreflectedpower_label.setText(_translate("MainWindow", str(self.status["Reflected Power"])))
-        self.ui.Qforwardpower_label.setText(_translate("MainWindow", str(self.status["Forward Power"])))
-        self.ui.Qpwm_label.setText(_translate("MainWindow", str(self.status["PWM"])))
-        self.ui.Qonoff_label.setText(_translate("MainWindow", str(self.status["On Off"])))
-        self.ui.Qenablefoldback_label.setText(_translate("MainWindow", str(self.status["Enable foldback"])))
-        self.ui.Qfoldbackin_label.setText(_translate("MainWindow", str(self.status["Foldback in"])))
-        self.ui.Qerror_label.setText(_translate("MainWindow", str(self.status["Error"])))
+        self.ui.Qtemperature_label.setText(_translate("MainWindow", str(msg.Temperature)))
+        self.ui.Qpll_label.setText(_translate("MainWindow", str(msg.PLL)))
+        self.ui.Qcurrent_label.setText(_translate("MainWindow", str(msg.Current)))
+        self.ui.Qvoltage_label.setText(_translate("MainWindow", str(msg.Voltage)))
+        self.ui.Qreflectedpower_label.setText(_translate("MainWindow", str(msg.Reflected_Power)))
+        self.ui.Qforwardpower_label.setText(_translate("MainWindow", str(msg.Forward_Power)))
+        self.ui.Qpwm_label.setText(_translate("MainWindow", str(msg.PWM)))
+        self.ui.Qonoff_label.setText(_translate("MainWindow", str(msg.On_Off)))
+        self.ui.Qenablefoldback_label.setText(_translate("MainWindow", str(msg.Enable_foldback)))
+        self.ui.Qfoldbackin_label.setText(_translate("MainWindow", str(msg.Foldback_in)))
+        self.ui.Qerror_label.setText(_translate("MainWindow", str(msg.Error)))
 
 
-            
     def enablePlayButton(self):
         self.ui.Qplay.setEnabled(True)
 
     def disablePlayButton(self):
         self.ui.Qplay.setEnabled(False)
-        
+
     def enablePauseButton(self):
         self.ui.Qpause.setEnabled(True)
 
     def disablePauseButton(self):
         self.ui.Qpause.setEnabled(False)
-        
+
     def enableStopButton(self):
         self.ui.Qstop.setEnabled(True)
 
     def disableStopButton(self):
         self.ui.Qstop.setEnabled(False)
-        
+
     def close(self):
         # self.close()
         QApplication.quit()
 
 
-def update_status(status_bar, msg):
-    status_bar.showMessage(msg, 2000)
+def update_status(msg):
+    window.update_values_on_screen(msg)
 
 
 def update_progress(progress_bar, value):
@@ -241,23 +326,6 @@ def update_progress(progress_bar, value):
     elif progress_bar.isHidden():
         progress_bar.setVisible(True)
 
-
-# class WorkerThread(QThread):
-#     finished = pyqtSignal()
-
-#     def run(self):
-#         main_window = MainWindow()
-#         main_window.moveToThread(self)
-#         self.started.connect(main_window.play_execution)
-#         self.finished.connect(main_window.deleteLater)
-#         self.exec_()
-
-# Usage:
-# if __name__ == '__main__':
-#     app = QtWidgets.QApplication(sys.argv)
-#     win = Window()
-#     win.show()
-#     sys.exit(app.exec_())
 
 
 if __name__ == "__main__":
