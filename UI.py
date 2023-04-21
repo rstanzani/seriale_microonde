@@ -5,7 +5,7 @@ import read_csv as rcsv
 import serial_RW as srw
 from UI_raw import Ui_MainWindow
 import sys
-from PyQt5.QtCore import QThread, pyqtSignal
+from PyQt5.QtCore import pyqtSignal # QThread
 
 
 class RFdata:
@@ -20,19 +20,6 @@ class RFdata:
     Enable_foldback = "ND"
     Foldback_in = "ND"
     Error = "No error"
-
-    # def __init__(self, rf_dict):
-    #     self.Temperature = rf_dict["Temperature"]
-    #     self.PLL = rf_dict["PLL"]
-    #     self.Current = rf_dict["Current"]
-    #     self.Voltage = rf_dict["Voltage"]
-    #     self.Reflected_Power = rf_dict["Reflected Power"]
-    #     self.Forward_Power = rf_dict["Forward Power"]
-    #     self.PWM = rf_dict["PWM"]
-    #     self.On_Off = rf_dict["On Off"]
-    #     self.Enable_foldback = rf_dict["Enable foldback"]
-    #     self.Foldback_in = rf_dict["Foldback in"]
-    #     self.Error = rf_dict["Error"]
 
     def set_values(self, rf_dict):
         self.Temperature = rf_dict["Temperature"]
@@ -50,7 +37,7 @@ class RFdata:
 
 class Worker(QtCore.QObject):
 
-    pippo = RFdata()
+    rf_data = RFdata()
     execution = False
 
     duration = 0
@@ -59,12 +46,6 @@ class Worker(QtCore.QObject):
     status = {"Temperature":"ND","PLL":"ND","Current":"ND","Voltage":"ND","Reflected Power":"ND",
               "Forward Power":"ND", "PWM":"ND", "On Off":"ND", "Enable foldback":"ND", "Foldback in":"ND", "Error":"No error"}
 
-    # def __init__(self):
-
-
-    # progressed = QtCore.Signal(int)
-    # messaged = QtCore.Signal(str)
-    # progressed = QtCore.Signal(int)
     messaged = pyqtSignal(object)
     finished = pyqtSignal()
     duration = 0
@@ -89,7 +70,7 @@ class Worker(QtCore.QObject):
     def run(self):
         self.start_execution()
         # global execution
-        print("Pippo va in città")
+        print("Opening connection with RF...")
         ser = srw.connect_serial("COM9")
         # Initialize
         index = 0
@@ -110,7 +91,6 @@ class Worker(QtCore.QObject):
         init_time = time.time()
 
         while self.execution:
-            # print("the condition is: {} {}".format(time.time(), timestamp + min_refresh))
             if time.time() >= timestamp + min_refresh: # minimum refresh period
                 print("Send a command...")
                 if time.time()-init_time >= next_time:
@@ -128,34 +108,24 @@ class Worker(QtCore.QObject):
 
                     srw.send_cmd_string(ser,"PWR", power)
                     srw.send_cmd_string(ser,"FREQ", freq)
-                # print(type(self.status))
                 self.status = srw.read_param(ser, self.status, "STATUS", False)
                 self.status = srw.read_param(ser, self.status, "FLDBCK_READ", False)
-                # output = RFdata(self.status)
-                self.pippo.set_values(self.status)
-                self.messaged.emit(self.pippo)
-                # update_values_on_screen(MainWindow)
-                # save_error_log()
+                self.rf_data.set_values(self.status)
+                self.messaged.emit(self.rf_data)
                 timestamp = time.time()
-            # else:
-            #     print("The conditions are not verified!")
+
         # Soft turn off
         print("\nStart soft shut down...")
         srw.send_cmd_string(ser,"OFF")
         srw.send_cmd_string(ser,"PWM", 0)
         srw.empty_buffer(ser, self.status, wait=1)
-        # print("\nRead status to confirm shutdown:")
         self.status = srw.read_param(ser, self.status, "STATUS")
+        
         # Close ports
         ser.close()
-        # print("THE TYPE OF THE FILE IS:")
-        # print(type(self.status["Forward Power"]))
-        # self.update_values_on_screen(MainWindow)
-        self.pippo.set_values(self.status)
-        self.messaged.emit(self.pippo)
-
+        self.rf_data.set_values(self.status)
+        self.messaged.emit(self.rf_data)
         self.finished.emit()
-
 
 
 class MainWindow(QMainWindow):
@@ -169,26 +139,23 @@ class MainWindow(QMainWindow):
               "Forward Power":"ND", "PWM":"ND", "On Off":"ND", "Enable foldback":"ND", "Foldback in":"ND", "Error":"No error"}
     error_history = []
     timestamp_old = 0
-    # execution = False
+    execution = True
+    worker = None
+    thread = None
 
     def __init__(self):
 
         self.__thread = QtCore.QThread()
-
 
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
         self.ui.QOpen_CSV.clicked.connect(lambda:  self.open_file("Open_CSV"))
-
         self.ui.Qexit.clicked.connect(lambda: self.close())
-
         self.ui.Qplay.clicked.connect(lambda: self.play_execution())
         # self.ui.Qpause.clicked.connect(lambda: self.pause_execution())
         self.ui.Qstop.clicked.connect(lambda: self.stop_execution())
-
-        self.ui.button.clicked.connect(self.run_long_task)
 
 
     def run_long_task(self):
@@ -196,8 +163,6 @@ class MainWindow(QMainWindow):
             self.__thread = self.__get_thread()
             self.__thread.start()
 
-    worker = None
-    thread = None
 
     def __get_thread(self):
         self. thread = QtCore.QThread()
@@ -211,18 +176,18 @@ class MainWindow(QMainWindow):
         self.thread.started.connect( self.worker.run)
         self.worker.finished.connect(lambda: self.quit_and_disable_buttons())
 
-        # worker.progressed.connect(lambda value: update_progress(self.ui.progressBar, value))
+        # worker.progressed.connect(lambda value: update_progress(self.ui.progressBar, value))   #for a progress bar
         # worker.messaged.connect(lambda msg: update_status(self.statusBar(), msg))
         self.worker.messaged.connect(lambda msg: update_status(msg))
 
         return self.thread
+
 
     def quit_and_disable_buttons(self):
         self.thread.quit
         self.enablePlayButton()
         self.disableStopButton()
         self.disablePauseButton()
-
 
 
     def save_error_log(self):
@@ -269,11 +234,10 @@ class MainWindow(QMainWindow):
         #define pause
         return
 
+
     def stop_execution(self):
         self.worker.stop_execution()
         # self.execution = False
-
-    execution = True
 
 
     def update_values_on_screen(self, msg):
@@ -325,7 +289,6 @@ def update_progress(progress_bar, value):
         progress_bar.setVisible(False)
     elif progress_bar.isHidden():
         progress_bar.setVisible(True)
-
 
 
 if __name__ == "__main__":
