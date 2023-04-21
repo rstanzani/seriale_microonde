@@ -4,6 +4,23 @@ import time
 import read_csv as rcsv
 import serial_RW as srw
 from UI_raw import Ui_MainWindow
+import sys
+from PyQt5.QtCore import QThread, pyqtSignal
+
+
+
+class Worker(QtCore.QObject):
+    progressed = QtCore.Signal(int)
+    messaged = QtCore.Signal(str)
+    finished = QtCore.Signal()
+
+    def run(self):
+        for i in range(1, 11):
+            self.progressed.emit(int(i*10))
+            self.messaged.emit(str(i))
+            time.sleep(0.5)
+
+        self.finished.emit()
 
 
 class MainWindow(QMainWindow):
@@ -20,6 +37,10 @@ class MainWindow(QMainWindow):
     execution = False
 
     def __init__(self):
+        
+        self.__thread = QtCore.QThread()
+        
+        
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -28,9 +49,35 @@ class MainWindow(QMainWindow):
 
         self.ui.Qexit.clicked.connect(lambda: self.close())
 
-        self.ui.Qplay.clicked.connect(lambda: self.play_execution())      
+        self.ui.Qplay.clicked.connect(lambda: self.play_execution())
         self.ui.Qpause.clicked.connect(lambda: self.pause_execution())
         self.ui.Qstop.clicked.connect(lambda: self.stop_execution())
+        
+        self.ui.button.clicked.connect(self.run_long_task)
+
+
+    def run_long_task(self):
+        if not self.__thread.isRunning():
+            self.__thread = self.__get_thread()
+            self.__thread.start()
+            
+            
+    def __get_thread(self):
+        thread = QtCore.QThread()
+        worker = Worker()
+        worker.moveToThread(thread)
+        
+        # this is essential when worker is in local scope!
+        thread.worker = worker
+        
+        thread.started.connect(worker.run)
+        worker.finished.connect(thread.quit)
+        
+        worker.progressed.connect(lambda value: update_progress(self.ui.progressBar, value))
+        worker.messaged.connect(lambda msg: update_status(self.statusBar(), msg))
+        
+        return thread
+    
 
 
     def save_error_log(self):
@@ -68,6 +115,9 @@ class MainWindow(QMainWindow):
 
     def play_execution(self):
 
+        # thread = WorkerThread()
+        # thread.start()
+        
         self.disablePlayButton()
         self.enableStopButton()
         self.enablePauseButton()
@@ -155,6 +205,7 @@ class MainWindow(QMainWindow):
         self.ui.Qerror_label.setText(_translate("MainWindow", str(self.status["Error"])))
 
 
+            
     def enablePlayButton(self):
         self.ui.Qplay.setEnabled(True)
 
@@ -178,11 +229,40 @@ class MainWindow(QMainWindow):
         QApplication.quit()
 
 
-if __name__ == "__main__":
-    import sys
-    app = QApplication(sys.argv)
+def update_status(status_bar, msg):
+    status_bar.showMessage(msg, 2000)
 
+
+def update_progress(progress_bar, value):
+    progress_bar.setValue(value)
+
+    if value >= 100:
+        progress_bar.setVisible(False)
+    elif progress_bar.isHidden():
+        progress_bar.setVisible(True)
+
+
+# class WorkerThread(QThread):
+#     finished = pyqtSignal()
+
+#     def run(self):
+#         main_window = MainWindow()
+#         main_window.moveToThread(self)
+#         self.started.connect(main_window.play_execution)
+#         self.finished.connect(main_window.deleteLater)
+#         self.exec_()
+
+# Usage:
+# if __name__ == '__main__':
+#     app = QtWidgets.QApplication(sys.argv)
+#     win = Window()
+#     win.show()
+#     sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+
+    app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
-
     sys.exit(app.exec())
