@@ -20,7 +20,7 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>20</x>
+      <x>100</x>
       <y>90</y>
       <width>120</width>
       <height>28</height>
@@ -32,11 +32,11 @@
    </widget>
    <widget class="QPushButton" name="Qstop">
     <property name="enabled">
-     <bool>true</bool>
+     <bool>false</bool>
     </property>
     <property name="geometry">
      <rect>
-      <x>330</x>
+      <x>230</x>
       <y>90</y>
       <width>120</width>
       <height>28</height>
@@ -44,22 +44,6 @@
     </property>
     <property name="text">
      <string>STOP</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="Qpause">
-    <property name="enabled">
-     <bool>false</bool>
-    </property>
-    <property name="geometry">
-     <rect>
-      <x>170</x>
-      <y>90</y>
-      <width>131</width>
-      <height>28</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>PAUSE</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="QGDML">

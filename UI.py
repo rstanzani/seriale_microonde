@@ -157,7 +157,6 @@ class MainWindow(QMainWindow):
         self.ui.QOpen_CSV.clicked.connect(lambda:  self.open_file("Open_CSV"))
         self.ui.Qexit.clicked.connect(lambda: self.close())
         self.ui.Qplay.clicked.connect(lambda: self.play_execution())
-        # self.ui.Qpause.clicked.connect(lambda: self.pause_execution())
         self.ui.Qstop.clicked.connect(lambda: self.stop_execution())
 
 
@@ -195,7 +194,6 @@ class MainWindow(QMainWindow):
         self.thread.quit
         self.enablePlayButton()
         self.disableStopButton()
-        self.disablePauseButton()
 
 
     def save_error_log(self):
@@ -234,13 +232,7 @@ class MainWindow(QMainWindow):
     def play_execution(self):
         self.disablePlayButton()
         self.enableStopButton()
-        self.enablePauseButton()
         self.run_long_task()
-
-
-    def pause_execution(self):
-        #define pause
-        return
 
     def stop_execution(self):
         self.worker.stop_execution()
@@ -251,12 +243,6 @@ class MainWindow(QMainWindow):
     def disablePlayButton(self):
         self.ui.Qplay.setEnabled(False)
 
-    def enablePauseButton(self):
-        self.ui.Qpause.setEnabled(True)
-
-    def disablePauseButton(self):
-        self.ui.Qpause.setEnabled(False)
-
     def enableStopButton(self):
         self.ui.Qstop.setEnabled(True)
 
@@ -264,7 +250,6 @@ class MainWindow(QMainWindow):
         self.ui.Qstop.setEnabled(False)
 
     def close(self):
-        # self.close()
         QApplication.quit()
 
     def update_status(self):
