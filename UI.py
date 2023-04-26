@@ -165,6 +165,11 @@ class MainWindow(QMainWindow):
         if not self.__thread.isRunning():
             self.__thread = self.__get_thread()
             self.__thread.start()
+        else:
+            print("Thread already running, killing it")
+            self.__thread.quit()
+            self.__thread = self.__get_thread()
+            self.__thread.start()
 
 
     def __get_thread(self):
