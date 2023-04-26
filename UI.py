@@ -7,83 +7,88 @@ from UI_raw import Ui_MainWindow
 import sys
 from PyQt5.QtCore import pyqtSignal # QThread
 
+# https://realpython.com/python-pyqt-qthread/
+# https://www.xingyulei.com/post/qt-threading/
+# TODO: rimuovere l'uso del dict per i campi
 
 class RFdata:
-    Temperature = "ND"
-    PLL = "ND"
-    Current = "ND"
-    Voltage = "ND"
-    Reflected_Power= "ND"
-    Forward_Power= "ND"
-    PWM = "ND"
-    On_Off = "ND"
-    Enable_foldback = "ND"
-    Foldback_in = "ND"
-    Error = "No error"
+    Temperature = 0
+    PLL = 0
+    Current = 0
+    Voltage = 0
+    Reflected_Power= 0
+    Forward_Power= 0
+    PWM = 0
+    On_Off = "Off"
+    Enable_foldback = False
+    Foldback_in = 0
+    Error = False  
 
-    def set_values(self, rf_dict):
-        self.Temperature = rf_dict["Temperature"]
-        self.PLL = rf_dict["PLL"]
-        self.Current = rf_dict["Current"]
-        self.Voltage = rf_dict["Voltage"]
-        self.Reflected_Power = rf_dict["Reflected Power"]
-        self.Forward_Power = rf_dict["Forward Power"]
-        self.PWM = rf_dict["PWM"]
-        self.On_Off = rf_dict["On Off"]
-        self.Enable_foldback = rf_dict["Enable foldback"]
-        self.Foldback_in = rf_dict["Foldback in"]
-        self.Error = rf_dict["Error"]
+    def set_values(self, temp, pll, curr, vol, refl, frw, pwm, onoff, ena, fld, err):
+        # print(type(rf_dict))
+        self.Temperature = temp
+        self.PLL = pll
+        self.Current = curr
+        self.Voltage = vol
+        self.Reflected_Power = refl
+        self.Forward_Power = frw
+        self.PWM = pwm
+        self.On_Off = onoff
+        self.Enable_foldback = ena
+        self.Foldback_in = fld
+        self.Error = err
 
+rf_data = RFdata()
 
 class Worker(QtCore.QObject):
 
-    rf_data = RFdata()
     execution = False
-
     duration = 0
     freq_list = []
     power_list = []
-    status = {"Temperature":"ND","PLL":"ND","Current":"ND","Voltage":"ND","Reflected Power":"ND",
-              "Forward Power":"ND", "PWM":"ND", "On Off":"ND", "Enable foldback":"ND", "Foldback in":"ND", "Error":"No error"}
-
-    messaged = pyqtSignal(object)
+    messaged = pyqtSignal()
     finished = pyqtSignal()
     duration = 0
     freq_list = []
     power_list = []
 
     def stop_execution(self):
-        print("Stopped execution")
-        self.execution = False
+        if self.execution:
+            self.execution = False
+            print("Execution stopped")
+        else:
+            print("Execution already stopped.")
 
     def start_execution(self):
         print("Started execution")
         self.execution = True
 
     def give_values(self, duration, freq_list, power_list):
-        print("Associating values")
         self.duration = duration
         self.freq_list = freq_list
         self.power_list = power_list
-        print("The values are: {} {} {}".format( self.duration, self.freq_list, self.power_list))
+        # print("The values are: {} {} {}".format( self.duration, self.freq_list, self.power_list))
 
     def run(self):
+        global rf_data
+        print("In run...")
         self.start_execution()
         # global execution
         print("Opening connection with RF...")
         ser = srw.connect_serial("COM9")
         # Initialize
         index = 0
-        print("Index is: {}".format(index))
+        # print("Index is: {}".format(index))
         next_time = self.duration[0]
         freq = self.freq_list[0]
         power = self.power_list[0]
 
-        print("Next time: {}".format(next_time))
+        # print("Next time: {}".format(next_time))
         srw.send_cmd_string(ser,"ON")
         srw.send_cmd_string(ser,"PWR", power)
         srw.send_cmd_string(ser,"FREQ", freq)
-        self.status = srw.read_param(ser, self.status, "STATUS", False)
+        # self.status = srw.read_param(ser, self.rf_values, "STATUS", False)
+        rf_data = srw.read_param(ser, rf_data, "STATUS", 1, False)
 
         # Start the main functions
         timestamp = time.time()
@@ -92,7 +97,7 @@ class Worker(QtCore.QObject):
 
         while self.execution:
             if time.time() >= timestamp + min_refresh: # minimum refresh period
-                print("Send a command...")
+
                 if time.time()-init_time >= next_time:
 
                     index += 1
@@ -108,23 +113,23 @@ class Worker(QtCore.QObject):
 
                     srw.send_cmd_string(ser,"PWR", power)
                     srw.send_cmd_string(ser,"FREQ", freq)
-                self.status = srw.read_param(ser, self.status, "STATUS", False)
-                self.status = srw.read_param(ser, self.status, "FLDBCK_READ", False)
-                self.rf_data.set_values(self.status)
-                self.messaged.emit(self.rf_data)
+                rf_data = srw.read_param(ser, rf_data, "STATUS", False)
+                rf_data = srw.read_param(ser, rf_data, "FLDBCK_READ", False)
+                self.messaged.emit()
                 timestamp = time.time()
 
         # Soft turn off
-        print("\nStart soft shut down...")
+        print("\nShutting down...")
         srw.send_cmd_string(ser,"OFF")
         srw.send_cmd_string(ser,"PWM", 0)
-        srw.empty_buffer(ser, self.status, wait=1)
-        self.status = srw.read_param(ser, self.status, "STATUS")
+        srw.empty_buffer(ser, wait=1)
+        rf_data = srw.read_param(ser, rf_data, "STATUS")
         
         # Close ports
         ser.close()
-        self.rf_data.set_values(self.status)
-        self.messaged.emit(self.rf_data)
+        # self.rf_data.set_values(self.rf_data)
+        print("COM port correctly closed")
+        self.messaged.emit()
         self.finished.emit()
 
 
@@ -135,8 +140,6 @@ class MainWindow(QMainWindow):
     power_list = []
     error = ""
     msg = ""
-    status = {"Temperature":"ND","PLL":"ND","Current":"ND","Voltage":"ND","Reflected Power":"ND",
-              "Forward Power":"ND", "PWM":"ND", "On Off":"ND", "Enable foldback":"ND", "Foldback in":"ND", "Error":"No error"}
     error_history = []
     timestamp_old = 0
     execution = True
@@ -165,7 +168,7 @@ class MainWindow(QMainWindow):
 
 
     def __get_thread(self):
-        self. thread = QtCore.QThread()
+        self.thread = QtCore.QThread()
         self.worker = Worker()
         self.worker.give_values(self.duration, self.freq_list, self.power_list)
         self.worker.moveToThread(self.thread)
@@ -178,7 +181,7 @@ class MainWindow(QMainWindow):
 
         # worker.progressed.connect(lambda value: update_progress(self.ui.progressBar, value))   #for a progress bar
         # worker.messaged.connect(lambda msg: update_status(self.statusBar(), msg))
-        self.worker.messaged.connect(lambda msg: update_status(msg))
+        self.worker.messaged.connect(lambda: self.update_status())
 
         return self.thread
 
@@ -192,9 +195,9 @@ class MainWindow(QMainWindow):
 
     def save_error_log(self):
         to_add = False
-        if self.status["Error"] != "No error":
+        if self.rf_values.Error != "No error":
             if len(self.error_history) != 0:
-                if self.error_history[-1][1] != self.status["Error"]:
+                if self.error_history[-1][1] != self.rf_values.Error:
                     print("Add: new value")
                     to_add = True
                 elif time.time()-self.error_history[-1][0] >= 60:
@@ -204,8 +207,8 @@ class MainWindow(QMainWindow):
                 print("Add: first elem")
                 to_add = True
             if to_add:
-                self.error_history.append([time.time(), self.status['Error']])
-        self.status["Error"] = "No error"
+                self.error_history.append([time.time(), self.rf_values.Error])
+        self.rf_values.Error = "No error"
 
 
     def open_file(self, button_name):
@@ -234,26 +237,8 @@ class MainWindow(QMainWindow):
         #define pause
         return
 
-
     def stop_execution(self):
         self.worker.stop_execution()
-        # self.execution = False
-
-
-    def update_values_on_screen(self, msg):
-        _translate = QtCore.QCoreApplication.translate
-        self.ui.Qtemperature_label.setText(_translate("MainWindow", str(msg.Temperature)))
-        self.ui.Qpll_label.setText(_translate("MainWindow", str(msg.PLL)))
-        self.ui.Qcurrent_label.setText(_translate("MainWindow", str(msg.Current)))
-        self.ui.Qvoltage_label.setText(_translate("MainWindow", str(msg.Voltage)))
-        self.ui.Qreflectedpower_label.setText(_translate("MainWindow", str(msg.Reflected_Power)))
-        self.ui.Qforwardpower_label.setText(_translate("MainWindow", str(msg.Forward_Power)))
-        self.ui.Qpwm_label.setText(_translate("MainWindow", str(msg.PWM)))
-        self.ui.Qonoff_label.setText(_translate("MainWindow", str(msg.On_Off)))
-        self.ui.Qenablefoldback_label.setText(_translate("MainWindow", str(msg.Enable_foldback)))
-        self.ui.Qfoldbackin_label.setText(_translate("MainWindow", str(msg.Foldback_in)))
-        self.ui.Qerror_label.setText(_translate("MainWindow", str(msg.Error)))
-
 
     def enablePlayButton(self):
         self.ui.Qplay.setEnabled(True)
@@ -277,9 +262,21 @@ class MainWindow(QMainWindow):
         # self.close()
         QApplication.quit()
 
+    def update_status(self):
+        global rf_data
 
-def update_status(msg):
-    window.update_values_on_screen(msg)
+        _translate = QtCore.QCoreApplication.translate
+        self.ui.Qtemperature_label.setText(_translate("MainWindow", str(rf_data.Temperature)))
+        self.ui.Qpll_label.setText(_translate("MainWindow", str(rf_data.PLL)))
+        self.ui.Qcurrent_label.setText(_translate("MainWindow", str(rf_data.Current)))
+        self.ui.Qvoltage_label.setText(_translate("MainWindow", str(rf_data.Voltage)))
+        self.ui.Qreflectedpower_label.setText(_translate("MainWindow", str(rf_data.Reflected_Power)))
+        self.ui.Qforwardpower_label.setText(_translate("MainWindow", str(rf_data.Forward_Power)))
+        self.ui.Qpwm_label.setText(_translate("MainWindow", str(rf_data.PWM)))
+        self.ui.Qonoff_label.setText(_translate("MainWindow", str(rf_data.On_Off)))
+        self.ui.Qenablefoldback_label.setText(_translate("MainWindow", str(rf_data.Enable_foldback)))
+        self.ui.Qfoldbackin_label.setText(_translate("MainWindow", str(rf_data.Foldback_in)))
+        self.ui.Qerror_label.setText(_translate("MainWindow", str(rf_data.Error)))
 
 
 def update_progress(progress_bar, value):

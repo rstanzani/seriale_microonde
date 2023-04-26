@@ -206,7 +206,7 @@ def read_reply_values(reply):
 
 #%% Updte status values
 
-def empty_buffer(ser, status, wait=2):
+def empty_buffer(ser, wait=2):
 
     # read response
     start_waiting = time.time()
@@ -218,7 +218,7 @@ def empty_buffer(ser, status, wait=2):
             continue      
 
 
-def read_param(ser, status, param="STATUS", wait=1, verbose=False):
+def read_param(ser, rf_values, param="STATUS", wait=1, verbose=False):
     # read response
     start_waiting = time.time()
 
@@ -235,74 +235,61 @@ def read_param(ser, status, param="STATUS", wait=1, verbose=False):
         payload_list = read_reply_values(prova_int)
         if len(payload_list) == 0:
             continue
-        set_status_values(status, payload_list, False)
+        rf_values = set_status_values(rf_values, payload_list, False)
         if verbose:
-            print_status(status, 2)
-        return status
+            print_rfdata(rf_values, 2)
+    return rf_values
     # return payload_list
 
 
-def set_status_values (status, payload_list, verbose=False):
+def set_status_values (rf_values, payload_list, verbose=False):
     for i in range(0, len(payload_list)):
         operand = payload_list[i][1]
         if operand == "01":
-            if verbose: print("Temperature")
-            status["Temperature"] = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
+            rf_values.Temperature = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
             
         elif operand == "02":
-            if verbose: print("PLL")
-            status["PLL"] = int(payload_list[i][2], 16)  # conversion from Unsigned Long
+            rf_values.PLL = int(payload_list[i][2], 16)
             
         elif operand == "03":
-            if verbose: print("Current")
-            status["Current"] = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
+            rf_values.Current = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
             
         elif operand == "04":
-            if verbose: print("Voltage")
-            status["Voltage"] = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
+            rf_values.Voltage = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
             
         elif operand == "05":
-            if verbose: print("Reflected Power")
-            status["Reflected Power"] = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
+            rf_values.Reflected_Power = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
             
         elif operand == "06":
-           if verbose: print("Forward Power")
-           status["Forward Power"] = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
+           rf_values.Forward_Power = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
            
         elif operand == "08":
-           if verbose: print("PWM")
-           status["PWM"] = int(payload_list[i][2], 16)
+           rf_values.PWM = int(payload_list[i][2], 16)
             
         elif operand == "0B" or operand == "0b":
-           if verbose: print("On Off")
-           status["On Off"] = int(payload_list[i][2], 16)
+           rf_values.On_Off = int(payload_list[i][2], 16)
            
         elif operand == "26":
-           if verbose: print("Enable foldback")
-           status["Enable foldback"] = int(payload_list[i][2], 16)
+           rf_values.Enable_foldback = int(payload_list[i][2], 16)
            
         elif operand == "51":
-           if verbose: print("Foldback in")
-           status["Foldback in"] = int(payload_list[i][2], 16)
+           rf_values.Foldback_in = int(payload_list[i][2], 16)
 
         elif operand == "17":
-           if verbose: print("Error")
-           status["Error"] = int(payload_list[i][2], 16)
-           
-        
-           
+           rf_values.Error = int(payload_list[i][2], 16)
     if verbose:
         print("Status updated")
+    return rf_values
 
-def print_status(status, verbose=0):
+def print_rfdata(rf_data, verbose=0):
     '''Verbose level [0,1,2] serves to select how many values to plot.'''
 
     if verbose == 0: # Do NOT remove ending spaces, they are useful when printing on and old and longer line
-        print("\r", "On Off: {} || Reflected Power: {} [W] || Forward Power: {} [W] || Enable foldback: {} || Error: {}      \r".format(status["On Off"], status["Reflected Power"], status["Forward Power"], status["Enable foldback"], status["Error"]))
+        print("\r", "On Off: {} || Reflected Power: {} [W] || Forward Power: {} [W] || Enable foldback: {} || Error: {}      \r".format(rf_data.On_Off, rf_data.Reflected_Power, rf_data.Forward_Power, rf_data.Enable_foldback, rf_data.Error))
 
     if verbose == 1:
-        print("\r", "On Off: {} || Temperature: {} [C] ||  Current: {} [A] || Voltage: {} [V] || Reflected Power: {} [W] || Forward Power: {} [W] || Enable foldback: {} || Foldback in {} [W] || Error: {}      \r".format(status["On Off"],status["Temperature"], status["Current"], status["Voltage"], status["Reflected Power"], status["Forward Power"], status["Enable foldback"], status["Foldback in"], status["Error"]))
+        print("\r", "On Off: {} || Temperature: {} [C] ||  Current: {} [A] || Voltage: {} [V] || Reflected Power: {} [W] || Forward Power: {} [W] || Enable foldback: {} || Foldback in {} [W] || Error: {}      \r".format(rf_data.On_Off, rf_data.Temperature, rf_data.Current, rf_data.Voltage, rf_data.Reflected_Power, rf_data.Forward_Power, rf_data.Enable_foldback, rf_data.Foldback_in, rf_data.Error))
 
     if verbose == 2:
-        print("\r", "On Off: {} || Temperature: {} [C] || PLL: {} || Current: {} [A] || Voltage: {} [V] || Reflected Power: {} [W] || Forward Power: {} [W] || PWM: {} || Enable foldback: {} || Foldback in {} [W] || Error: {}      \r".format(status["On Off"],status["Temperature"], status["PLL"], status["Current"], status["Voltage"], status["Reflected Power"], status["Forward Power"], status["PWM"], status["Enable foldback"], status["Foldback in"], status["Error"]))
+        print("\r", "On Off: {} || Temperature: {} [C] || PLL: {} || Current: {} [A] || Voltage: {} [V] || Reflected Power: {} [W] || Forward Power: {} [W] || PWM: {} || Enable foldback: {} || Foldback in {} [W] || Error: {}      \r".format(rf_data.On_Off, rf_data.Temperature, rf_data.PLL, rf_data.Current, rf_data.Voltage, rf_data.Reflected_Power, rf_data.Forward_Power, rf_data.PWM, rf_data.Enable_foldback, rf_data.Foldback_in, rf_data.Error))
 
