@@ -199,6 +199,8 @@ class MainWindow(QMainWindow):
         self.enableExitButton()
         self.enableSearchSerialButton()
         self.enableOpenCSVButton()
+        self.ui.QoutputLabel.setText("Process ended.")
+        
 
     def save_error_log(self):
         to_add = False
@@ -226,7 +228,7 @@ class MainWindow(QMainWindow):
         opened_path, _ = QFileDialog.getOpenFileName(None, "Open the {} file".format(file_type), path, "*")
         # Read parameters from csv file
         if opened_path != "":
-            print("The path selected is: {}".format(opened_path))
+            # print("The path selected is: {}".format(opened_path))
             self.ui.QGDML.setText(opened_path)
             self.duration, self.freq_list, self.power_list, self.error, self.msg  = rcsv.read_and_plot(opened_path, self.ui.Qenable_plot.isChecked(), False)
             self.ui.QoutputLabel.setText(self.msg)
@@ -235,6 +237,7 @@ class MainWindow(QMainWindow):
 
 
     def play_execution(self):
+        self.ui.QoutputLabel.setText("Process started.")
         self.disablePlayButton()
         self.enableStopButton()
         self.disableExitButton()
@@ -243,6 +246,7 @@ class MainWindow(QMainWindow):
         self.run_long_task()
 
     def stop_execution(self):
+        self.ui.QoutputLabel.setText("Stopping process...")
         self.worker.stop_execution()
         
     def search_serials(self):
