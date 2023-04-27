@@ -43,67 +43,18 @@ def save_error_log():
         # convert timestamp to readable with: time.gmtime(1681401590.5839448)    
         # error_history.append([datetime.now().strftime("%d/%m/%Y %H:%M:%S"), status['Error']])
 
-########### TKINTER ####################
-'''
-import tkinter as tk
-
-# Update the values
-def update_values():
-    global status
-    values[0].set("Temperature: {}".format(status["Temperature"]))
-    values[1].set("PLL: {}".format(status["PLL"]))
-    values[2].set("Current: {}".format(status["Current"]))
-    values[3].set("Voltage: {}".format(status["Voltage"]))
-    values[4].set("Reflected Power: {}".format(status["Reflected Power"]))
-    values[5].set("Forward Power: {}".format(status["Forward Power"]))
-    values[6].set("PWM: {}".format(status["PWM"]))
-    values[7].set("On Off: {}".format(status["On Off"]))
-    values[8].set("Enable foldback: {}".format(status["Enable foldback"]))
-    values[9].set("Foldback in: {}".format(status["Foldback in"]))
-    values[10].set("Error: {}".format(status["Error"]))
-
-# Function to update the values automatically every second
-def auto_update():
-    update_values()
-    root.after(1000, auto_update)  # Schedule the next update after 1000ms (1 second)
-
-
-# Create the main Tkinter window
-root = tk.Tk()
-root.title("Value Display")
-root.geometry("300x300")
-# Create a list to hold the values
-values = []
-for i in range(11):
-    values.append(tk.StringVar())  # Use StringVar to store the values as strings
-
-# Create 10 labels to display the values
-labels = []
-for i in range(11):
-    label = tk.Label(root, textvariable=values[i], compound='left')
-    label.pack()
-    labels.append(label)
-
-
-# Start the automatic updates
-auto_update()
-
-# Start the Tkinter event loop
-root.mainloop()
-
-'''
-
 # Main ########################################################################
 print("Start RF generator...")
-ser = srw.connect_serial("COM9")
+comport = "COM9"
+ser = srw.connect_serial(comport)
 
 status = {"Temperature":"ND","PLL":"ND","Current":"ND","Voltage":"ND","Reflected Power":"ND", 
           "Forward Power":"ND", "PWM":"ND", "On Off":"ND", "Enable foldback":"ND", "Foldback in":"ND", "Error":"No error"}
 
 
-
 # Read parameters from csv file
 duration, freq_list, power_list, error, msg = rcsv.read_and_plot("D:\Downloads\Book2.rf.csv", True, False)
+print(msg)
 
 if not error:
     error_history = []
@@ -154,13 +105,5 @@ if not error:
     
 # Close ports
 ser.close()
-
-
-'''
-# # Create a thread for running the update_value_label function
-update_thread = threading.Thread(target=main_things)
-update_thread.start()
-'''
-
 
 

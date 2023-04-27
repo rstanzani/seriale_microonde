@@ -11,19 +11,20 @@ import search_serials as ssr
 # https://realpython.com/python-pyqt-qthread/
 # https://www.xingyulei.com/post/qt-threading/
 # TODO: rimuovere l'uso del dict per i campi
+comport = "COM9"
 
 class RFdata:
-    Temperature = 0
-    PLL = 0
-    Current = 0
-    Voltage = 0
-    Reflected_Power= 0
-    Forward_Power= 0
-    PWM = 0
-    On_Off = "Off"
-    Enable_foldback = False
-    Foldback_in = 0
-    Error = False  
+    Temperature = "N.D."
+    PLL = "N.D."
+    Current = "N.D."
+    Voltage = "N.D."
+    Reflected_Power = "N.D."
+    Forward_Power= "N.D."
+    PWM = "N.D."
+    On_Off = "N.D."
+    Enable_foldback = "N.D."
+    Foldback_in = "N.D."
+    Error = "N.D."
 
     def set_values(self, temp, pll, curr, vol, refl, frw, pwm, onoff, ena, fld, err):
         # print(type(rf_dict))
@@ -72,11 +73,12 @@ class Worker(QtCore.QObject):
 
     def run(self):
         global rf_data
+        global comport
         print("In run...")
         self.start_execution()
         # global execution
         print("Opening connection with RF...")
-        ser = srw.connect_serial("COM9")
+        ser = srw.connect_serial(comport)
         # Initialize
         index = 0
         # print("Index is: {}".format(index))
