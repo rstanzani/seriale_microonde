@@ -56,7 +56,7 @@ class Worker(QtCore.QObject):
     def stop_execution(self):
         if self.execution:
             self.execution = False
-            print("Execution stopped")
+            print("Sending stop command...")
         else:
             print("Execution already stopped.")
 
@@ -183,7 +183,7 @@ class MainWindow(QMainWindow):
         self.thread.worker =  self.worker
 
         self.thread.started.connect( self.worker.run)
-        self.worker.finished.connect(lambda: self.quit_and_disable_buttons())
+        self.worker.finished.connect(lambda: self.quit_and_restore_buttons())
 
         # worker.progressed.connect(lambda value: update_progress(self.ui.progressBar, value))   #for a progress bar
         # worker.messaged.connect(lambda msg: update_status(self.statusBar(), msg))
@@ -192,13 +192,13 @@ class MainWindow(QMainWindow):
         return self.thread
 
 
-
-
-    def quit_and_disable_buttons(self):
+    def quit_and_restore_buttons(self):
         self.thread.quit
         self.enablePlayButton()
         self.disableStopButton()
-
+        self.enableExitButton()
+        self.enableSearchSerialButton()
+        self.enableOpenCSVButton()
 
     def save_error_log(self):
         to_add = False
@@ -224,27 +224,36 @@ class MainWindow(QMainWindow):
         file_type = button_name.split("_")[1]
         path = ""
         opened_path, _ = QFileDialog.getOpenFileName(None, "Open the {} file".format(file_type), path, "*")
-        print("The path selected is: {}".format(opened_path))
-        self.ui.QGDML.setText(opened_path)
         # Read parameters from csv file
-        self.duration, self.freq_list, self.power_list, self.error, self.msg  = rcsv.read_and_plot(opened_path, self.ui.Qenable_plot.isChecked(), False)
-        self.ui.QoutputLabel.setText(self.msg)
-        if not self.error:
-            self.enablePlayButton()
+        if opened_path != "":
+            print("The path selected is: {}".format(opened_path))
+            self.ui.QGDML.setText(opened_path)
+            self.duration, self.freq_list, self.power_list, self.error, self.msg  = rcsv.read_and_plot(opened_path, self.ui.Qenable_plot.isChecked(), False)
+            self.ui.QoutputLabel.setText(self.msg)
+            if not self.error:
+                self.enablePlayButton()
 
 
     def play_execution(self):
         self.disablePlayButton()
         self.enableStopButton()
+        self.disableExitButton()
+        self.disableSearchSerialButton()
+        self.disableOpenCSVButton()
         self.run_long_task()
 
     def stop_execution(self):
         self.worker.stop_execution()
         
     def search_serials(self):
+        self.disablePlayButton()
+        self.disableExitButton()
+        self.disableOpenCSVButton()
         self.ui.QoutputLabel.setText("Search serials, may take up to 1 minute")
         serial_list = ssr.print_serials()
         self.ui.QoutputLabel.setText("Found serials: {}".format(serial_list))
+        self.enableExitButton()
+        self.enableOpenCSVButton()
         
     def enablePlayButton(self):
         self.ui.Qplay.setEnabled(True)
@@ -257,6 +266,24 @@ class MainWindow(QMainWindow):
 
     def disableStopButton(self):
         self.ui.Qstop.setEnabled(False)
+
+    def enableExitButton(self):
+        self.ui.Qexit.setEnabled(True)
+
+    def disableExitButton(self):
+        self.ui.Qexit.setEnabled(False)
+        
+    def enableSearchSerialButton(self):
+        self.ui.Qsearchserial.setEnabled(True)
+
+    def disableSearchSerialButton(self):
+        self.ui.Qsearchserial.setEnabled(False)
+        
+    def enableOpenCSVButton(self):
+        self.ui.QOpen_CSV.setEnabled(True)
+
+    def disableOpenCSVButton(self):
+        self.ui.QOpen_CSV.setEnabled(False)
 
     def close(self):
         QApplication.quit()
