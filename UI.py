@@ -253,11 +253,14 @@ class MainWindow(QMainWindow):
         self.disablePlayButton()
         self.disableExitButton()
         self.disableOpenCSVButton()
+        self.disableSearchSerialButton()
         self.ui.QoutputLabel.setText("Search serials, may take up to 1 minute")
         serial_list = ssr.print_serials()
         self.ui.QoutputLabel.setText("Found serials: {}".format(serial_list))
         self.enableExitButton()
+        self.enablePlayButton()
         self.enableOpenCSVButton()
+        self.enableSearchSerialButton()
         
     def enablePlayButton(self):
         self.ui.Qplay.setEnabled(True)
