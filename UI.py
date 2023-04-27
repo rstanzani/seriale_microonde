@@ -6,6 +6,7 @@ import serial_RW as srw
 from UI_raw import Ui_MainWindow
 import sys
 from PyQt5.QtCore import pyqtSignal # QThread
+import search_serials as ssr
 
 # https://realpython.com/python-pyqt-qthread/
 # https://www.xingyulei.com/post/qt-threading/
@@ -158,6 +159,7 @@ class MainWindow(QMainWindow):
         self.ui.Qexit.clicked.connect(lambda: self.close())
         self.ui.Qplay.clicked.connect(lambda: self.play_execution())
         self.ui.Qstop.clicked.connect(lambda: self.stop_execution())
+        self.ui.Qsearchserial.clicked.connect(lambda: self.search_serials())
 
 
     def run_long_task(self):
@@ -188,6 +190,8 @@ class MainWindow(QMainWindow):
         self.worker.messaged.connect(lambda: self.update_status())
 
         return self.thread
+
+
 
 
     def quit_and_disable_buttons(self):
@@ -236,7 +240,12 @@ class MainWindow(QMainWindow):
 
     def stop_execution(self):
         self.worker.stop_execution()
-
+        
+    def search_serials(self):
+        self.ui.QoutputLabel.setText("Search serials, may take up to 1 minute")
+        serial_list = ssr.print_serials()
+        self.ui.QoutputLabel.setText("Found serials: {}".format(serial_list))
+        
     def enablePlayButton(self):
         self.ui.Qplay.setEnabled(True)
 

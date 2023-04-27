@@ -37,7 +37,15 @@ def serial_ports():
             pass
     return result
 
-print(serial_ports())
+def print_serials():
+    list_serials = serial_ports()
+    printable = ""
+    for ser in list_serials:
+        printable += str(ser) + " "
+    return printable
+
+# lista = print_serials()
+# print(serial_ports())
 
 
 
