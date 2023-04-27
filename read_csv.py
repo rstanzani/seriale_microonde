@@ -96,11 +96,13 @@ def read_and_plot(filepath, showfig=False, savefig=False):
                 ax[1].set_ylabel("{}".format(label[0][2]), color="orange", fontsize=13, labelpad=1)
                 ax[1].tick_params(axis='y', colors='orange', labelsize=9)
                 ax[1].fill_between(time, power, step="post", alpha=0.2, color="orange")
-                ax[1].set_ylim([minpower-0.1*(maxpower-minpower), maxpower+0.1*(maxpower-minpower)])
                 ax[1].grid(linestyle = '--', linewidth = 0.4, zorder=-1)
 
                 ax[1].scatter(time, power, facecolor='white', edgecolor='orange', marker="o", alpha=1)
-                ax[1].set_ylim([minpower-0.1*(maxpower-minpower), maxpower+0.1*(maxpower-minpower)])
+                if maxpower != minpower:
+                    ax[1].set_ylim([minpower-0.1*(maxpower-minpower), maxpower+0.1*(maxpower-minpower)])
+                else:
+                    ax[1].set_ylim([minpower-0.1*minpower, maxpower+0.1*maxpower])
         
                 if savefig:
                     fig.savefig('plot.jpg', format='jpeg', dpi=300)
