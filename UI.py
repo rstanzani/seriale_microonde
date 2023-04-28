@@ -27,7 +27,6 @@ class RFdata:
     Error = "N.D."
 
     def set_values(self, temp, pll, curr, vol, refl, frw, pwm, onoff, ena, fld, err):
-        # print(type(rf_dict))
         self.Temperature = temp
         self.PLL = pll
         self.Current = curr
@@ -41,6 +40,8 @@ class RFdata:
         self.Error = err
 
 rf_data = RFdata()
+index = 0
+interruption_type = "" # "pause", "stop"
 
 class Worker(QtCore.QObject):
 
@@ -54,12 +55,11 @@ class Worker(QtCore.QObject):
     freq_list = []
     power_list = []
 
-    def stop_execution(self):
+    def stop_worker_execution(self):
         if self.execution:
             self.execution = False
-            print("Sending stop command...")
         else:
-            print("Execution already stopped.")
+            print("Execution stopped.")
 
     def start_execution(self):
         print("Started execution")
@@ -69,28 +69,25 @@ class Worker(QtCore.QObject):
         self.duration = duration
         self.freq_list = freq_list
         self.power_list = power_list
-        # print("The values are: {} {} {}".format( self.duration, self.freq_list, self.power_list))
 
     def run(self):
         global rf_data
         global comport
+        global index
+
         print("In run...")
         self.start_execution()
         # global execution
         print("Opening connection with RF...")
         ser = srw.connect_serial(comport)
-        # Initialize
-        index = 0
-        # print("Index is: {}".format(index))
+
         next_time = self.duration[0]
         freq = self.freq_list[0]
         power = self.power_list[0]
 
-        # print("Next time: {}".format(next_time))
         srw.send_cmd_string(ser,"ON")
         srw.send_cmd_string(ser,"PWR", power)
         srw.send_cmd_string(ser,"FREQ", freq)
-        # self.status = srw.read_param(ser, self.rf_values, "STATUS", False)
         rf_data = srw.read_param(ser, rf_data, "STATUS", 1, False)
 
         # Start the main functions
@@ -100,7 +97,6 @@ class Worker(QtCore.QObject):
 
         while self.execution:
             if time.time() >= timestamp + min_refresh: # minimum refresh period
-
                 if time.time()-init_time >= next_time:
 
                     index += 1
@@ -127,10 +123,9 @@ class Worker(QtCore.QObject):
         srw.send_cmd_string(ser,"PWM", 0)
         srw.empty_buffer(ser, wait=1)
         rf_data = srw.read_param(ser, rf_data, "STATUS")
-        
+
         # Close ports
         ser.close()
-        # self.rf_data.set_values(self.rf_data)
         print("COM port correctly closed")
         self.messaged.emit()
         self.finished.emit()
@@ -160,6 +155,7 @@ class MainWindow(QMainWindow):
         self.ui.QOpen_CSV.clicked.connect(lambda:  self.open_file("Open_CSV"))
         self.ui.Qexit.clicked.connect(lambda: self.close())
         self.ui.Qplay.clicked.connect(lambda: self.play_execution())
+        self.ui.Qpause.clicked.connect(lambda: self.pause_execution())
         self.ui.Qstop.clicked.connect(lambda: self.stop_execution())
         self.ui.Qsearchserial.clicked.connect(lambda: self.search_serials())
 
@@ -185,7 +181,7 @@ class MainWindow(QMainWindow):
         self.thread.worker =  self.worker
 
         self.thread.started.connect( self.worker.run)
-        self.worker.finished.connect(lambda: self.quit_and_restore_buttons())
+        self.worker.finished.connect(lambda: self.quit_thread())
 
         # worker.progressed.connect(lambda value: update_progress(self.ui.progressBar, value))   #for a progress bar
         # worker.messaged.connect(lambda msg: update_status(self.statusBar(), msg))
@@ -194,15 +190,22 @@ class MainWindow(QMainWindow):
         return self.thread
 
 
-    def quit_and_restore_buttons(self):
+    def quit_thread(self):
+        global interruption_type
         self.thread.quit
+
+    def restore_buttons(self):
         self.enablePlayButton()
-        self.disableStopButton()
-        self.enableExitButton()
-        self.enableSearchSerialButton()
-        self.enableOpenCSVButton()
-        self.ui.QoutputLabel.setText("Process ended.")
-        
+        if interruption_type == "pause":
+            self.disablePauseButton()
+            self.ui.QoutputLabel.setText("Process paused.")
+        elif interruption_type == "stop":
+            self.disableStopButton()
+            self.enableSearchSerialButton()
+            self.enableOpenCSVButton()
+            self.enableExitButton()
+            self.ui.QoutputLabel.setText("Process ended.")
+
 
     def save_error_log(self):
         to_add = False
@@ -230,17 +233,16 @@ class MainWindow(QMainWindow):
         opened_path, _ = QFileDialog.getOpenFileName(None, "Open the {} file".format(file_type), path, "*")
         # Read parameters from csv file
         if opened_path != "":
-            # print("The path selected is: {}".format(opened_path))
             self.ui.QGDML.setText(opened_path)
             self.duration, self.freq_list, self.power_list, self.error, self.msg  = rcsv.read_and_plot(opened_path, self.ui.Qenable_plot.isChecked(), False)
             self.ui.QoutputLabel.setText(self.msg)
             if not self.error:
                 self.enablePlayButton()
 
-
     def play_execution(self):
         self.ui.QoutputLabel.setText("Process started.")
         self.disablePlayButton()
+        self.enablePauseButton()
         self.enableStopButton()
         self.disableExitButton()
         self.disableSearchSerialButton()
@@ -248,9 +250,22 @@ class MainWindow(QMainWindow):
         self.run_long_task()
 
     def stop_execution(self):
-        self.ui.QoutputLabel.setText("Stopping process...")
-        self.worker.stop_execution()
-        
+        global index
+        global interruption_type
+        interruption_type = "stop"
+        self.ui.QoutputLabel.setText("Process stopped.")
+        self.worker.stop_worker_execution()
+        index = 0
+        self.restore_buttons()
+
+    def pause_execution(self):
+        global interruption_type
+        interruption_type = "pause"
+        self.ui.QoutputLabel.setText("Process paused.")
+        self.worker.stop_worker_execution()
+        self.restore_buttons()
+
+
     def search_serials(self):
         self.disablePlayButton()
         self.disableExitButton()
@@ -263,12 +278,18 @@ class MainWindow(QMainWindow):
         self.enablePlayButton()
         self.enableOpenCSVButton()
         self.enableSearchSerialButton()
-        
+
     def enablePlayButton(self):
         self.ui.Qplay.setEnabled(True)
 
     def disablePlayButton(self):
         self.ui.Qplay.setEnabled(False)
+
+    def enablePauseButton(self):
+        self.ui.Qpause.setEnabled(True)
+
+    def disablePauseButton(self):
+        self.ui.Qpause.setEnabled(False)
 
     def enableStopButton(self):
         self.ui.Qstop.setEnabled(True)
@@ -281,13 +302,13 @@ class MainWindow(QMainWindow):
 
     def disableExitButton(self):
         self.ui.Qexit.setEnabled(False)
-        
+
     def enableSearchSerialButton(self):
         self.ui.Qsearchserial.setEnabled(True)
 
     def disableSearchSerialButton(self):
         self.ui.Qsearchserial.setEnabled(False)
-        
+
     def enableOpenCSVButton(self):
         self.ui.QOpen_CSV.setEnabled(True)
 

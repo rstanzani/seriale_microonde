@@ -16,7 +16,7 @@ def handler(signum, frame):
     res = input()
     if res in ('y', 'Y', 'yes', 'Yes'):
         exit_flag = True  # Set exit_flag to True to indicate exit
- 
+
 signal.signal(signal.SIGINT, handler)
 
 def save_error_log():
@@ -39,8 +39,8 @@ def save_error_log():
         if to_add:
             error_history.append([time.time(), status['Error']])
     status["Error"] = "No error"
-            
-        # convert timestamp to readable with: time.gmtime(1681401590.5839448)    
+
+        # convert timestamp to readable with: time.gmtime(1681401590.5839448)
         # error_history.append([datetime.now().strftime("%d/%m/%Y %H:%M:%S"), status['Error']])
 
 # Main ########################################################################
@@ -48,7 +48,7 @@ print("Start RF generator...")
 comport = "COM9"
 ser = srw.connect_serial(comport)
 
-status = {"Temperature":"ND","PLL":"ND","Current":"ND","Voltage":"ND","Reflected Power":"ND", 
+status = {"Temperature":"ND","PLL":"ND","Current":"ND","Voltage":"ND","Reflected Power":"ND",
           "Forward Power":"ND", "PWM":"ND", "On Off":"ND", "Enable foldback":"ND", "Foldback in":"ND", "Error":"No error"}
 
 
@@ -58,13 +58,13 @@ print(msg)
 
 if not error:
     error_history = []
-    
+
     # Initialize
     index = 0
     next_time = duration[0]
     freq = freq_list[0]
     power = power_list[0]
-    
+
     srw.send_cmd_string(ser,"ON")
     srw.send_cmd_string(ser,"PWR", power)
     # srw.send_cmd_string(ser,"PWM", 300)  # By setting the PWM, the PWR is overwritten!
@@ -72,7 +72,7 @@ if not error:
     # srw.send_cmd_string(ser,"FLDBCK_ON") # By enabling foldback the power is limited
     # srw.send_cmd_string(ser,"FLDBCK_VAL", 5)
     srw.read_param(ser, status, "STATUS")
-    
+
     # Start the main functions
     init_time = time.time()
     exit_flag = False
@@ -89,12 +89,12 @@ if not error:
             srw.send_cmd_string(ser,"FREQ", freq)
             # srw.send_cmd_string(ser,"FLDBCK_ON")
             # srw.send_cmd_string(ser,"FLDBCK_VAL", 5)
-    
+
         srw.read_param(ser, status, "STATUS") # The list can be useful to see the raw data
         srw.read_param(ser, status, "FLDBCK_READ") # The list can be useful to see the raw data
         save_error_log()
         # update_values()
-        
+
     # Soft turn off
     print("\nStart soft shut down...")
     srw.send_cmd_string(ser,"OFF")
@@ -102,7 +102,7 @@ if not error:
     srw.empty_buffer(ser, status, wait=1)
     print("\nRead status to confirm shutdown:")
     srw.read_param(ser, status, "STATUS")
-    
+
 # Close ports
 ser.close()
 

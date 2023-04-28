@@ -34,6 +34,6 @@ def read_forever(ser):
 read_forever(ser)
 
 
-        
+
 
 

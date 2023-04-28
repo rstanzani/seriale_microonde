@@ -26,7 +26,7 @@ def connect_serial(comport="COM11"):
 
 def rnd_hex_freq(randomize=True, list_val=[2420, 2480]):
     '''Return the hex of a random frequency in the range 2420-2480 MHz.
-    list_val contains by default min and max frequency. The user can import 
+    list_val contains by default min and max frequency. The user can import
     a list of frequencies, but all elements should be even!'''
     if randomize:
         min_freq = 2420 #MHz, max freq is 2480 MHz
@@ -66,9 +66,9 @@ def hex_to_float(h):
 def checksum (start, address, payload_list):
     length = len(payload_list)
     # Bit sum
-    
-    somma = (start << 8 | address) + (length) 
-    
+
+    somma = (start << 8 | address) + (length)
+
     for i in range(0, len(payload_list)):
         # print(hex(payload_list[i][2]))
         somma = somma + (payload_list[i][0] << 8 | payload_list[i][1])
@@ -101,13 +101,13 @@ def send_cmd(ser, start, address, length, typee, operand, content):
 
     # List of commands (a list for the general case) #TODO move this list to another point
     payload_list = []
-    payload_list.append([typee, operand, content]) # Example to try a list of commands: payload_list = example_multiple_payloadlist()     
+    payload_list.append([typee, operand, content]) # Example to try a list of commands: payload_list = example_multiple_payloadlist()
 
     chksm = checksum(start, address, payload_list)
     # hex(chksm)
 
     header = start << 24 | address << 16 | len(payload_list) << 8 | chksm
-    
+
     # Compose the payload command
     payload = 0x00
     for i in range(0, len(payload_list)):
@@ -115,10 +115,10 @@ def send_cmd(ser, start, address, length, typee, operand, content):
         payload = payload << 48 | single_cmd
 
     command = header << (len(payload_list) * 48) | payload
-  
+
     # print("Sending the command {}".format(hex(command)))
     length_conversion = 4 + 6*len(payload_list)
-    
+
     # print("Send:" + hex(command))
     ser.write(command.to_bytes(length_conversion, 'big'))
 
@@ -141,7 +141,7 @@ def send_cmd_string(ser, string, value=0):
     elif string == "FLDBCK_VAL":
         if value != 0:
             value = hex(value)  # todo devono essere unsigned long
-            value = literal_eval(value)   
+            value = literal_eval(value)
         else:
             value = 0x5 # default values 5W
         send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x51, value) # set value
@@ -177,7 +177,7 @@ def send_cmd_string(ser, string, value=0):
         send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x09,  value)
     else:
         print("Command not recognized!")
-        
+
 
 def read_reply_values(reply):
     '''Read reply payloads from the rf.
@@ -189,9 +189,9 @@ def read_reply_values(reply):
     address = converted[2:4]
     length = int(converted[4:6], 16)
     # checksum = converted[6:8]
-    
+
     payload_list = []
-    
+
     # TODO: read and analyze the checksum!
     if start == "55" and address == "00":
         for i in range(0, length):
@@ -215,7 +215,7 @@ def empty_buffer(ser, wait=2):
     while time.time() <= start_waiting + wait:
         r = ser.read(100)
         if len(r) == 0:
-            continue      
+            continue
 
 
 def read_param(ser, rf_values, param="STATUS", wait=1, verbose=False):
@@ -226,11 +226,11 @@ def read_param(ser, rf_values, param="STATUS", wait=1, verbose=False):
     while time.time() <= start_waiting + wait:
         r = ser.read(100)
         if len(r) == 0:
-            continue      
-        
+            continue
+
         r_hex = hexlify(r)
         prova_int = int(r_hex, 16)
-        
+
         # List of elements read from the serial
         payload_list = read_reply_values(prova_int)
         if len(payload_list) == 0:
@@ -247,31 +247,31 @@ def set_status_values (rf_values, payload_list, verbose=False):
         operand = payload_list[i][1]
         if operand == "01":
             rf_values.Temperature = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
-            
+
         elif operand == "02":
             rf_values.PLL = int(payload_list[i][2], 16)
-            
+
         elif operand == "03":
             rf_values.Current = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
-            
+
         elif operand == "04":
             rf_values.Voltage = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
-            
+
         elif operand == "05":
             rf_values.Reflected_Power = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
-            
+
         elif operand == "06":
            rf_values.Forward_Power = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
-           
+
         elif operand == "08":
            rf_values.PWM = int(payload_list[i][2], 16)
-            
+
         elif operand == "0B" or operand == "0b":
            rf_values.On_Off = int(payload_list[i][2], 16)
-           
+
         elif operand == "26":
            rf_values.Enable_foldback = int(payload_list[i][2], 16)
-           
+
         elif operand == "51":
            rf_values.Foldback_in = int(payload_list[i][2], 16)
 

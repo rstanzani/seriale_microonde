@@ -19,11 +19,11 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName("centralwidget")
         self.Qplay = QtWidgets.QPushButton(self.centralwidget)
         self.Qplay.setEnabled(False)
-        self.Qplay.setGeometry(QtCore.QRect(90, 90, 120, 28))
+        self.Qplay.setGeometry(QtCore.QRect(20, 90, 120, 28))
         self.Qplay.setObjectName("Qplay")
         self.Qstop = QtWidgets.QPushButton(self.centralwidget)
         self.Qstop.setEnabled(False)
-        self.Qstop.setGeometry(QtCore.QRect(220, 90, 120, 28))
+        self.Qstop.setGeometry(QtCore.QRect(320, 90, 120, 28))
         self.Qstop.setObjectName("Qstop")
         self.QGDML = QtWidgets.QLineEdit(self.centralwidget)
         self.QGDML.setGeometry(QtCore.QRect(20, 50, 311, 21))
@@ -226,6 +226,10 @@ class Ui_MainWindow(object):
         font.setWeight(75)
         self.QinfoLabel_15.setFont(font)
         self.QinfoLabel_15.setObjectName("QinfoLabel_15")
+        self.Qpause = QtWidgets.QPushButton(self.centralwidget)
+        self.Qpause.setEnabled(False)
+        self.Qpause.setGeometry(QtCore.QRect(170, 90, 120, 28))
+        self.Qpause.setObjectName("Qpause")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 477, 21))
@@ -272,6 +276,7 @@ class Ui_MainWindow(object):
         self.Qsearchserial.setText(_translate("MainWindow", "Search serials"))
         self.QinfoLabel_14.setText(_translate("MainWindow", "Click and wait up to 30 seconds. "))
         self.QinfoLabel_15.setText(_translate("MainWindow", "Messages:"))
+        self.Qpause.setText(_translate("MainWindow", "PAUSE"))
 
 
 if __name__ == "__main__":

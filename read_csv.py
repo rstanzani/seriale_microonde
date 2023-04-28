@@ -25,7 +25,7 @@ def read_and_plot(filepath, showfig=False, savefig=False):
         file = open(filepath, 'r')
         lines = file.readlines()
         file.close()
-       
+
         error = False
         for i in range(0, len(lines)):
             if i == 0:
@@ -34,14 +34,14 @@ def read_and_plot(filepath, showfig=False, savefig=False):
             duration.append(abs(float(lines[i].split(",")[0])))
             freq.append(int(lines[i].split(",")[1]))
             power.append(int(re.split(r"\D+", lines[i].split(",")[2])[0]))
-    
+
         minfreq = min(freq)
         maxfreq = max(freq)
         minpower = min(power)
         maxpower = max(power)
         minduration = min(duration)
         # maxfoldback = max(foldback)
-        
+
         # validate the inserted values
         if  minfreq<2400 or maxfreq>2500:
             msg = "ERROR: wrong range for frequency. Correct range: 2400÷2500 MHz."
@@ -64,20 +64,20 @@ def read_and_plot(filepath, showfig=False, savefig=False):
             msg = "ERROR: the minimum duration should be 1 s"
             # print(msg)
             error = True
-    
+
         if not error:
             # step_duration = 5 # seconds
             # time = sum(duration)
             time = []
-            
+
             for i in range(0, len(duration)+1):
                 time.append(sum(duration[:i]))
             duration[0]
-            
+
             freq.append(freq[len(freq)-1])
             power.append(power[len(power)-1])
             # time = np.linspace(0, sum(duration), sum(duration))
-            
+
             if showfig:
                 fig,ax = plt.subplots(2)
 
@@ -90,7 +90,7 @@ def read_and_plot(filepath, showfig=False, savefig=False):
 
                 ax[0].scatter(time, freq, facecolor='white', edgecolor='blue', marker="o", alpha=1)
                 ax[0].set_ylim([minfreq-0.1*(maxfreq-minfreq), maxfreq+0.1*(maxfreq-minfreq)])
-                
+
                 ax[1].step(time, power, color='orange', alpha=0.5, where='post', zorder=-2)
                 ax[1].set_xlabel("Time [s]", fontsize=9, labelpad=6)
                 ax[1].set_ylabel("{}".format(label[0][2]), color="orange", fontsize=13, labelpad=1)
@@ -103,7 +103,7 @@ def read_and_plot(filepath, showfig=False, savefig=False):
                     ax[1].set_ylim([minpower-0.1*(maxpower-minpower), maxpower+0.1*(maxpower-minpower)])
                 else:
                     ax[1].set_ylim([minpower-0.1*minpower, maxpower+0.1*maxpower])
-        
+
                 if savefig:
                     fig.savefig('plot.jpg', format='jpeg', dpi=300)
             if savefig and not showfig:
