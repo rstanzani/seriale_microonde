@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">color: rgb(41, 45, 62);
+background-color: rgb(41, 45, 62);</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QPushButton" name="Qplay">
     <property name="enabled">
@@ -25,6 +29,10 @@
       <width>120</width>
       <height>28</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">:enabled {color:rgb(255, 255, 255); background-color: rgb(65, 72, 99)} 
+:disabled {color:rgb(150, 150, 180); background-color:rgb(88, 96, 104) }</string>
     </property>
     <property name="text">
      <string>PLAY</string>
@@ -41,6 +49,10 @@
       <width>120</width>
       <height>28</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">:enabled {color:rgb(255, 255, 255); background-color: rgb(65, 72, 99)} 
+:disabled {color:rgb(150, 150, 180); background-color:rgb(88, 96, 104) }</string>
     </property>
     <property name="text">
      <string>STOP</string>
@@ -59,6 +71,9 @@
      <font>
       <pointsize>7</pointsize>
      </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
      <string>Select the csv file</string>
@@ -87,6 +102,10 @@
       <pointsize>7</pointsize>
      </font>
     </property>
+    <property name="styleSheet">
+     <string notr="true">:enabled {color:rgb(255, 255, 255); background-color: rgb(65, 72, 99)} 
+:disabled {color:rgb(150, 150, 180); background-color:rgb(88, 96, 104) }</string>
+    </property>
     <property name="standardButtons">
      <set>QDialogButtonBox::Open</set>
     </property>
@@ -102,6 +121,9 @@
       <width>318</width>
       <height>31</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(255, 255, 255);</string>
     </property>
     <property name="frameShape">
      <enum>QFrame::Box</enum>
@@ -145,6 +167,9 @@
       <bold>true</bold>
      </font>
     </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
     <property name="text">
      <string>Plot the csv:</string>
     </property>
@@ -164,6 +189,9 @@
       <weight>75</weight>
       <bold>true</bold>
      </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
      <string>Reflected power:</string>
@@ -185,6 +213,9 @@
       <bold>true</bold>
      </font>
     </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
     <property name="text">
      <string>Voltage:</string>
     </property>
@@ -204,6 +235,9 @@
       <weight>75</weight>
       <bold>true</bold>
      </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
      <string>Temperature:</string>
@@ -225,6 +259,9 @@
       <bold>true</bold>
      </font>
     </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
     <property name="text">
      <string>PLL:</string>
     </property>
@@ -244,6 +281,9 @@
       <weight>75</weight>
       <bold>true</bold>
      </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
      <string>Current: </string>
@@ -265,6 +305,9 @@
       <bold>true</bold>
      </font>
     </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
     <property name="text">
      <string>Forward power:</string>
     </property>
@@ -284,6 +327,9 @@
       <weight>75</weight>
       <bold>true</bold>
      </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
      <string>PWM:</string>
@@ -305,6 +351,9 @@
       <bold>true</bold>
      </font>
     </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
     <property name="text">
      <string>On Off:</string>
     </property>
@@ -324,6 +373,9 @@
       <weight>75</weight>
       <bold>true</bold>
      </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
      <string>Enable foldback:</string>
@@ -345,6 +397,9 @@
       <bold>true</bold>
      </font>
     </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
     <property name="text">
      <string>Foldback in:</string>
     </property>
@@ -365,6 +420,9 @@
       <bold>true</bold>
      </font>
     </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
     <property name="text">
      <string>Error:</string>
     </property>
@@ -377,6 +435,9 @@
       <width>121</width>
       <height>31</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
      <string>0 W</string>
@@ -394,6 +455,9 @@
       <height>31</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
     <property name="text">
      <string>0 W</string>
     </property>
@@ -409,6 +473,9 @@
       <width>121</width>
       <height>31</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
      <string>0</string>
@@ -426,6 +493,9 @@
       <height>31</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
     <property name="text">
      <string>0 C</string>
     </property>
@@ -441,6 +511,9 @@
       <width>121</width>
       <height>31</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
      <string>0 V</string>
@@ -458,6 +531,9 @@
       <height>31</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
     <property name="text">
      <string>0</string>
     </property>
@@ -473,6 +549,9 @@
       <width>121</width>
       <height>31</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
      <string>0 W</string>
@@ -490,6 +569,9 @@
       <height>31</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
     <property name="text">
      <string>0</string>
     </property>
@@ -505,6 +587,9 @@
       <width>121</width>
       <height>31</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
      <string>0 A</string>
@@ -522,6 +607,9 @@
       <height>31</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
     <property name="text">
      <string>No error</string>
     </property>
@@ -538,6 +626,9 @@
       <height>31</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
     <property name="text">
      <string>0</string>
     </property>
@@ -547,7 +638,7 @@
    </widget>
    <widget class="QPushButton" name="Qexit">
     <property name="enabled">
-     <bool>true</bool>
+     <bool>false</bool>
     </property>
     <property name="geometry">
      <rect>
@@ -556,6 +647,10 @@
       <width>120</width>
       <height>51</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">:enabled {color:rgb(255, 255, 255); background-color: rgb(65, 72, 99)} 
+:disabled {color:rgb(150, 150, 180); background-color:rgb(88, 96, 104) }</string>
     </property>
     <property name="text">
      <string>EXIT</string>
@@ -585,6 +680,10 @@
       <width>111</width>
       <height>21</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">:enabled {color:rgb(255, 255, 255); background-color: rgb(65, 72, 99)} 
+:disabled {color:rgb(150, 150, 180); background-color:rgb(88, 96, 104) }</string>
     </property>
     <property name="text">
      <string>Search serials</string>
@@ -618,6 +717,9 @@
       <weight>75</weight>
       <bold>true</bold>
      </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
      <string>Click and wait up to 30 seconds. </string>
@@ -654,6 +756,10 @@
       <width>120</width>
       <height>28</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">:enabled {color:rgb(255, 255, 255); background-color: rgb(65, 72, 99)} 
+:disabled {color:rgb(150, 150, 180); background-color:rgb(88, 96, 104) }</string>
     </property>
     <property name="text">
      <string>PAUSE</string>
