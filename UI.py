@@ -201,6 +201,7 @@ class MainWindow(QMainWindow):
             self.ui.QoutputLabel.setText("Process paused.")
         elif interruption_type == "stop":
             self.disableStopButton()
+            self.disablePauseButton()
             self.enableSearchSerialButton()
             self.enableOpenCSVButton()
             self.enableExitButton()
@@ -322,16 +323,16 @@ class MainWindow(QMainWindow):
         global rf_data
 
         _translate = QtCore.QCoreApplication.translate
-        self.ui.Qtemperature_label.setText(_translate("MainWindow", str(rf_data.Temperature)))
+        self.ui.Qtemperature_label.setText(_translate("MainWindow", str(rf_data.Temperature)+" °C"))
         self.ui.Qpll_label.setText(_translate("MainWindow", str(rf_data.PLL)))
-        self.ui.Qcurrent_label.setText(_translate("MainWindow", str(rf_data.Current)))
-        self.ui.Qvoltage_label.setText(_translate("MainWindow", str(rf_data.Voltage)))
-        self.ui.Qreflectedpower_label.setText(_translate("MainWindow", str(rf_data.Reflected_Power)))
-        self.ui.Qforwardpower_label.setText(_translate("MainWindow", str(rf_data.Forward_Power)))
+        self.ui.Qcurrent_label.setText(_translate("MainWindow", str(rf_data.Current))+" A")
+        self.ui.Qvoltage_label.setText(_translate("MainWindow", str(rf_data.Voltage))+" V")
+        self.ui.Qreflectedpower_label.setText(_translate("MainWindow", str(rf_data.Reflected_Power)+" W"))
+        self.ui.Qforwardpower_label.setText(_translate("MainWindow", str(rf_data.Forward_Power)+" W"))
         self.ui.Qpwm_label.setText(_translate("MainWindow", str(rf_data.PWM)))
         self.ui.Qonoff_label.setText(_translate("MainWindow", str(rf_data.On_Off)))
         self.ui.Qenablefoldback_label.setText(_translate("MainWindow", str(rf_data.Enable_foldback)))
-        self.ui.Qfoldbackin_label.setText(_translate("MainWindow", str(rf_data.Foldback_in)))
+        self.ui.Qfoldbackin_label.setText(_translate("MainWindow", str(rf_data.Foldback_in)+" W"))
         self.ui.Qerror_label.setText(_translate("MainWindow", str(rf_data.Error)))
 
 
