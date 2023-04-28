@@ -104,6 +104,7 @@ def read_and_plot(filepath, showfig=False, savefig=False):
                 else:
                     ax[1].set_ylim([minpower-0.1*minpower, maxpower+0.1*maxpower])
 
+                fig.show()
                 if savefig:
                     fig.savefig('plot.jpg', format='jpeg', dpi=300)
             if savefig and not showfig:
