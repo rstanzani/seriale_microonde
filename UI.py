@@ -354,7 +354,12 @@ class MainWindow(QMainWindow):
         self.ui.Qreflectedpower_label.setText(_translate("MainWindow", str(rf_data.Reflected_Power)+" W"))
         self.ui.Qforwardpower_label.setText(_translate("MainWindow", str(rf_data.Forward_Power)+" W"))
         self.ui.Qpwm_label.setText(_translate("MainWindow", str(rf_data.PWM)))
-        self.ui.Qonoff_label.setText(_translate("MainWindow", str(rf_data.On_Off)))
+        if str(rf_data.On_Off) == "1":
+            self.ui.Qonoff_label.setText(_translate("MainWindow", "On"))
+            self.ui.Qonoff_label.setStyleSheet("color: green")
+        else:
+            self.ui.Qonoff_label.setText(_translate("MainWindow", "Off"))
+            self.ui.Qonoff_label.setStyleSheet("color: red")                             
         self.ui.Qenablefoldback_label.setText(_translate("MainWindow", str(rf_data.Enable_foldback)))
         self.ui.Qfoldbackin_label.setText(_translate("MainWindow", str(rf_data.Foldback_in)+" W"))
         self.ui.Qerror_label.setText(_translate("MainWindow", str(rf_data.Error)))

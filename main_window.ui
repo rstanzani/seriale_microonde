@@ -357,7 +357,7 @@ color:rgb(150, 150, 180);
      <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
-     <string>On Off:</string>
+     <string>Status:</string>
     </property>
    </widget>
    <widget class="QLabel" name="QinfoLabel_11">
@@ -477,10 +477,10 @@ color:rgb(150, 150, 180);
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">color: rgb(255, 255, 255);</string>
+     <string notr="true">color: rgb(255, 0, 0);</string>
     </property>
     <property name="text">
-     <string>0</string>
+     <string>Off</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
