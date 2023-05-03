@@ -25,23 +25,30 @@ class RFdata:
     Enable_foldback = "N.D."
     Foldback_in = "N.D."
     Error = "N.D."
+    cycle_count = 0
+    cycle_percentage = 0
 
-    def set_values(self, temp, pll, curr, vol, refl, frw, pwm, onoff, ena, fld, err):
-        self.Temperature = temp
-        self.PLL = pll
-        self.Current = curr
-        self.Voltage = vol
-        self.Reflected_Power = refl
-        self.Forward_Power = frw
-        self.PWM = pwm
-        self.On_Off = onoff
-        self.Enable_foldback = ena
-        self.Foldback_in = fld
-        self.Error = err
+    # def set_values(self, temp, pll, curr, vol, refl, frw, pwm, onoff, ena, fld, err, cy_num, cy_per):
+    #     self.Temperature = temp
+    #     self.PLL = pll
+    #     self.Current = curr
+    #     self.Voltage = vol
+    #     self.Reflected_Power = refl
+    #     self.Forward_Power = frw
+    #     self.PWM = pwm
+    #     self.On_Off = onoff
+    #     self.Enable_foldback = ena
+    #     self.Foldback_in = fld
+    #     self.Error = err
+    #     self.cycle_num = cy_num
+    #     self.cycle_percentage = cy_per
 
 rf_data = RFdata()
 index = 0
 interruption_type = "" # "pause", "stop"
+num_executed_cycles = 1
+execution_time = 0
+prev_execution_time = 0
 
 class Worker(QtCore.QObject):
 
@@ -74,7 +81,14 @@ class Worker(QtCore.QObject):
         global rf_data
         global comport
         global index
-
+        global num_executed_cycles
+        global execution_time
+        global prev_execution_time
+        global interruption_type
+        
+        if interruption_type == "stop":
+            prev_execution_time = 0
+        
         print("In run...")
         self.start_execution()
         # global execution
@@ -92,12 +106,13 @@ class Worker(QtCore.QObject):
 
         # Start the main functions
         timestamp = time.time()
+        starttime = time.time()
         min_refresh = 1
-        init_time = time.time()
+        cycle_time = time.time()
 
         while self.execution:
             if time.time() >= timestamp + min_refresh: # minimum refresh period
-                if time.time()-init_time >= next_time:
+                if time.time()-cycle_time >= next_time:
 
                     index += 1
                     index = index % len(self.duration)  # set to 0 if is the last line in the csv
@@ -107,21 +122,27 @@ class Worker(QtCore.QObject):
                     freq = self.freq_list[index]
 
                     if index == 0:
-                        init_time = time.time()
+                        num_executed_cycles += 1
+                        cycle_time = time.time()
                         next_time = self.duration[index]
 
                     srw.send_cmd_string(ser,"PWR", power)
                     srw.send_cmd_string(ser,"FREQ", freq)
                 rf_data = srw.read_param(ser, rf_data, "STATUS", False)
                 rf_data = srw.read_param(ser, rf_data, "FLDBCK_READ", False)
+                rf_data.cycle_count = num_executed_cycles
+                rf_data.cycle_percentage = round(index/(len(self.duration))*100, 0)
                 self.messaged.emit()
                 timestamp = time.time()
+                execution_time = prev_execution_time + (timestamp - starttime)
 
         # Soft turn off
         print("\nShutting down...")
         srw.send_cmd_string(ser,"OFF")
         srw.send_cmd_string(ser,"PWM", 0)
         srw.empty_buffer(ser, wait=1)
+
+        prev_execution_time = execution_time
         rf_data = srw.read_param(ser, rf_data, "STATUS")
 
         # Close ports
@@ -253,7 +274,9 @@ class MainWindow(QMainWindow):
     def stop_execution(self):
         global index
         global interruption_type
+        global num_executed_cycles
         interruption_type = "stop"
+        num_executed_cycles = 1
         self.ui.QoutputLabel.setText("Process stopped.")
         self.worker.stop_worker_execution()
         index = 0
@@ -321,6 +344,7 @@ class MainWindow(QMainWindow):
 
     def update_status(self):
         global rf_data
+        global execution_time
 
         _translate = QtCore.QCoreApplication.translate
         self.ui.Qtemperature_label.setText(_translate("MainWindow", str(rf_data.Temperature)+" °C"))
@@ -334,7 +358,10 @@ class MainWindow(QMainWindow):
         self.ui.Qenablefoldback_label.setText(_translate("MainWindow", str(rf_data.Enable_foldback)))
         self.ui.Qfoldbackin_label.setText(_translate("MainWindow", str(rf_data.Foldback_in)+" W"))
         self.ui.Qerror_label.setText(_translate("MainWindow", str(rf_data.Error)))
-
+        self.ui.Qcyclenumber.setText(_translate("MainWindow", str(rf_data.cycle_count)))
+        self.ui.Qcurrentcycle.setText(_translate("MainWindow", str(rf_data.cycle_percentage)))
+        self.ui.Qexecution_time.setText(_translate("MainWindow", time.strftime('%H:%M:%S', time.gmtime(execution_time))))
+        
 
 def update_progress(progress_bar, value):
     progress_bar.setValue(value)
