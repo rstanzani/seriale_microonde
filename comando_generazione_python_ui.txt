@@ -1,0 +1,7 @@
+Nella cartella dove metto il codic e python e il file qt:
+
+
+pyuic5 -x .\main_window.ui -o UI_raw.py
+
+
+this creates an exe starting with the file main_window.ui and with output file the file python defined

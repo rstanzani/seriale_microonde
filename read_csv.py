@@ -17,6 +17,7 @@ def read_and_plot(filepath, showfig=False, savefig=False):
     duration = []
     freq = []
     power = []
+    msg = 'File correctly imported'
 
     if filepath[-7:] == ".rf.csv":
         execute = True
@@ -24,7 +25,7 @@ def read_and_plot(filepath, showfig=False, savefig=False):
         file = open(filepath, 'r')
         lines = file.readlines()
         file.close()
-       
+
         error = False
         for i in range(0, len(lines)):
             if i == 0:
@@ -33,46 +34,50 @@ def read_and_plot(filepath, showfig=False, savefig=False):
             duration.append(abs(float(lines[i].split(",")[0])))
             freq.append(int(lines[i].split(",")[1]))
             power.append(int(re.split(r"\D+", lines[i].split(",")[2])[0]))
-    
+
         minfreq = min(freq)
         maxfreq = max(freq)
         minpower = min(power)
         maxpower = max(power)
         minduration = min(duration)
         # maxfoldback = max(foldback)
-        
+
         # validate the inserted values
         if  minfreq<2400 or maxfreq>2500:
-            print("ERROR: wrong range for frequency. Correct range: 2400÷2500 MHz.")
+            msg = "ERROR: wrong range for frequency. Correct range: 2400÷2500 MHz."
+            # print(msg)
             error = True
         if  minpower<0 or maxpower>300:
-            print("ERROR: wrong range for power. Correct range: 0÷300 W.")
+            msg = "ERROR: wrong range for power. Correct range: 0÷300 W."
+            # print(msg)
             error = True
         # if  minfoldback<0 or maxfoldback>250:
         #     print("ERROR: wrong range for foldback. Correct range: 0÷250 W.")
         #     error = True
         for i in freq:
             if i % 2 != 0:
-                print("ERROR: odd value for frequency. Tip: the numbers for the frequency should be even.")
+                msg = "ERROR: odd value for frequency. Tip: the numbers for the frequency should be even."
+                # print(msg)
                 error = True
                 continue
         if minduration < 1:
-            print("ERROR: the minimum duration should be 1 s")
+            msg = "ERROR: the minimum duration should be 1 s"
+            # print(msg)
             error = True
-    
+
         if not error:
             # step_duration = 5 # seconds
             # time = sum(duration)
             time = []
-            
+
             for i in range(0, len(duration)+1):
                 time.append(sum(duration[:i]))
             duration[0]
-            
+
             freq.append(freq[len(freq)-1])
             power.append(power[len(power)-1])
             # time = np.linspace(0, sum(duration), sum(duration))
-            
+
             if showfig:
                 fig,ax = plt.subplots(2)
 
@@ -85,26 +90,32 @@ def read_and_plot(filepath, showfig=False, savefig=False):
 
                 ax[0].scatter(time, freq, facecolor='white', edgecolor='blue', marker="o", alpha=1)
                 ax[0].set_ylim([minfreq-0.1*(maxfreq-minfreq), maxfreq+0.1*(maxfreq-minfreq)])
-                
+
                 ax[1].step(time, power, color='orange', alpha=0.5, where='post', zorder=-2)
                 ax[1].set_xlabel("Time [s]", fontsize=9, labelpad=6)
                 ax[1].set_ylabel("{}".format(label[0][2]), color="orange", fontsize=13, labelpad=1)
                 ax[1].tick_params(axis='y', colors='orange', labelsize=9)
                 ax[1].fill_between(time, power, step="post", alpha=0.2, color="orange")
-                ax[1].set_ylim([minpower-0.1*(maxpower-minpower), maxpower+0.1*(maxpower-minpower)])
                 ax[1].grid(linestyle = '--', linewidth = 0.4, zorder=-1)
 
                 ax[1].scatter(time, power, facecolor='white', edgecolor='orange', marker="o", alpha=1)
-                ax[1].set_ylim([minpower-0.1*(maxpower-minpower), maxpower+0.1*(maxpower-minpower)])
-        
+                if maxpower != minpower:
+                    ax[1].set_ylim([minpower-0.1*(maxpower-minpower), maxpower+0.1*(maxpower-minpower)])
+                else:
+                    ax[1].set_ylim([minpower-0.1*minpower, maxpower+0.1*maxpower])
+
+                fig.show()
                 if savefig:
                     fig.savefig('plot.jpg', format='jpeg', dpi=300)
             if savefig and not showfig:
-                print("The image was not created, please enable showfig parameter")
+                msg = "The image was not created, please enable showfig parameter"
+                # print(msg)
 
     else:
-        print("ERROR: the file has the wrong name. Please retry with another one.")
-    return duration, freq, power, error
+        msg = "ERROR: the file has the wrong name. Please retry with another one."
+        # print(msg)
+        error = True
+    return duration, freq, power, error, msg
 
 
 #%% Main
