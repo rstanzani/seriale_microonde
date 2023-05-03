@@ -26,7 +26,7 @@ def connect_serial(comport="COM11"):
 
 def rnd_hex_freq(randomize=True, list_val=[2420, 2480]):
     '''Return the hex of a random frequency in the range 2420-2480 MHz.
-    list_val contains by default min and max frequency. The user can import 
+    list_val contains by default min and max frequency. The user can import
     a list of frequencies, but all elements should be even!'''
     if randomize:
         min_freq = 2420 #MHz, max freq is 2480 MHz
@@ -66,9 +66,9 @@ def hex_to_float(h):
 def checksum (start, address, payload_list):
     length = len(payload_list)
     # Bit sum
-    
-    somma = (start << 8 | address) + (length) 
-    
+
+    somma = (start << 8 | address) + (length)
+
     for i in range(0, len(payload_list)):
         # print(hex(payload_list[i][2]))
         somma = somma + (payload_list[i][0] << 8 | payload_list[i][1])
@@ -101,13 +101,13 @@ def send_cmd(ser, start, address, length, typee, operand, content):
 
     # List of commands (a list for the general case) #TODO move this list to another point
     payload_list = []
-    payload_list.append([typee, operand, content]) # Example to try a list of commands: payload_list = example_multiple_payloadlist()     
+    payload_list.append([typee, operand, content]) # Example to try a list of commands: payload_list = example_multiple_payloadlist()
 
     chksm = checksum(start, address, payload_list)
     # hex(chksm)
 
     header = start << 24 | address << 16 | len(payload_list) << 8 | chksm
-    
+
     # Compose the payload command
     payload = 0x00
     for i in range(0, len(payload_list)):
@@ -115,10 +115,10 @@ def send_cmd(ser, start, address, length, typee, operand, content):
         payload = payload << 48 | single_cmd
 
     command = header << (len(payload_list) * 48) | payload
-  
+
     # print("Sending the command {}".format(hex(command)))
     length_conversion = 4 + 6*len(payload_list)
-    
+
     # print("Send:" + hex(command))
     ser.write(command.to_bytes(length_conversion, 'big'))
 
@@ -141,7 +141,7 @@ def send_cmd_string(ser, string, value=0):
     elif string == "FLDBCK_VAL":
         if value != 0:
             value = hex(value)  # todo devono essere unsigned long
-            value = literal_eval(value)   
+            value = literal_eval(value)
         else:
             value = 0x5 # default values 5W
         send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x51, value) # set value
@@ -177,7 +177,7 @@ def send_cmd_string(ser, string, value=0):
         send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x09,  value)
     else:
         print("Command not recognized!")
-        
+
 
 def read_reply_values(reply):
     '''Read reply payloads from the rf.
@@ -189,9 +189,9 @@ def read_reply_values(reply):
     address = converted[2:4]
     length = int(converted[4:6], 16)
     # checksum = converted[6:8]
-    
+
     payload_list = []
-    
+
     # TODO: read and analyze the checksum!
     if start == "55" and address == "00":
         for i in range(0, length):
@@ -206,7 +206,7 @@ def read_reply_values(reply):
 
 #%% Updte status values
 
-def empty_buffer(ser, status, wait=2):
+def empty_buffer(ser, wait=2):
 
     # read response
     start_waiting = time.time()
@@ -215,10 +215,10 @@ def empty_buffer(ser, status, wait=2):
     while time.time() <= start_waiting + wait:
         r = ser.read(100)
         if len(r) == 0:
-            continue      
+            continue
 
 
-def read_param(ser, status, param="STATUS", wait=1, verbose=False):
+def read_param(ser, rf_values, param="STATUS", wait=1, verbose=False):
     # read response
     start_waiting = time.time()
 
@@ -226,83 +226,70 @@ def read_param(ser, status, param="STATUS", wait=1, verbose=False):
     while time.time() <= start_waiting + wait:
         r = ser.read(100)
         if len(r) == 0:
-            continue      
-        
+            continue
+
         r_hex = hexlify(r)
         prova_int = int(r_hex, 16)
-        
+
         # List of elements read from the serial
         payload_list = read_reply_values(prova_int)
         if len(payload_list) == 0:
             continue
-        set_status_values(status, payload_list, False)
+        rf_values = set_status_values(rf_values, payload_list, False)
         if verbose:
-            print_status(status, 2)
-        return status
+            print_rfdata(rf_values, 2)
+    return rf_values
     # return payload_list
 
 
-def set_status_values (status, payload_list, verbose=False):
+def set_status_values (rf_values, payload_list, verbose=False):
     for i in range(0, len(payload_list)):
         operand = payload_list[i][1]
         if operand == "01":
-            if verbose: print("Temperature")
-            status["Temperature"] = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
-            
+            rf_values.Temperature = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
+
         elif operand == "02":
-            if verbose: print("PLL")
-            status["PLL"] = int(payload_list[i][2], 16)  # conversion from Unsigned Long
-            
+            rf_values.PLL = int(payload_list[i][2], 16)
+
         elif operand == "03":
-            if verbose: print("Current")
-            status["Current"] = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
-            
+            rf_values.Current = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
+
         elif operand == "04":
-            if verbose: print("Voltage")
-            status["Voltage"] = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
-            
+            rf_values.Voltage = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
+
         elif operand == "05":
-            if verbose: print("Reflected Power")
-            status["Reflected Power"] = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
-            
+            rf_values.Reflected_Power = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
+
         elif operand == "06":
-           if verbose: print("Forward Power")
-           status["Forward Power"] = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
-           
+           rf_values.Forward_Power = round(hex_to_float("0x"+str(payload_list[i][2])), 2)
+
         elif operand == "08":
-           if verbose: print("PWM")
-           status["PWM"] = int(payload_list[i][2], 16)
-            
+           rf_values.PWM = int(payload_list[i][2], 16)
+
         elif operand == "0B" or operand == "0b":
-           if verbose: print("On Off")
-           status["On Off"] = int(payload_list[i][2], 16)
-           
+           rf_values.On_Off = int(payload_list[i][2], 16)
+
         elif operand == "26":
-           if verbose: print("Enable foldback")
-           status["Enable foldback"] = int(payload_list[i][2], 16)
-           
+           rf_values.Enable_foldback = int(payload_list[i][2], 16)
+
         elif operand == "51":
-           if verbose: print("Foldback in")
-           status["Foldback in"] = int(payload_list[i][2], 16)
+           rf_values.Foldback_in = int(payload_list[i][2], 16)
 
         elif operand == "17":
-           if verbose: print("Error")
-           status["Error"] = int(payload_list[i][2], 16)
-           
-        
-           
+           rf_values.Error = int(payload_list[i][2], 16)
     if verbose:
         print("Status updated")
+    return rf_values
 
-def print_status(status, verbose=0):
+def print_rfdata(rf_data, verbose=0):
     '''Verbose level [0,1,2] serves to select how many values to plot.'''
 
     if verbose == 0: # Do NOT remove ending spaces, they are useful when printing on and old and longer line
-        print("\r", "On Off: {} || Reflected Power: {} [W] || Forward Power: {} [W] || Enable foldback: {} || Error: {}      \r".format(status["On Off"], status["Reflected Power"], status["Forward Power"], status["Enable foldback"], status["Error"]))
+        print("\r", "On Off: {} || Reflected Power: {} [W] || Forward Power: {} [W] || Enable foldback: {} || Error: {}      \r".format(rf_data.On_Off, rf_data.Reflected_Power, rf_data.Forward_Power, rf_data.Enable_foldback, rf_data.Error))
 
     if verbose == 1:
-        print("\r", "On Off: {} || Temperature: {} [C] ||  Current: {} [A] || Voltage: {} [V] || Reflected Power: {} [W] || Forward Power: {} [W] || Enable foldback: {} || Foldback in {} [W] || Error: {}      \r".format(status["On Off"],status["Temperature"], status["Current"], status["Voltage"], status["Reflected Power"], status["Forward Power"], status["Enable foldback"], status["Foldback in"], status["Error"]))
+        print("\r", "On Off: {} || Temperature: {} [C] ||  Current: {} [A] || Voltage: {} [V] || Reflected Power: {} [W] || Forward Power: {} [W] || Enable foldback: {} || Foldback in {} [W] || Error: {}      \r".format(rf_data.On_Off, rf_data.Temperature, rf_data.Current, rf_data.Voltage, rf_data.Reflected_Power, rf_data.Forward_Power, rf_data.Enable_foldback, rf_data.Foldback_in, rf_data.Error))
 
     if verbose == 2:
-        print("\r", "On Off: {} || Temperature: {} [C] || PLL: {} || Current: {} [A] || Voltage: {} [V] || Reflected Power: {} [W] || Forward Power: {} [W] || PWM: {} || Enable foldback: {} || Foldback in {} [W] || Error: {}      \r".format(status["On Off"],status["Temperature"], status["PLL"], status["Current"], status["Voltage"], status["Reflected Power"], status["Forward Power"], status["PWM"], status["Enable foldback"], status["Foldback in"], status["Error"]))
+        print("\r", "On Off: {} || Temperature: {} [C] || PLL: {} || Current: {} [A] || Voltage: {} [V] || Reflected Power: {} [W] || Forward Power: {} [W] || PWM: {} || Enable foldback: {} || Foldback in {} [W] || Error: {}      \r".format(rf_data.On_Off, rf_data.Temperature, rf_data.PLL, rf_data.Current, rf_data.Voltage, rf_data.Reflected_Power, rf_data.Forward_Power, rf_data.PWM, rf_data.Enable_foldback, rf_data.Foldback_in, rf_data.Error))
 
