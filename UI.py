@@ -1,6 +1,7 @@
 from PyQt5 import QtCore # QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow #QWidget, QInputDialog, QLineEdit
 import time
+from datetime import datetime
 import read_csv as rcsv
 import serial_RW as srw
 from UI_raw import Ui_MainWindow
@@ -27,21 +28,21 @@ class RFdata:
     Error = "N.D."
     cycle_count = 0
     cycle_percentage = 0
+    
+# File di log
+log_file = "log.txt"
 
-    # def set_values(self, temp, pll, curr, vol, refl, frw, pwm, onoff, ena, fld, err, cy_num, cy_per):
-    #     self.Temperature = temp
-    #     self.PLL = pll
-    #     self.Current = curr
-    #     self.Voltage = vol
-    #     self.Reflected_Power = refl
-    #     self.Forward_Power = frw
-    #     self.PWM = pwm
-    #     self.On_Off = onoff
-    #     self.Enable_foldback = ena
-    #     self.Foldback_in = fld
-    #     self.Error = err
-    #     self.cycle_num = cy_num
-    #     self.cycle_percentage = cy_per
+def write_to_file(filename, text):
+    try:
+        with open(filename, "r") as f:
+            content = f.read()
+    except FileNotFoundError:
+        content = ""
+    content = text + "\n" + content
+    with open(filename, "w") as f:
+        f.write(content)
+    f.close()
+  
 
 rf_data = RFdata()
 index = 0
@@ -262,7 +263,11 @@ class MainWindow(QMainWindow):
                 self.enablePlayButton()
 
     def play_execution(self):
+        global log_file
         self.ui.QoutputLabel.setText("Process started.")
+        # Save log file
+        date_time = datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+        write_to_file(log_file, "{} {}".format(date_time, "play"))
         self.disablePlayButton()
         self.enablePauseButton()
         self.enableStopButton()
@@ -277,6 +282,9 @@ class MainWindow(QMainWindow):
         global num_executed_cycles
         interruption_type = "stop"
         num_executed_cycles = 1
+        date_time = datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+        write_to_file(log_file, "{} {}".format(date_time, "stop"))
+        write_to_file(log_file, "{}".format("--"))
         self.ui.QoutputLabel.setText("Process stopped.")
         self.worker.stop_worker_execution()
         index = 0
@@ -285,6 +293,8 @@ class MainWindow(QMainWindow):
     def pause_execution(self):
         global interruption_type
         interruption_type = "pause"
+        date_time = datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+        write_to_file(log_file, "{} {}".format(date_time, "pause"))
         self.ui.QoutputLabel.setText("Process paused.")
         self.worker.stop_worker_execution()
         self.restore_buttons()
