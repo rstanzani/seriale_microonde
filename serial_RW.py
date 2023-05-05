@@ -183,25 +183,31 @@ def read_reply_values(reply):
     '''Read reply payloads from the rf.
     Return a list of the read operands'''
     converted = hex(reply)[2:]
-
-    # Read the header structure
-    start = converted[0:2]
-    address = converted[2:4]
-    length = int(converted[4:6], 16)
-    # checksum = converted[6:8]
+    error = False
+    try:
+        # Read the header structure
+        start = converted[0:2]
+        address = converted[2:4]
+        length = int(converted[4:6], 16)
+        # checksum = converted[6:8]
+    except Exception as e:
+        print("Error {} with converted {}".format(e, converted))
+        error = True
+        pass
 
     payload_list = []
 
-    # TODO: read and analyze the checksum!
-    if start == "55" and address == "00":
-        for i in range(0, length):
-            payload = converted[8+i*12:20+i*12]
-            typee = payload[0:2]
-            operand = payload[2:4]
-            value = payload[4:12]
-            if (len(payload) *  len(typee) *  len(operand) * len(value) != 0):
-                payload_list.append([typee, operand, value])
-                # print(value)
+    if not error:
+        # TODO: read and analyze the checksum!
+        if start == "55" and address == "00":
+            for i in range(0, length):
+                payload = converted[8+i*12:20+i*12]
+                typee = payload[0:2]
+                operand = payload[2:4]
+                value = payload[4:12]
+                if (len(payload) *  len(typee) *  len(operand) * len(value) != 0):
+                    payload_list.append([typee, operand, value])
+                    # print(value)
     return payload_list
 
 #%% Updte status values
