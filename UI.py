@@ -1,7 +1,7 @@
 from PyQt5 import QtCore # QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow #QWidget, QInputDialog, QLineEdit
 import time
-from datetime import datetime
+import datetime
 import read_csv as rcsv
 import serial_RW as srw
 from UI_raw import Ui_MainWindow
@@ -266,7 +266,7 @@ class MainWindow(QMainWindow):
         global log_file
         self.ui.QoutputLabel.setText("Process started.")
         # Save log file
-        date_time = datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+        date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
         write_to_file(log_file, "{} {}".format(date_time, "play"))
         self.disablePlayButton()
         self.enablePauseButton()
@@ -282,7 +282,7 @@ class MainWindow(QMainWindow):
         global num_executed_cycles
         interruption_type = "stop"
         num_executed_cycles = 1
-        date_time = datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+        date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
         write_to_file(log_file, "{} {}".format(date_time, "stop"))
         write_to_file(log_file, "{}".format("--"))
         self.ui.QoutputLabel.setText("Process stopped.")
@@ -293,7 +293,7 @@ class MainWindow(QMainWindow):
     def pause_execution(self):
         global interruption_type
         interruption_type = "pause"
-        date_time = datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+        date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
         write_to_file(log_file, "{} {}".format(date_time, "pause"))
         self.ui.QoutputLabel.setText("Process paused.")
         self.worker.stop_worker_execution()
@@ -375,8 +375,7 @@ class MainWindow(QMainWindow):
         self.ui.Qerror_label.setText(_translate("MainWindow", str(rf_data.Error)))
         self.ui.Qcyclenumber.setText(_translate("MainWindow", str(rf_data.cycle_count)))
         self.ui.Qcurrentcycle.setText(_translate("MainWindow", str(rf_data.cycle_percentage)))
-        self.ui.Qexecution_time.setText(_translate("MainWindow", time.strftime('%H:%M:%S', time.gmtime(execution_time))))
-
+        self.ui.Qexecution_time.setText(_translate("MainWindow", str(datetime.timedelta(seconds = int(execution_time)))))
 
 def update_progress(progress_bar, value):
     progress_bar.setValue(value)
