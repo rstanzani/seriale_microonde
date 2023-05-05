@@ -85,10 +85,10 @@ class Worker(QtCore.QObject):
         global execution_time
         global prev_execution_time
         global interruption_type
-        
+
         if interruption_type == "stop":
             prev_execution_time = 0
-        
+
         print("In run...")
         self.start_execution()
         # global execution
@@ -359,14 +359,14 @@ class MainWindow(QMainWindow):
             self.ui.Qonoff_label.setStyleSheet("color: green")
         else:
             self.ui.Qonoff_label.setText(_translate("MainWindow", "Off"))
-            self.ui.Qonoff_label.setStyleSheet("color: red")                             
+            self.ui.Qonoff_label.setStyleSheet("color: red")
         self.ui.Qenablefoldback_label.setText(_translate("MainWindow", str(rf_data.Enable_foldback)))
         self.ui.Qfoldbackin_label.setText(_translate("MainWindow", str(rf_data.Foldback_in)+" W"))
         self.ui.Qerror_label.setText(_translate("MainWindow", str(rf_data.Error)))
         self.ui.Qcyclenumber.setText(_translate("MainWindow", str(rf_data.cycle_count)))
         self.ui.Qcurrentcycle.setText(_translate("MainWindow", str(rf_data.cycle_percentage)))
         self.ui.Qexecution_time.setText(_translate("MainWindow", time.strftime('%H:%M:%S', time.gmtime(execution_time))))
-        
+
 
 def update_progress(progress_bar, value):
     progress_bar.setValue(value)

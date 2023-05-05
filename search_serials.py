@@ -44,11 +44,11 @@ def serial_ports(): # the hard way, it finds also virtual com ports
 
 def serial_ports_compact():
     ports_new = serial.tools.list_ports.comports()
-    
+
     port_list = []
     for port, desc, hwid in sorted(ports_new):
-        port_list.append(str(port))        
-    print(port_list)
+        port_list.append(str(port))
+    # print(port_list)
     return port_list
 
 
