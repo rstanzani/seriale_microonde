@@ -397,6 +397,8 @@ class MainWindow(QMainWindow):
             
         if threshold_alarm:
             self.ui.QoutputLabel.setText("THRESHOLD ALARM. Message: {}".format(thres_status))
+            date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+            write_to_file(log_file, "{} {}".format(date_time, "Threshold forced stop with: "+thres_status))
             threshold_alarm = False
         self.ui.Qenablefoldback_label.setText(_translate("MainWindow", str(rf_data.Enable_foldback)))
         self.ui.Qfoldbackin_label.setText(_translate("MainWindow", str(rf_data.Foldback_in)+" W"))
