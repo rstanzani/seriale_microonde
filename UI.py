@@ -112,7 +112,7 @@ class Worker(QtCore.QObject):
         
         if rf_data.Temperature != "N.D." and rf_data.Voltage != "N.D." and  rf_data.Current != "N.D." and rf_data.Reflected_Power != "N.D." and rf_data.Forward_Power != "N.D.":
             if int(rf_data.Temperature) >= 65 or int(rf_data.Voltage) >= 33 or int(rf_data.Current) >= 18 or int(rf_data.Reflected_Power) >= 150 or int(rf_data.Forward_Power) >= 260:
-                print("Alarm: threshold exceeded!")
+                print("Alarm: threshold exceeded. Data: temperature {} C, Voltage {} V, Current {} A, Reflected Power {} W, Power {} W".format(rf_data.Temperature,rf_data.Voltage,rf_data.Current,rf_data.Reflected_Power,rf_data.Forward_Power))
                 threshold_alarm = True
 
         # Start the main functions
@@ -127,7 +127,7 @@ class Worker(QtCore.QObject):
             
                 if rf_data.Temperature != "N.D." and rf_data.Voltage != "N.D." and  rf_data.Current != "N.D." and rf_data.Reflected_Power != "N.D." and rf_data.Forward_Power != "N.D.":
                     if int(rf_data.Temperature) >= 65 or int(rf_data.Voltage) >= 33 or int(rf_data.Current) >= 18 or int(rf_data.Reflected_Power) >= 150 or int(rf_data.Forward_Power) >= 260:
-                        print("Alarm: threshold exceeded!")
+                        print("Alarm: threshold exceeded. Data: temperature {} C, Voltage {} V, Current {} A, Reflected Power {} W, Power {} W".format(rf_data.Temperature,rf_data.Voltage,rf_data.Current,rf_data.Reflected_Power,rf_data.Forward_Power))
                         threshold_alarm = True
 
                 if time.time()-cycle_time >= next_time:
