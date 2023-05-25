@@ -128,6 +128,7 @@ def send_cmd_string(ser, string, val=0, redundancy=1):
         value = val # do not remove, useful for the redundancy
         if string == "ON":
             send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0B, 0x00000001)
+            time.sleep(0.3)
         elif string == "OFF":
             send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0B, 0x00000000)
         elif string == "STATUS":
@@ -163,6 +164,7 @@ def send_cmd_string(ser, string, val=0, redundancy=1):
             else:
                 value = 0x00000000
             send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0E,  value)
+            time.sleep(0.3)
         elif string == "PWM":
             if value != 0:
                 value = hex(value)
@@ -170,6 +172,7 @@ def send_cmd_string(ser, string, val=0, redundancy=1):
             else:
                 value = 0x00000000
             send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x08,  value)
+            time.sleep(0.3)
         elif string == "FREQ":
             if value != 0:
                 value = float_to_hex(value)
@@ -177,9 +180,10 @@ def send_cmd_string(ser, string, val=0, redundancy=1):
             else:
                 value = 0x00000000
             send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x09,  value)
+            time.sleep(0.3)
         else:
             print("Command not recognized!")
-        time.sleep(0.3)
+
 
 
 def read_reply_values(reply):

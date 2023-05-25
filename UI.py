@@ -49,6 +49,7 @@ interruption_type = "" # "pause", "stop"
 num_executed_cycles = 1
 execution_time = 0
 prev_execution_time = 0
+threshold_alarm = False
 
 class Worker(QtCore.QObject):
 
@@ -77,6 +78,7 @@ class Worker(QtCore.QObject):
         self.freq_list = freq_list
         self.power_list = power_list
 
+
     def run(self):
         global rf_data
         global comport
@@ -85,7 +87,9 @@ class Worker(QtCore.QObject):
         global execution_time
         global prev_execution_time
         global interruption_type
+        global threshold_alarm
 
+        threshold_alarm = False
         if interruption_type == "stop":
             prev_execution_time = 0
 
@@ -105,6 +109,11 @@ class Worker(QtCore.QObject):
         srw.send_cmd_string(ser,"FREQ", freq, redundancy=1)
         
         rf_data = srw.read_param(ser, rf_data, "STATUS", 1, False)
+        
+        if rf_data.Temperature != "N.D." and rf_data.Voltage != "N.D." and  rf_data.Current != "N.D." and rf_data.Reflected_Power != "N.D." and rf_data.Forward_Power != "N.D.":
+            if int(rf_data.Temperature) >= 65 or int(rf_data.Voltage) >= 33 or int(rf_data.Current) >= 18 or int(rf_data.Reflected_Power) >= 150 or int(rf_data.Forward_Power) >= 260:
+                print("Alarm: threshold exceeded!")
+                threshold_alarm = True
 
         # Start the main functions
         timestamp = time.time()
@@ -112,8 +121,15 @@ class Worker(QtCore.QObject):
         min_refresh = 1
         cycle_time = time.time()
 
-        while self.execution:
+        while self.execution and threshold_alarm == False:
+            
             if time.time() >= timestamp + min_refresh: # minimum refresh period
+            
+                if rf_data.Temperature != "N.D." and rf_data.Voltage != "N.D." and  rf_data.Current != "N.D." and rf_data.Reflected_Power != "N.D." and rf_data.Forward_Power != "N.D.":
+                    if int(rf_data.Temperature) >= 65 or int(rf_data.Voltage) >= 33 or int(rf_data.Current) >= 18 or int(rf_data.Reflected_Power) >= 150 or int(rf_data.Forward_Power) >= 260:
+                        print("Alarm: threshold exceeded!")
+                        threshold_alarm = True
+
                 if time.time()-cycle_time >= next_time:
 
                     index += 1
