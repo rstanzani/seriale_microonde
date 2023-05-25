@@ -123,8 +123,9 @@ def send_cmd(ser, start, address, length, typee, operand, content):
     ser.write(command.to_bytes(length_conversion, 'big'))
 
 
-def send_cmd_string(ser, string, value=0, redundancy=1):
+def send_cmd_string(ser, string, val=0, redundancy=1):
     for i in range(0, redundancy):
+        value = val # do not remove, useful for the redundancy
         if string == "ON":
             send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0B, 0x00000001)
         elif string == "OFF":
