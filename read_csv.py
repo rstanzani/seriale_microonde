@@ -40,20 +40,15 @@ def read_and_plot(filepath, showfig=False, savefig=False):
         minpower = min(power)
         maxpower = max(power)
         minduration = min(duration)
-        # maxfoldback = max(foldback)
 
         # validate the inserted values
         if  minfreq<2400 or maxfreq>2500:
             msg = "ERROR: wrong range for frequency. Correct range: 2400÷2500 MHz."
-            # print(msg)
             error = True
         if  minpower<0 or maxpower>300:
             msg = "ERROR: wrong range for power. Correct range: 0÷300 W."
-            # print(msg)
             error = True
-        # if  minfoldback<0 or maxfoldback>250:
-        #     print("ERROR: wrong range for foldback. Correct range: 0÷250 W.")
-        #     error = True
+
         for i in freq:
             if i % 2 != 0:
                 msg = "ERROR: odd value for frequency. Tip: the numbers for the frequency should be even."

@@ -7,7 +7,6 @@ import serial_RW as srw
 from UI_raw import Ui_MainWindow
 import sys
 from PyQt5.QtCore import pyqtSignal # QThread
-import search_serials as ssr
 
 # https://realpython.com/python-pyqt-qthread/
 # https://www.xingyulei.com/post/qt-threading/
@@ -101,8 +100,10 @@ class Worker(QtCore.QObject):
         power = self.power_list[0]
 
         srw.send_cmd_string(ser,"ON")
-        srw.send_cmd_string(ser,"PWR", power)
-        srw.send_cmd_string(ser,"FREQ", freq)
+        srw.send_cmd_string(ser,"PWR", power, redundancy=3)
+        srw.empty_buffer(ser, wait=1)
+        srw.send_cmd_string(ser,"FREQ", freq, redundancy=1)
+        
         rf_data = srw.read_param(ser, rf_data, "STATUS", 1, False)
 
         # Start the main functions
@@ -127,20 +128,42 @@ class Worker(QtCore.QObject):
                         cycle_time = time.time()
                         next_time = self.duration[index]
 
-                    srw.send_cmd_string(ser,"PWR", power)
-                    srw.send_cmd_string(ser,"FREQ", freq)
+                    srw.send_cmd_string(ser,"PWR", power, redundancy=3)
+                    srw.send_cmd_string(ser,"FREQ", freq, redundancy=3)
+                   
+                    
                 rf_data = srw.read_param(ser, rf_data, "STATUS", False)
-                rf_data = srw.read_param(ser, rf_data, "FLDBCK_READ", False)
+                # rf_data = srw.read_param(ser, rf_data, "FLDBCK_READ", False)
                 rf_data.cycle_count = num_executed_cycles
                 rf_data.cycle_percentage = round(index/(len(self.duration))*100, 0)
                 self.messaged.emit()
                 timestamp = time.time()
                 execution_time = prev_execution_time + (timestamp - starttime)
+                if rf_data.Error == 4:   #tentativo
+                    print("Ri-setto i parametri")
+                    srw.send_cmd_string(ser,"PWR", power)
+                    srw.send_cmd_string(ser,"FREQ", freq)
+                if rf_data.Error == 203:   #writing not enabled (probably off?)
+                    print("Restart")
+                    # restart the rf
+
+                    check = False
+                    # rf_data = srw.read_param(ser, rf_data, "STATUS", False)    
+                    while check == False:
+                        srw.send_cmd_string(ser,"ON")
+                        print("Setting pwr {}".format(power))
+                        rf_data = srw.read_param(ser, rf_data, "STATUS", 1, False)
+                        time.sleep(1)
+                        if rf_data.On_Off == 1:
+                            srw.send_cmd_string(ser,"PWR", power, redundancy=3)
+                            srw.send_cmd_string(ser,"FREQ", freq, redundancy=3)
+                            check = True
+                            rf_data.Error = 0
 
         # Soft turn off
         print("\nShutting down...")
-        srw.send_cmd_string(ser,"OFF")
         srw.send_cmd_string(ser,"PWM", 0)
+        srw.send_cmd_string(ser,"OFF")
         srw.empty_buffer(ser, wait=1)
 
         prev_execution_time = execution_time
@@ -179,8 +202,6 @@ class MainWindow(QMainWindow):
         self.ui.Qplay.clicked.connect(lambda: self.play_execution())
         self.ui.Qpause.clicked.connect(lambda: self.pause_execution())
         self.ui.Qstop.clicked.connect(lambda: self.stop_execution())
-        self.ui.Qsearchserial.clicked.connect(lambda: self.search_serials())
-
 
     def run_long_task(self):
         if not self.__thread.isRunning():
@@ -224,7 +245,6 @@ class MainWindow(QMainWindow):
         elif interruption_type == "stop":
             self.disableStopButton()
             self.disablePauseButton()
-            self.enableSearchSerialButton()
             self.enableOpenCSVButton()
             self.enableExitButton()
             self.ui.QoutputLabel.setText("Process ended.")
@@ -257,11 +277,10 @@ class MainWindow(QMainWindow):
         # Read parameters from csv file
         if opened_path != "":
             self.ui.QGDML.setText(opened_path)
-            self.duration, self.freq_list, self.power_list, self.error, self.msg  = rcsv.read_and_plot(opened_path, self.ui.Qenable_plot.isChecked(), False)
+            self.duration, self.freq_list, self.power_list, self.error, self.msg  = rcsv.read_and_plot(opened_path, True, False)
             self.ui.QoutputLabel.setText(self.msg)
             if not self.error:
                 self.enablePlayButton()
-
     def play_execution(self):
         global log_file
         self.ui.QoutputLabel.setText("Process started.")
@@ -272,7 +291,6 @@ class MainWindow(QMainWindow):
         self.enablePauseButton()
         self.enableStopButton()
         self.disableExitButton()
-        self.disableSearchSerialButton()
         self.disableOpenCSVButton()
         self.run_long_task()
 
@@ -300,19 +318,6 @@ class MainWindow(QMainWindow):
         self.restore_buttons()
 
 
-    def search_serials(self):
-        self.disablePlayButton()
-        self.disableExitButton()
-        self.disableOpenCSVButton()
-        self.disableSearchSerialButton()
-        self.ui.QoutputLabel.setText("Search serials, may take up to 1 minute")
-        serial_list = ssr.print_serials()
-        self.ui.QoutputLabel.setText("Found serials: {}".format(serial_list))
-        self.enableExitButton()
-        self.enablePlayButton()
-        self.enableOpenCSVButton()
-        self.enableSearchSerialButton()
-
     def enablePlayButton(self):
         self.ui.Qplay.setEnabled(True)
 
@@ -337,12 +342,6 @@ class MainWindow(QMainWindow):
     def disableExitButton(self):
         self.ui.Qexit.setEnabled(False)
 
-    def enableSearchSerialButton(self):
-        self.ui.Qsearchserial.setEnabled(True)
-
-    def disableSearchSerialButton(self):
-        self.ui.Qsearchserial.setEnabled(False)
-
     def enableOpenCSVButton(self):
         self.ui.QOpen_CSV.setEnabled(True)
 
@@ -366,10 +365,12 @@ class MainWindow(QMainWindow):
         self.ui.Qpwm_label.setText(_translate("MainWindow", str(rf_data.PWM)))
         if str(rf_data.On_Off) == "1":
             self.ui.Qonoff_label.setText(_translate("MainWindow", "On"))
-            self.ui.Qonoff_label.setStyleSheet("color: green")
+            self.ui.Qonoff_label.setStyleSheet("color: rgb(41, 45, 62);\n"
+                                             "background-color: rgb(85, 255, 0);")
         else:
             self.ui.Qonoff_label.setText(_translate("MainWindow", "Off"))
-            self.ui.Qonoff_label.setStyleSheet("color: red")
+            self.ui.Qonoff_label.setStyleSheet("color: rgb(41, 45, 62);\n"
+                                             "background-color: rgb(255, 0, 0);")
         self.ui.Qenablefoldback_label.setText(_translate("MainWindow", str(rf_data.Enable_foldback)))
         self.ui.Qfoldbackin_label.setText(_translate("MainWindow", str(rf_data.Foldback_in)+" W"))
         self.ui.Qerror_label.setText(_translate("MainWindow", str(rf_data.Error)))

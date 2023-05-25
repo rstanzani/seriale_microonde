@@ -123,60 +123,62 @@ def send_cmd(ser, start, address, length, typee, operand, content):
     ser.write(command.to_bytes(length_conversion, 'big'))
 
 
-def send_cmd_string(ser, string, value=0):
-    if string == "ON":
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0B, 0x00000001)
-    elif string == "OFF":
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0B, 0x00000000)
-    elif string == "STATUS":
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x16, 0x00000000)
-    elif string == "RNDFREQ":
-        hex_freq = rnd_hex_freq(True)
-        # print("Send freq {}".format(hex_freq))
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x09, hex_freq)
-    elif string == "READ_PWR":
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x06, 0x00000000)
-    elif string == "FLDBCK_ON":
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x26, 0x1) # turn on
-    elif string == "FLDBCK_VAL":
-        if value != 0:
-            value = hex(value)  # todo devono essere unsigned long
-            value = literal_eval(value)
+def send_cmd_string(ser, string, value=0, redundancy=1):
+    for i in range(0, redundancy):
+        if string == "ON":
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0B, 0x00000001)
+        elif string == "OFF":
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0B, 0x00000000)
+        elif string == "STATUS":
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x16, 0x00000000)
+        elif string == "RNDFREQ":
+            hex_freq = rnd_hex_freq(True)
+            # print("Send freq {}".format(hex_freq))
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x09, hex_freq)
+        elif string == "READ_PWR":
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x06, 0x00000000)
+        elif string == "FLDBCK_ON":
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x26, 0x1) # turn on
+        elif string == "FLDBCK_VAL":
+            if value != 0:
+                value = hex(value)  # todo devono essere unsigned long
+                value = literal_eval(value)
+            else:
+                value = 0x5 # default values 5W
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x51, value) # set value
+        elif string == "FLDBCK_READ":
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x51, 0x00000000)
+        elif string == "ERROR_READ":
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x09, 0x00000000)
+        elif string == "PWM_READ":
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x08, 0x0)
+        elif string == "V_READ":
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x04, 0x0)
+        elif string == "PWR":
+            # print("Set power to: {}".format(value))
+            if value != 0:
+                value = float_to_hex(value)
+                value = literal_eval(value)
+            else:
+                value = 0x00000000
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0E,  value)
+        elif string == "PWM":
+            if value != 0:
+                value = hex(value)
+                value = literal_eval(value)
+            else:
+                value = 0x00000000
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x08,  value)
+        elif string == "FREQ":
+            if value != 0:
+                value = float_to_hex(value)
+                value = literal_eval(value)
+            else:
+                value = 0x00000000
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x09,  value)
         else:
-            value = 0x5 # default values 5W
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x51, value) # set value
-    elif string == "FLDBCK_READ":
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x51, 0x00000000)
-    elif string == "ERROR_READ":
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x09, 0x00000000)
-    elif string == "PWM_READ":
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x08, 0x0)
-    elif string == "V_READ":
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x04, 0x0)
-    elif string == "PWR":
-        # print("Set power to: {}".format(value))
-        if value != 0:
-            value = float_to_hex(value)
-            value = literal_eval(value)
-        else:
-            value = 0x00000000
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0E,  value)
-    elif string == "PWM":
-        if value != 0:
-            value = hex(value)
-            value = literal_eval(value)
-        else:
-            value = 0x00000000
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x08,  value)
-    elif string == "FREQ":
-        if value != 0:
-            value = float_to_hex(value)
-            value = literal_eval(value)
-        else:
-            value = 0x00000000
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x09,  value)
-    else:
-        print("Command not recognized!")
+            print("Command not recognized!")
+        time.sleep(0.3)
 
 
 def read_reply_values(reply):
@@ -191,7 +193,7 @@ def read_reply_values(reply):
         length = int(converted[4:6], 16)
         # checksum = converted[6:8]
     except Exception as e:
-        print("Error {} with converted {}".format(e, converted))
+        print("Error in serial_RW: {}, with converted equal to: {}".format(e, converted))
         error = True
         pass
 
