@@ -50,6 +50,7 @@ num_executed_cycles = 1
 execution_time = 0
 prev_execution_time = 0
 threshold_alarm = False
+thres_status = ""
 
 class Worker(QtCore.QObject):
 
@@ -88,6 +89,7 @@ class Worker(QtCore.QObject):
         global prev_execution_time
         global interruption_type
         global threshold_alarm
+        global thres_status
 
         threshold_alarm = False
         if interruption_type == "stop":
@@ -112,7 +114,8 @@ class Worker(QtCore.QObject):
         
         if rf_data.Temperature != "N.D." and rf_data.Voltage != "N.D." and  rf_data.Current != "N.D." and rf_data.Reflected_Power != "N.D." and rf_data.Forward_Power != "N.D.":
             if int(rf_data.Temperature) >= 65 or int(rf_data.Voltage) >= 33 or int(rf_data.Current) >= 18 or int(rf_data.Reflected_Power) >= 150 or int(rf_data.Forward_Power) >= 260:
-                print("Alarm: threshold exceeded. Data: temperature {} C, Voltage {} V, Current {} A, Reflected Power {} W, Power {} W".format(rf_data.Temperature,rf_data.Voltage,rf_data.Current,rf_data.Reflected_Power,rf_data.Forward_Power))
+                thres_status = "Threshold Err. Temp {}C, Volt {}V, Curr {}A, R.Pow {}W, Pow {}W".format(rf_data.Temperature,rf_data.Voltage,rf_data.Current,rf_data.Reflected_Power,rf_data.Forward_Power)
+                print(thres_status)
                 threshold_alarm = True
 
         # Start the main functions
@@ -127,7 +130,8 @@ class Worker(QtCore.QObject):
             
                 if rf_data.Temperature != "N.D." and rf_data.Voltage != "N.D." and  rf_data.Current != "N.D." and rf_data.Reflected_Power != "N.D." and rf_data.Forward_Power != "N.D.":
                     if int(rf_data.Temperature) >= 65 or int(rf_data.Voltage) >= 33 or int(rf_data.Current) >= 18 or int(rf_data.Reflected_Power) >= 150 or int(rf_data.Forward_Power) >= 260:
-                        print("Alarm: threshold exceeded. Data: temperature {} C, Voltage {} V, Current {} A, Reflected Power {} W, Power {} W".format(rf_data.Temperature,rf_data.Voltage,rf_data.Current,rf_data.Reflected_Power,rf_data.Forward_Power))
+                        thres_status = "Threshold Err. Temp {}C, Volt {}V, Curr {}A, R.Pow {}W, Pow {}W".format(rf_data.Temperature,rf_data.Voltage,rf_data.Current,rf_data.Reflected_Power,rf_data.Forward_Power)
+                        print(thres_status)                        
                         threshold_alarm = True
 
                 if time.time()-cycle_time >= next_time:
@@ -297,6 +301,7 @@ class MainWindow(QMainWindow):
             self.ui.QoutputLabel.setText(self.msg)
             if not self.error:
                 self.enablePlayButton()
+
     def play_execution(self):
         global log_file
         self.ui.QoutputLabel.setText("Process started.")
@@ -370,6 +375,8 @@ class MainWindow(QMainWindow):
     def update_status(self):
         global rf_data
         global execution_time
+        global threshold_alarm
+        global thres_status
 
         _translate = QtCore.QCoreApplication.translate
         self.ui.Qtemperature_label.setText(_translate("MainWindow", str(rf_data.Temperature)+" °C"))
@@ -387,6 +394,10 @@ class MainWindow(QMainWindow):
             self.ui.Qonoff_label.setText(_translate("MainWindow", "Off"))
             self.ui.Qonoff_label.setStyleSheet("color: rgb(41, 45, 62);\n"
                                              "background-color: rgb(255, 0, 0);")
+            
+        if threshold_alarm:
+            self.ui.QoutputLabel.setText("THRESHOLD ALARM. Message: {}".format(thres_status))
+            threshold_alarm = False
         self.ui.Qenablefoldback_label.setText(_translate("MainWindow", str(rf_data.Enable_foldback)))
         self.ui.Qfoldbackin_label.setText(_translate("MainWindow", str(rf_data.Foldback_in)+" W"))
         self.ui.Qerror_label.setText(_translate("MainWindow", str(rf_data.Error)))
