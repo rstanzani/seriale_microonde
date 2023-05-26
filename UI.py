@@ -131,6 +131,7 @@ class Worker(QtCore.QObject):
                         self.safety_mode_counter = 0
                         self.threshold_security_mode = False
                         self.starttime_security_mode = 0
+                        self.force_change_pwr_safety = True
 
     def run(self):
         global rf_data
@@ -162,7 +163,7 @@ class Worker(QtCore.QObject):
         freq = self.freq_list[0]
         power = self.power_list[0]
 
-        print("Starting and safe_mode_param is {}".format(self.safe_mode_param))
+        # print("Starting and safe_mode_param is {}".format(self.safe_mode_param))
         srw.send_cmd_string(ser,"ON")
         srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
         srw.empty_buffer(ser, wait=1)
@@ -181,7 +182,7 @@ class Worker(QtCore.QObject):
             if time.time() >= timestamp + min_refresh: # minimum refresh period
             
                 self.safe_mode(rf_data)
-                if self.threshold_security_mode and self.force_change_pwr_safety:
+                if self.force_change_pwr_safety:
                     srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
                     self.force_change_pwr_safety = False
 
