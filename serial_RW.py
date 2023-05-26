@@ -163,6 +163,7 @@ def send_cmd_string(ser, string, val=0, redundancy=1):
                 value = literal_eval(value)
             else:
                 value = 0x00000000
+            value = literal_eval(float_to_hex(255)) if value >= literal_eval(float_to_hex(255)) else value # maximum value il 260 with a certain error (security)
             send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0E,  value)
             time.sleep(0.3)
         elif string == "PWM":

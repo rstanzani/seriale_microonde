@@ -27,7 +27,7 @@ class RFdata:
     Error = "N.D."
     cycle_count = 0
     cycle_percentage = 0
-    
+
 # File di log
 log_file = "log.txt"
 
@@ -41,7 +41,7 @@ def write_to_file(filename, text):
     with open(filename, "w") as f:
         f.write(content)
     f.close()
-  
+
 
 rf_data = RFdata()
 index = 0
@@ -49,10 +49,11 @@ interruption_type = "" # "pause", "stop"
 num_executed_cycles = 1
 execution_time = 0
 prev_execution_time = 0
-threshold_alarm = False
+threshold_stop = False
 thres_status = ""
 
 class Worker(QtCore.QObject):
+
 
     execution = False
     duration = 0
@@ -63,6 +64,11 @@ class Worker(QtCore.QObject):
     duration = 0
     freq_list = []
     power_list = []
+
+    safe_mode_param = 1 #base value 1, in safe mode 2/3
+    threshold_security_mode = False
+    starttime_security_mode = 0
+    duration_security_mode = 60 # secondi
 
     def stop_worker_execution(self):
         if self.execution:
@@ -79,6 +85,38 @@ class Worker(QtCore.QObject):
         self.freq_list = freq_list
         self.power_list = power_list
 
+    def check_thresholds(self, rf_data):
+        global threshold_stop
+        global thres_status
+        '''Check the thresholds and changes the state of the system.'''
+
+        if not self.threshold_security_mode:
+            if rf_data.Temperature != "N.D."  and rf_data.Voltage != "N.D." and  rf_data.Current != "N.D." and rf_data.Reflected_Power != "N.D." and rf_data.Forward_Power != "N.D.":
+                if int(rf_data.Temperature) >= 65 or int(rf_data.Voltage) >= 33 or int(rf_data.Current) >= 18 or int(rf_data.Reflected_Power) >= 150 or int(rf_data.Forward_Power) >= 260:
+                    thres_status = "Threshold Err. Temp {}C, Volt {}V, Curr {}A, R.Pow {}W, Pow {}W".format(rf_data.Temperature,rf_data.Voltage,rf_data.Current,rf_data.Reflected_Power,rf_data.Forward_Power)
+                    print("Entering SAFE MODE, status: {}".format(thres_status))
+                    self.threshold_security_mode = True
+
+        if self.threshold_security_mode: # not else because otherwise it skips the first
+            if self.starttime_security_mode == 0:
+                # print("Set the new time for security mode")
+                self.starttime_security_mode = time.time()
+            else:
+                if time.time() <= self.starttime_security_mode + self.duration_security_mode:
+                    self.safe_mode_param = 2/3
+                else:
+                    print("Sono passati i {} secondi".format(self.duration_security_mode))
+
+                    # check params
+                    if rf_data.Temperature != "N.D." and rf_data.Voltage != "N.D." and  rf_data.Current != "N.D." and rf_data.Reflected_Power != "N.D." and rf_data.Forward_Power != "N.D.":
+                        if int(rf_data.Temperature) >= 65 or int(rf_data.Voltage) >= 33 or int(rf_data.Current) >= 18 or int(rf_data.Reflected_Power) >= 150 or int(rf_data.Forward_Power) >= 260:
+                            # print("Stop definitivo perché non andava ancora bene")
+                            threshold_stop = True
+                        else:
+                            print("Exiting Safe Mode.")
+                            self.safe_mode_param = 1
+                            self.threshold_security_mode = False
+                            self.starttime_security_mode = 0
 
     def run(self):
         global rf_data
@@ -91,7 +129,6 @@ class Worker(QtCore.QObject):
         global threshold_alarm
         global thres_status
 
-        threshold_alarm = False
         if interruption_type == "stop":
             prev_execution_time = 0
 
@@ -106,17 +143,14 @@ class Worker(QtCore.QObject):
         power = self.power_list[0]
 
         srw.send_cmd_string(ser,"ON")
-        srw.send_cmd_string(ser,"PWR", power, redundancy=3)
+        srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
         srw.empty_buffer(ser, wait=1)
         srw.send_cmd_string(ser,"FREQ", freq, redundancy=1)
-        
+
         rf_data = srw.read_param(ser, rf_data, "STATUS", 1, False)
-        
-        if rf_data.Temperature != "N.D." and rf_data.Voltage != "N.D." and  rf_data.Current != "N.D." and rf_data.Reflected_Power != "N.D." and rf_data.Forward_Power != "N.D.":
-            if int(rf_data.Temperature) >= 65 or int(rf_data.Voltage) >= 33 or int(rf_data.Current) >= 18 or int(rf_data.Reflected_Power) >= 150 or int(rf_data.Forward_Power) >= 260:
-                thres_status = "Threshold Err. Temp {}C, Volt {}V, Curr {}A, R.Pow {}W, Pow {}W".format(rf_data.Temperature,rf_data.Voltage,rf_data.Current,rf_data.Reflected_Power,rf_data.Forward_Power)
-                print(thres_status)
-                threshold_alarm = True
+
+        # Control the thresholds
+        self.check_thresholds(rf_data)
 
         # Start the main functions
         timestamp = time.time()
@@ -124,15 +158,11 @@ class Worker(QtCore.QObject):
         min_refresh = 1
         cycle_time = time.time()
 
-        while self.execution and threshold_alarm == False:
-            
+        while self.execution and threshold_stop == False:
+
             if time.time() >= timestamp + min_refresh: # minimum refresh period
-            
-                if rf_data.Temperature != "N.D." and rf_data.Voltage != "N.D." and  rf_data.Current != "N.D." and rf_data.Reflected_Power != "N.D." and rf_data.Forward_Power != "N.D.":
-                    if int(rf_data.Temperature) >= 65 or int(rf_data.Voltage) >= 33 or int(rf_data.Current) >= 18 or int(rf_data.Reflected_Power) >= 150 or int(rf_data.Forward_Power) >= 260:
-                        thres_status = "Threshold Err. Temp {}C, Volt {}V, Curr {}A, R.Pow {}W, Pow {}W".format(rf_data.Temperature,rf_data.Voltage,rf_data.Current,rf_data.Reflected_Power,rf_data.Forward_Power)
-                        print(thres_status)                        
-                        threshold_alarm = True
+
+                self.check_thresholds(rf_data)
 
                 if time.time()-cycle_time >= next_time:
 
@@ -140,9 +170,10 @@ class Worker(QtCore.QObject):
                     index = index % len(self.duration)  # set to 0 if is the last line in the csv
 
                     next_time = next_time + self.duration[index]
-                    power = self.power_list[index]
+                    power = self.power_list[index] * self.safe_mode_param
                     freq = self.freq_list[index]
 
+                    print("power is {}".format(power))
                     if index == 0:
                         num_executed_cycles += 1
                         cycle_time = time.time()
@@ -150,8 +181,8 @@ class Worker(QtCore.QObject):
 
                     srw.send_cmd_string(ser,"PWR", power, redundancy=3)
                     srw.send_cmd_string(ser,"FREQ", freq, redundancy=3)
-                   
-                    
+
+
                 rf_data = srw.read_param(ser, rf_data, "STATUS", False)
                 # rf_data = srw.read_param(ser, rf_data, "FLDBCK_READ", False)
                 rf_data.cycle_count = num_executed_cycles
@@ -168,7 +199,7 @@ class Worker(QtCore.QObject):
                     # restart the rf
 
                     check = False
-                    # rf_data = srw.read_param(ser, rf_data, "STATUS", False)    
+                    # rf_data = srw.read_param(ser, rf_data, "STATUS", False)
                     while check == False:
                         srw.send_cmd_string(ser,"ON")
                         print("Setting pwr {}".format(power))
@@ -375,7 +406,7 @@ class MainWindow(QMainWindow):
     def update_status(self):
         global rf_data
         global execution_time
-        global threshold_alarm
+        global threshold_stop
         global thres_status
 
         _translate = QtCore.QCoreApplication.translate
@@ -394,12 +425,12 @@ class MainWindow(QMainWindow):
             self.ui.Qonoff_label.setText(_translate("MainWindow", "Off"))
             self.ui.Qonoff_label.setStyleSheet("color: rgb(41, 45, 62);\n"
                                              "background-color: rgb(255, 0, 0);")
-            
-        if threshold_alarm:
-            self.ui.QoutputLabel.setText("THRESHOLD ALARM. Message: {}".format(thres_status))
+
+        if threshold_stop:
+            self.ui.QoutputLabel.setText("THRESHOLD ALARM, see log file.")
             date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
-            write_to_file(log_file, "{} {}".format(date_time, "Threshold forced stop with: "+thres_status))
-            threshold_alarm = False
+            write_to_file(log_file, "{} {}".format(date_time, thres_status))
+            threshold_stop = False
         self.ui.Qenablefoldback_label.setText(_translate("MainWindow", str(rf_data.Enable_foldback)))
         self.ui.Qfoldbackin_label.setText(_translate("MainWindow", str(rf_data.Foldback_in)+" W"))
         self.ui.Qerror_label.setText(_translate("MainWindow", str(rf_data.Error)))
