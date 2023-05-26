@@ -70,6 +70,7 @@ class Worker(QtCore.QObject):
     starttime_security_mode = 0
     duration_security_mode = 30 # seconds
     safety_mode_counter = 0
+    force_change_pwr_safety = False
 
     def stop_worker_execution(self):
         if self.execution:
@@ -93,8 +94,8 @@ class Worker(QtCore.QObject):
 
         thres_exceeded = False
         rf_data.Temperature = 70
-        if rf_data.Temperature != "N.D."  and rf_data.Voltage != "N.D." and  rf_data.Current != "N.D." and rf_data.Reflected_Power != "N.D." and rf_data.Forward_Power != "N.D.":
-            if int(rf_data.Temperature) >= 65 or int(rf_data.Voltage) >= 33 or int(rf_data.Current) >= 18 or int(rf_data.Reflected_Power) >= 150 or int(rf_data.Forward_Power) >= 260:
+        if rf_data.Temperature != "N.D.":# and rf_data.Voltage != "N.D." and  rf_data.Current != "N.D." and rf_data.Reflected_Power != "N.D." and rf_data.Forward_Power != "N.D.":
+            if int(rf_data.Temperature) >= 65:# or int(rf_data.Voltage) >= 33 or int(rf_data.Current) >= 18 or int(rf_data.Reflected_Power) >= 150 or int(rf_data.Forward_Power) >= 260:
                 thres_status = "Threshold Err. Temp {}C, Volt {}V, Curr {}A, R.Pow {}W, Pow {}W".format(rf_data.Temperature,rf_data.Voltage,rf_data.Current,rf_data.Reflected_Power,rf_data.Forward_Power)
                 thres_exceeded = True
         return thres_exceeded
@@ -112,9 +113,9 @@ class Worker(QtCore.QObject):
 
         if self.threshold_security_mode: # not else because otherwise it skips the first
             if self.starttime_security_mode == 0:
-                print("First entering in safe mode and bla bla")
                 self.safe_mode_param = 2/3
                 self.starttime_security_mode = time.time()
+                self.force_change_pwr_safety = True # force the change of pwr
             else:
                 if time.time() >= self.starttime_security_mode + self.duration_security_mode:
                     if self.check_thresholds(rf_data):
@@ -122,6 +123,7 @@ class Worker(QtCore.QObject):
                         # try to gradually reduce the output power. After N times, the system is stopped.
                         self.safety_mode_counter += 1
                         self.safe_mode_param = (2-0.5*self.safety_mode_counter)/3
+                        self.force_change_pwr_safety = True # force the change of pwr
                         print("Reduced value to {}".format(self.safe_mode_param))
                         if self.safety_mode_counter >= 3:
                             print("Stopping: unsafe parameters.")
@@ -180,10 +182,12 @@ class Worker(QtCore.QObject):
 
         while self.execution and threshold_stop == False:
             if time.time() >= timestamp + min_refresh: # minimum refresh period
+            
                 self.safe_mode(rf_data)
+                if self.threshold_security_mode and self.force_change_pwr_safety:
+                    srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
+                    self.force_change_pwr_safety = False
 
-                print("power is {}".format(power*self.safe_mode_param))
-                
                 if time.time()-cycle_time >= next_time:
 
                     index += 1
@@ -209,7 +213,7 @@ class Worker(QtCore.QObject):
                 timestamp = time.time()
                 execution_time = prev_execution_time + (timestamp - starttime)
                 if rf_data.Error == 4:   #tentativo
-                    print("Ri-setto i parametri")
+                    print("Re-set parameters")
                     srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param)
                     srw.send_cmd_string(ser,"FREQ", freq)
                 if rf_data.Error == 203:   #writing not enabled (probably off?)
