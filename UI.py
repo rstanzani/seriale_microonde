@@ -53,8 +53,6 @@ threshold_stop = False
 thres_status = ""
 
 class Worker(QtCore.QObject):
-
-
     execution = False
     duration = 0
     freq_list = []
@@ -93,9 +91,8 @@ class Worker(QtCore.QObject):
         global thres_status
 
         thres_exceeded = False
-        rf_data.Temperature = 70
-        if rf_data.Temperature != "N.D.":# and rf_data.Voltage != "N.D." and  rf_data.Current != "N.D." and rf_data.Reflected_Power != "N.D." and rf_data.Forward_Power != "N.D.":
-            if int(rf_data.Temperature) >= 65:# or int(rf_data.Voltage) >= 33 or int(rf_data.Current) >= 18 or int(rf_data.Reflected_Power) >= 150 or int(rf_data.Forward_Power) >= 260:
+        if rf_data.Temperature != "N.D." and rf_data.Voltage != "N.D." and  rf_data.Current != "N.D." and rf_data.Reflected_Power != "N.D." and rf_data.Forward_Power != "N.D.":
+            if int(rf_data.Temperature) >= 65 or int(rf_data.Voltage) >= 33 or int(rf_data.Current) >= 18 or int(rf_data.Reflected_Power) >= 150 or int(rf_data.Forward_Power) >= 260:
                 thres_status = "Threshold Err. Temp {}C, Volt {}V, Curr {}A, R.Pow {}W, Pow {}W".format(rf_data.Temperature,rf_data.Voltage,rf_data.Current,rf_data.Reflected_Power,rf_data.Forward_Power)
                 thres_exceeded = True
         return thres_exceeded
@@ -453,6 +450,7 @@ class MainWindow(QMainWindow):
             date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
             write_to_file(log_file, "{} {}".format(date_time, thres_status))
             threshold_stop = False
+            
         self.ui.Qenablefoldback_label.setText(_translate("MainWindow", str(rf_data.Enable_foldback)))
         self.ui.Qfoldbackin_label.setText(_translate("MainWindow", str(rf_data.Foldback_in)+" W"))
         self.ui.Qerror_label.setText(_translate("MainWindow", str(rf_data.Error)))
