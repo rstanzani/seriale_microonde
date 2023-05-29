@@ -380,7 +380,7 @@ color:rgb(150, 150, 180);
      <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
-     <string>0 W</string>
+     <string>-- W</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -399,7 +399,7 @@ color:rgb(150, 150, 180);
      <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
-     <string>0 W</string>
+     <string>-- W</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -448,7 +448,7 @@ background-color: rgb(255, 0, 0);</string>
      <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
-     <string>0 C</string>
+     <string>-- C</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -467,7 +467,7 @@ background-color: rgb(255, 0, 0);</string>
      <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
-     <string>0 V</string>
+     <string>-- V</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -486,7 +486,7 @@ background-color: rgb(255, 0, 0);</string>
      <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
-     <string>0</string>
+     <string>--</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -505,7 +505,7 @@ background-color: rgb(255, 0, 0);</string>
      <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
-     <string>0 W</string>
+     <string>-- W</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -524,7 +524,7 @@ background-color: rgb(255, 0, 0);</string>
      <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
-     <string>0</string>
+     <string>--</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -543,7 +543,7 @@ background-color: rgb(255, 0, 0);</string>
      <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
-     <string>0 A</string>
+     <string>-- A</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -581,7 +581,7 @@ background-color: rgb(255, 0, 0);</string>
      <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
-     <string>0</string>
+     <string>--</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>

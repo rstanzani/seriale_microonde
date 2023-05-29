@@ -14,17 +14,17 @@ from PyQt5.QtCore import pyqtSignal # QThread
 comport = "COM9"
 
 class RFdata:
-    Temperature = "N.D."
-    PLL = "N.D."
-    Current = "N.D."
-    Voltage = "N.D."
-    Reflected_Power = "N.D."
-    Forward_Power= "N.D."
-    PWM = "N.D."
-    On_Off = "N.D."
-    Enable_foldback = "N.D."
-    Foldback_in = "N.D."
-    Error = "N.D."
+    Temperature = "--"
+    PLL = "--"
+    Current = "--"
+    Voltage = "--"
+    Reflected_Power = "--"
+    Forward_Power= "--"
+    PWM = "--"
+    On_Off = "--"
+    Enable_foldback = "--"
+    Foldback_in = "--"
+    Error = "--"
     cycle_count = 0
     cycle_percentage = 0
 
@@ -62,7 +62,7 @@ class Worker(QtCore.QObject):
     duration = 0
     freq_list = []
     power_list = []
-    
+
     safe_mode_param = 1 # base value 1, in safe mode 2/3
     threshold_security_mode = False
     starttime_security_mode = 0
@@ -84,19 +84,19 @@ class Worker(QtCore.QObject):
         self.duration = duration
         self.freq_list = freq_list
         self.power_list = power_list
-        
-        
+
+
     def check_thresholds(self, rf_data):
         '''Check the thresholds and return a bool'''
         global thres_status
 
         thres_exceeded = False
-        if rf_data.Temperature != "N.D." and rf_data.Voltage != "N.D." and  rf_data.Current != "N.D." and rf_data.Reflected_Power != "N.D." and rf_data.Forward_Power != "N.D.":
+        if rf_data.Temperature != "--" and rf_data.Voltage != "--" and  rf_data.Current != "--" and rf_data.Reflected_Power != "--" and rf_data.Forward_Power != "--":
             if int(rf_data.Temperature) >= 65 or int(rf_data.Voltage) >= 33 or int(rf_data.Current) >= 18 or int(rf_data.Reflected_Power) >= 150 or int(rf_data.Forward_Power) >= 260:
                 thres_status = "Threshold Err. Temp {}C, Volt {}V, Curr {}A, R.Pow {}W, Pow {}W".format(rf_data.Temperature,rf_data.Voltage,rf_data.Current,rf_data.Reflected_Power,rf_data.Forward_Power)
                 thres_exceeded = True
         return thres_exceeded
-    
+
 
     def safe_mode(self, rf_data):
         global threshold_stop
@@ -158,7 +158,7 @@ class Worker(QtCore.QObject):
         self.safety_mode_counter = 0
         self.threshold_security_mode = False
         self.starttime_security_mode = 0
-        
+
         next_time = self.duration[0]
         freq = self.freq_list[0]
         power = self.power_list[0]
@@ -180,7 +180,7 @@ class Worker(QtCore.QObject):
 
         while self.execution and threshold_stop == False:
             if time.time() >= timestamp + min_refresh: # minimum refresh period
-            
+
                 self.safe_mode(rf_data)
                 if self.force_change_pwr_safety:
                     srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
@@ -239,6 +239,14 @@ class Worker(QtCore.QObject):
 
         prev_execution_time = execution_time
         rf_data = srw.read_param(ser, rf_data, "STATUS")
+
+        rf_data.Temperature = "--"
+        rf_data.PLL = "--"
+        rf_data.Current = "--"
+        rf_data.PWM = "--"
+        rf_data.Foldback_in = "--"
+        rf_data.Enable_foldback = "--"
+        rf_data.Error = "--"
 
         # Close ports
         ser.close()
@@ -451,7 +459,7 @@ class MainWindow(QMainWindow):
             date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
             write_to_file(log_file, "{} {}".format(date_time, thres_status))
             threshold_stop = False
-            
+
         self.ui.Qenablefoldback_label.setText(_translate("MainWindow", str(rf_data.Enable_foldback)))
         self.ui.Qfoldbackin_label.setText(_translate("MainWindow", str(rf_data.Foldback_in)+" W"))
         self.ui.Qerror_label.setText(_translate("MainWindow", str(rf_data.Error)))
