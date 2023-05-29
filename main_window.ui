@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>450</width>
-    <height>610</height>
+    <width>490</width>
+    <height>693</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -118,10 +118,10 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="QoutputLabel">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>540</y>
+      <x>20</x>
+      <y>600</y>
       <width>301</width>
-      <height>21</height>
+      <height>31</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -140,8 +140,8 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="QinfoLabel_3">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>350</y>
+      <x>30</x>
+      <y>390</y>
       <width>81</width>
       <height>28</height>
      </rect>
@@ -163,8 +163,8 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="QinfoLabel_4">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>390</y>
+      <x>30</x>
+      <y>430</y>
       <width>81</width>
       <height>28</height>
      </rect>
@@ -186,8 +186,8 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="QinfoLabel_5">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>430</y>
+      <x>30</x>
+      <y>470</y>
       <width>81</width>
       <height>28</height>
      </rect>
@@ -209,8 +209,8 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="QinfoLabel_6">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>470</y>
+      <x>30</x>
+      <y>510</y>
       <width>81</width>
       <height>28</height>
      </rect>
@@ -232,8 +232,8 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="QinfoLabel_7">
     <property name="geometry">
      <rect>
-      <x>220</x>
-      <y>390</y>
+      <x>230</x>
+      <y>430</y>
       <width>81</width>
       <height>28</height>
      </rect>
@@ -255,8 +255,8 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="QinfoLabel_8">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>310</y>
+      <x>30</x>
+      <y>350</y>
       <width>81</width>
       <height>28</height>
      </rect>
@@ -278,8 +278,8 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="QinfoLabel_9">
     <property name="geometry">
      <rect>
-      <x>220</x>
-      <y>430</y>
+      <x>230</x>
+      <y>470</y>
       <width>81</width>
       <height>28</height>
      </rect>
@@ -301,8 +301,8 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="QinfoLabel_11">
     <property name="geometry">
      <rect>
-      <x>220</x>
-      <y>310</y>
+      <x>230</x>
+      <y>350</y>
       <width>81</width>
       <height>28</height>
      </rect>
@@ -324,8 +324,8 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="QinfoLabel_12">
     <property name="geometry">
      <rect>
-      <x>220</x>
-      <y>470</y>
+      <x>230</x>
+      <y>510</y>
       <width>61</width>
       <height>28</height>
      </rect>
@@ -347,8 +347,8 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="QinfoLabel_13">
     <property name="geometry">
      <rect>
-      <x>220</x>
-      <y>350</y>
+      <x>230</x>
+      <y>390</y>
       <width>61</width>
       <height>28</height>
      </rect>
@@ -370,8 +370,8 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="Qforwardpower_label">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>310</y>
+      <x>130</x>
+      <y>350</y>
       <width>71</width>
       <height>31</height>
      </rect>
@@ -389,8 +389,8 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="Qreflectedpower_label">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>350</y>
+      <x>130</x>
+      <y>390</y>
       <width>71</width>
       <height>31</height>
      </rect>
@@ -438,8 +438,8 @@ background-color: rgb(255, 0, 0);</string>
    <widget class="QLabel" name="Qtemperature_label">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>430</y>
+      <x>130</x>
+      <y>470</y>
       <width>71</width>
       <height>31</height>
      </rect>
@@ -457,8 +457,8 @@ background-color: rgb(255, 0, 0);</string>
    <widget class="QLabel" name="Qvoltage_label">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>390</y>
+      <x>130</x>
+      <y>430</y>
       <width>71</width>
       <height>31</height>
      </rect>
@@ -476,8 +476,8 @@ background-color: rgb(255, 0, 0);</string>
    <widget class="QLabel" name="Qpll_label">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>470</y>
+      <x>130</x>
+      <y>510</y>
       <width>71</width>
       <height>31</height>
      </rect>
@@ -495,9 +495,9 @@ background-color: rgb(255, 0, 0);</string>
    <widget class="QLabel" name="Qfoldbackin_label">
     <property name="geometry">
      <rect>
-      <x>320</x>
-      <y>470</y>
-      <width>71</width>
+      <x>330</x>
+      <y>510</y>
+      <width>81</width>
       <height>31</height>
      </rect>
     </property>
@@ -514,9 +514,9 @@ background-color: rgb(255, 0, 0);</string>
    <widget class="QLabel" name="Qpwm_label">
     <property name="geometry">
      <rect>
-      <x>320</x>
-      <y>430</y>
-      <width>71</width>
+      <x>330</x>
+      <y>470</y>
+      <width>81</width>
       <height>31</height>
      </rect>
     </property>
@@ -533,9 +533,9 @@ background-color: rgb(255, 0, 0);</string>
    <widget class="QLabel" name="Qcurrent_label">
     <property name="geometry">
      <rect>
-      <x>320</x>
-      <y>390</y>
-      <width>71</width>
+      <x>330</x>
+      <y>430</y>
+      <width>81</width>
       <height>31</height>
      </rect>
     </property>
@@ -552,9 +552,9 @@ background-color: rgb(255, 0, 0);</string>
    <widget class="QLabel" name="Qerror_label">
     <property name="geometry">
      <rect>
-      <x>320</x>
-      <y>350</y>
-      <width>71</width>
+      <x>330</x>
+      <y>390</y>
+      <width>81</width>
       <height>31</height>
      </rect>
     </property>
@@ -571,9 +571,9 @@ background-color: rgb(255, 0, 0);</string>
    <widget class="QLabel" name="Qenablefoldback_label">
     <property name="geometry">
      <rect>
-      <x>320</x>
-      <y>310</y>
-      <width>71</width>
+      <x>330</x>
+      <y>350</y>
+      <width>81</width>
       <height>31</height>
      </rect>
     </property>
@@ -593,8 +593,8 @@ background-color: rgb(255, 0, 0);</string>
     </property>
     <property name="geometry">
      <rect>
-      <x>320</x>
-      <y>540</y>
+      <x>330</x>
+      <y>600</y>
       <width>121</width>
       <height>31</height>
      </rect>
@@ -610,9 +610,9 @@ background-color: rgb(255, 0, 0);</string>
    <widget class="QLabel" name="QinfoLabel_15">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>510</y>
-      <width>171</width>
+      <x>20</x>
+      <y>570</y>
+      <width>91</width>
       <height>21</height>
      </rect>
     </property>
@@ -653,8 +653,8 @@ background-color: rgb(255, 0, 0);</string>
    <widget class="Line" name="line_3">
     <property name="geometry">
      <rect>
-      <x>340</x>
-      <y>310</y>
+      <x>350</x>
+      <y>350</y>
       <width>118</width>
       <height>3</height>
      </rect>
@@ -699,9 +699,9 @@ background-color: rgb(255, 0, 0);</string>
    <widget class="QLabel" name="QinfoLabel_17">
     <property name="geometry">
      <rect>
-      <x>20</x>
+      <x>30</x>
       <y>220</y>
-      <width>151</width>
+      <width>141</width>
       <height>28</height>
      </rect>
     </property>
@@ -722,9 +722,9 @@ background-color: rgb(255, 0, 0);</string>
    <widget class="QLabel" name="Qcyclenumber">
     <property name="geometry">
      <rect>
-      <x>190</x>
+      <x>200</x>
       <y>220</y>
-      <width>21</width>
+      <width>101</width>
       <height>31</height>
      </rect>
     </property>
@@ -741,8 +741,8 @@ background-color: rgb(255, 0, 0);</string>
    <widget class="QLabel" name="QinfoLabel_18">
     <property name="geometry">
      <rect>
-      <x>240</x>
-      <y>220</y>
+      <x>30</x>
+      <y>260</y>
       <width>141</width>
       <height>28</height>
      </rect>
@@ -764,9 +764,9 @@ background-color: rgb(255, 0, 0);</string>
    <widget class="QLabel" name="Qcurrentcycle">
     <property name="geometry">
      <rect>
-      <x>390</x>
-      <y>220</y>
-      <width>41</width>
+      <x>200</x>
+      <y>260</y>
+      <width>101</width>
       <height>31</height>
      </rect>
     </property>
@@ -783,9 +783,9 @@ background-color: rgb(255, 0, 0);</string>
    <widget class="QLabel" name="QinfoLabel_19">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>260</y>
-      <width>191</width>
+      <x>30</x>
+      <y>300</y>
+      <width>141</width>
       <height>28</height>
      </rect>
     </property>
@@ -800,15 +800,15 @@ background-color: rgb(255, 0, 0);</string>
      <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
-     <string>Tempo totale di esecuzione:</string>
+     <string>Tempo di esecuzione:</string>
     </property>
    </widget>
    <widget class="QLabel" name="Qexecution_time">
     <property name="geometry">
      <rect>
-      <x>270</x>
-      <y>260</y>
-      <width>111</width>
+      <x>200</x>
+      <y>300</y>
+      <width>101</width>
       <height>31</height>
      </rect>
     </property>
@@ -926,7 +926,7 @@ background-color: rgb(255, 0, 0);</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>450</width>
+     <width>490</width>
      <height>21</height>
     </rect>
    </property>

@@ -247,6 +247,7 @@ class Worker(QtCore.QObject):
         rf_data.Foldback_in = "--"
         rf_data.Enable_foldback = "--"
         rf_data.Error = "--"
+        rf_data.Voltage = "--"
 
         # Close ports
         ser.close()
