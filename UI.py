@@ -264,6 +264,7 @@ class MainWindow(QMainWindow):
     execution = True
     worker = None
     thread = None
+    last_status_update = 0
 
     def __init__(self):
 
@@ -325,6 +326,28 @@ class MainWindow(QMainWindow):
             self.enableExitButton()
             self.ui.QoutputLabel.setText("Process ended.")
 
+    scheme = "LAST_CYCLE_STATUS"
+
+    def status_log_file(self, filename, updated_line):
+        update = False
+        with open(filename, 'r') as f:
+            lines = f.readlines()
+
+        if "play" in lines[0]:
+            print("Add scheme after a play")
+            lines[0] = self.scheme + " " + updated_line + "\n" + lines[0]
+            update = True
+        elif self.scheme in lines[0]:
+            print("Update the scheme")
+            lines[0] = self.scheme + " " + updated_line + "\n"
+            update = True
+        else:
+            print("Not in PLAY mode")
+
+        # Write the updated contents back to the file
+        if update:
+            with open(filename, 'w') as f:
+                f.writelines(lines)
 
     def save_error_log(self):
         to_add = False
@@ -433,6 +456,7 @@ class MainWindow(QMainWindow):
         global execution_time
         global threshold_stop
         global thres_status
+        date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
 
         _translate = QtCore.QCoreApplication.translate
         self.ui.Qtemperature_label.setText(_translate("MainWindow", str(rf_data.Temperature)+" °C"))
@@ -453,7 +477,6 @@ class MainWindow(QMainWindow):
 
         if threshold_stop:
             self.ui.QoutputLabel.setText("THRESHOLD ALARM, see log file.")
-            date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
             write_to_file(log_file, "{} {}".format(date_time, thres_status))
             threshold_stop = False
 
@@ -463,6 +486,11 @@ class MainWindow(QMainWindow):
         self.ui.Qcyclenumber.setText(_translate("MainWindow", str(rf_data.cycle_count)))
         self.ui.Qcurrentcycle.setText(_translate("MainWindow", str(rf_data.cycle_percentage)))
         self.ui.Qexecution_time.setText(_translate("MainWindow", str(datetime.timedelta(seconds = int(execution_time)))))
+
+        if time.time() > self.last_status_update + 10:
+            self.status_log_file(log_file, "{} - num_cycles: {} - current_cycle: {}%".format(date_time, rf_data.cycle_count, rf_data.cycle_percentage))
+            self.last_status_update = time.time()
+
 
 def update_progress(progress_bar, value):
     progress_bar.setValue(value)
