@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(519, 693)
+        MainWindow.resize(1116, 664)
         MainWindow.setStyleSheet("color: rgb(41, 45, 62);\n"
 "background-color: rgb(41, 45, 62);")
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -330,9 +330,17 @@ class Ui_MainWindow(object):
         self.QinfoLabel_23.setStyleSheet("color: rgb(255, 255, 255);")
         self.QinfoLabel_23.setAlignment(QtCore.Qt.AlignCenter)
         self.QinfoLabel_23.setObjectName("QinfoLabel_23")
+        self.MplWidget = Mplwidget(self.centralwidget)
+        self.MplWidget.setGeometry(QtCore.QRect(500, 0, 611, 320))
+        self.MplWidget.setMinimumSize(QtCore.QSize(480, 320))
+        self.MplWidget.setObjectName("MplWidget")
+        self.MplWidget_2 = Mplwidget(self.centralwidget)
+        self.MplWidget_2.setGeometry(QtCore.QRect(500, 330, 611, 320))
+        self.MplWidget_2.setMinimumSize(QtCore.QSize(0, 0))
+        self.MplWidget_2.setObjectName("MplWidget_2")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 519, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1116, 21))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
@@ -384,6 +392,7 @@ class Ui_MainWindow(object):
         self.QinfoLabel_21.setText(_translate("MainWindow", "file selezionato:"))
         self.QinfoLabel_22.setText(_translate("MainWindow", "RF status:"))
         self.QinfoLabel_23.setText(_translate("MainWindow", "PLC status:"))
+from mplwidget import Mplwidget
 
 
 if __name__ == "__main__":

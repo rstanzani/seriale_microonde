@@ -14,7 +14,6 @@ from binascii import hexlify
 
 
 def connect_serial(comport="COM11"):
-    # comport = "COM11"
     try:
         ser = serial.Serial(comport, 250000, timeout=0.1, bytesize=8) #nota: se metto un timeout dopo quel tempo mi legge tutto quello che ha ricevuto
         time.sleep(3)
@@ -46,7 +45,6 @@ def rnd_hex_freq(randomize=True, list_val=[2420, 2480]):
         rnd = random.randint(0, len(list_val)-1)
         freq = list_val[rnd]
 
-    # print(freq)
     freq_hex = float_to_hex(freq)
     converted = literal_eval(freq_hex) # Create the int with the hexadecimal value contained in the string (source: https://linuxhint.com/string-to-hexadecimal-in-python/)
     return converted

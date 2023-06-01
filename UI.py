@@ -42,7 +42,6 @@ def write_to_file(filename, text):
         f.write(content)
     f.close()
 
-
 rf_data = RFdata()
 index = 0
 interruption_type = "" # "pause", "stop"
@@ -149,7 +148,7 @@ class Worker(QtCore.QObject):
 
         print("In run...")
         self.start_execution()
-        # global execution
+
         print("Opening connection with RF...")
         ser = srw.connect_serial(comport)
 
@@ -163,7 +162,6 @@ class Worker(QtCore.QObject):
         freq = self.freq_list[0]
         power = self.power_list[0]
 
-        # print("Starting and safe_mode_param is {}".format(self.safe_mode_param))
         srw.send_cmd_string(ser,"ON")
         srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
         srw.empty_buffer(ser, wait=1)
@@ -204,7 +202,6 @@ class Worker(QtCore.QObject):
 
 
                 rf_data = srw.read_param(ser, rf_data, "STATUS", False)
-                # rf_data = srw.read_param(ser, rf_data, "FLDBCK_READ", False)
                 rf_data.cycle_count = num_executed_cycles
                 rf_data.cycle_percentage = round(index/(len(self.duration))*100, 0)
                 self.messaged.emit()
@@ -219,7 +216,6 @@ class Worker(QtCore.QObject):
                     # restart the rf
 
                     check = False
-                    # rf_data = srw.read_param(ser, rf_data, "STATUS", False)
                     while check == False:
                         srw.send_cmd_string(ser,"ON")
                         print("Setting pwr {}".format(power))
@@ -357,7 +353,7 @@ class MainWindow(QMainWindow):
         # Read parameters from csv file
         if opened_path != "":
             self.ui.QGDML.setText(opened_path)
-            self.duration, self.freq_list, self.power_list, self.error, self.msg  = rcsv.read_and_plot(opened_path, True, False)
+            self.duration, self.freq_list, self.power_list, self.error, self.msg  = rcsv.read_and_plot(self.ui, opened_path)
             self.ui.QoutputLabel.setText(self.msg)
             if not self.error:
                 self.enablePlayButton()
@@ -478,7 +474,6 @@ def update_progress(progress_bar, value):
 
 
 if __name__ == "__main__":
-
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
