@@ -334,11 +334,11 @@ class MainWindow(QMainWindow):
             lines = f.readlines()
 
         if "play" in lines[0]:
-            print("Add scheme after a play")
+            # print("Add scheme after a play")
             lines[0] = self.scheme + " " + updated_line + "\n" + lines[0]
             update = True
         elif self.scheme in lines[0]:
-            print("Update the scheme")
+            # print("Update the scheme")
             lines[0] = self.scheme + " " + updated_line + "\n"
             update = True
         else:
@@ -487,8 +487,8 @@ class MainWindow(QMainWindow):
         self.ui.Qcurrentcycle.setText(_translate("MainWindow", str(rf_data.cycle_percentage)))
         self.ui.Qexecution_time.setText(_translate("MainWindow", str(datetime.timedelta(seconds = int(execution_time)))))
 
-        if time.time() > self.last_status_update + 10:
-            self.status_log_file(log_file, "{} - num_cycles: {} - current_cycle: {}%".format(date_time, rf_data.cycle_count, rf_data.cycle_percentage))
+        if time.time() > self.last_status_update + 60:
+            self.status_log_file(log_file, "{} - cycle num: {} - cycle progress: {}%".format(date_time, rf_data.cycle_count, rf_data.cycle_percentage))
             self.last_status_update = time.time()
 
 
