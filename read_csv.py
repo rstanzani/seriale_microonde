@@ -66,7 +66,9 @@ def read_and_plot(ui, filepath):
             freq.append(freq[len(freq)-1])
             power.append(power[len(power)-1])
 
-            ui.MplWidget.canvas.axes.clear()
+
+            ui.MplWidget.canvas.axes = ui.MplWidget.canvas.figure.add_subplot(111)      
+            # ui.MplWidget.canvas.axes.clear()
             ui.MplWidget.canvas.axes.step(time, freq, color='blue', alpha=0.5, where='post', zorder=-2)
             ui.MplWidget.canvas.axes.set_ylabel("{}".format(label[0][1]), color="blue", fontsize=10)
             ui.MplWidget.canvas.axes.tick_params(axis='y', colors='blue', labelsize=9)
@@ -78,7 +80,8 @@ def read_and_plot(ui, filepath):
             ui.MplWidget.canvas.axes.set_ylim([minfreq-0.1*(maxfreq-minfreq), maxfreq+0.1*(maxfreq-minfreq)])
             ui.MplWidget.canvas.draw()
 
-            ui.MplWidget_2.canvas.axes.clear()
+            ui.MplWidget_2.canvas.axes = ui.MplWidget_2.canvas.figure.add_subplot(111)
+            # ui.MplWidget_2.canvas.axes.clear()
             ui.MplWidget_2.canvas.axes.step(time, power, color='orange', alpha=0.5, where='post', zorder=-2)
             ui.MplWidget_2.canvas.axes.set_xlabel("Time [s]", fontsize=9, labelpad=6)
             ui.MplWidget_2.canvas.axes.set_ylabel("{}".format(label[0][2]), color="orange", fontsize=10)
