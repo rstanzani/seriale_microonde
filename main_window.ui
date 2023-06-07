@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1116</width>
-    <height>664</height>
+    <height>691</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -666,7 +666,7 @@ background-color: rgb(255, 0, 0);</string>
      <enum>Qt::Horizontal</enum>
     </property>
    </widget>
-   <widget class="QLabel" name="QplconairInfo">
+   <widget class="QLabel" name="QPLCInfo">
     <property name="enabled">
      <bool>true</bool>
     </property>
@@ -959,7 +959,7 @@ background-color: rgb(255, 0, 0);</string>
      <x>0</x>
      <y>0</y>
      <width>1116</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
   </widget>

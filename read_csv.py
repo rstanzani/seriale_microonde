@@ -67,7 +67,7 @@ def read_and_plot(ui, filepath):
             power.append(power[len(power)-1])
 
 
-            ui.MplWidget.canvas.axes = ui.MplWidget.canvas.figure.add_subplot(111)      
+            ui.MplWidget.canvas.axes = ui.MplWidget.canvas.figure.add_subplot(111)
             # ui.MplWidget.canvas.axes.clear()
             ui.MplWidget.canvas.axes.step(time, freq, color='blue', alpha=0.5, where='post', zorder=-2)
             ui.MplWidget.canvas.axes.set_ylabel("{}".format(label[0][1]), color="blue", fontsize=10)

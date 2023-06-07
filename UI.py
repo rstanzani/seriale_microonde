@@ -6,12 +6,15 @@ import read_csv as rcsv
 import serial_RW as srw
 from UI_raw import Ui_MainWindow
 import sys
+# from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, QThreadPool
 from PyQt5.QtCore import pyqtSignal # QThread
+import plc_communication as plcc
 
-# https://realpython.com/python-pyqt-qthread/
-# https://www.xingyulei.com/post/qt-threading/
-# TODO: rimuovere l'uso del dict per i campi
+from threading import Thread
+
 comport = "COM9"
+plc_thread_exec = True # used to stop the plc reading thread
+plc_status = 0
 
 class RFdata:
     Temperature = "--"
@@ -50,6 +53,41 @@ execution_time = 0
 prev_execution_time = 0
 threshold_stop = False
 thres_status = ""
+
+
+class PLCWorker(QtCore.QObject):
+    execution = False
+    messaged = pyqtSignal()
+    finished = pyqtSignal()
+
+    def stop_worker_execution(self):
+        if self.execution:
+            self.execution = False
+        else:
+            print("Execution stopped.")
+
+    def start_execution(self):
+        print("Started execution")
+        self.execution = True
+
+    def run(self):
+        global plc_status
+        global plc_thread_exec
+
+        print("In run for plc communication...")
+        self.start_execution()
+
+        while plc_thread_exec:
+            plc_status = plcc.is_plc_on_air()  #TODO set to 1 for testing purposes
+            time.sleep(2)
+            self.messaged.emit()
+            # print(plc_status)
+            # self.messaged.emit()
+
+        print("plc communication finished")
+        self.messaged.emit()
+        self.finished.emit()
+
 
 class Worker(QtCore.QObject):
     execution = False
@@ -90,7 +128,7 @@ class Worker(QtCore.QObject):
         global thres_status
 
         thres_exceeded = False
-        if rf_data.Temperature != "--" and rf_data.Voltage != "--" and  rf_data.Current != "--" and rf_data.Reflected_Power != "--" and rf_data.Forward_Power != "--":
+        if rf_data.Temperature != "--" and rf_data.Voltage != "--" and rf_data.Current != "--" and rf_data.Reflected_Power != "--" and rf_data.Forward_Power != "--":
             if int(rf_data.Temperature) >= 65 or int(rf_data.Voltage) >= 33 or int(rf_data.Current) >= 18 or int(rf_data.Reflected_Power) >= 150 or int(rf_data.Forward_Power) >= 260:
                 thres_status = "Threshold Err. Temp {}C, Volt {}V, Curr {}A, R.Pow {}W, Pow {}W".format(rf_data.Temperature,rf_data.Voltage,rf_data.Current,rf_data.Reflected_Power,rf_data.Forward_Power)
                 thres_exceeded = True
@@ -142,6 +180,7 @@ class Worker(QtCore.QObject):
         global interruption_type
         global threshold_alarm
         global thres_status
+        global plc_status
 
         if interruption_type == "stop":
             prev_execution_time = 0
@@ -176,9 +215,10 @@ class Worker(QtCore.QObject):
         min_refresh = 1
         cycle_time = time.time()
 
-        while self.execution and threshold_stop == False:
+        while self.execution and threshold_stop == False and plc_status:
             if time.time() >= timestamp + min_refresh: # minimum refresh period
 
+                # print("Il plc al momento vale: {}".format(plc_status))
                 self.safe_mode(rf_data)
                 if self.force_change_pwr_safety:
                     srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
@@ -263,35 +303,76 @@ class MainWindow(QMainWindow):
     timestamp_old = 0
     execution = True
     worker = None
+    plcworker = None
     thread = None
+    thread_plc = None
+
     last_status_update = 0
+
 
     def __init__(self):
 
         self.__thread = QtCore.QThread()
+        self.__thread_plc = QtCore.QThread()
 
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        self.ui.QOpen_CSV.clicked.connect(lambda:  self.open_file("Open_CSV"))
+        self.ui.QOpen_CSV.clicked.connect(lambda: self.open_file("Open_CSV"))
         self.ui.Qexit.clicked.connect(lambda: self.close())
         self.ui.Qplay.clicked.connect(lambda: self.play_execution())
         self.ui.Qpause.clicked.connect(lambda: self.pause_execution())
         self.ui.Qstop.clicked.connect(lambda: self.stop_execution())
 
+        self.run_plc_check()
+
+
+    def run_plc_check(self):
+        if not self.__thread_plc.isRunning():
+            self.__thread_plc = self.__get_thread_plc()
+            self.__thread_plc.start()
+        else:
+            print("Thread already running, killing it")
+            # print("thread id is {}".format(int(self.__thread_plc.currentThreadId())))
+            self.__thread_plc.quit()
+            time.sleep(3)
+            self.__thread_plc = self.__get_thread_plc()
+            self.__thread_plc.start()
+            # print("thread id is {}".format(int(self.__thread_plc.currentThreadId())))
+
+
     def run_long_task(self):
         if not self.__thread.isRunning():
             self.__thread = self.__get_thread()
             self.__thread.start()
+            # print("first iteration, thread id is {}".format(int(self.__thread.currentThreadId())))
         else:
             print("Thread already running, killing it")
+            # print("thread id is {}".format(int(self.__thread.currentThreadId())))
             self.__thread.quit()
+            time.sleep(3)
             self.__thread = self.__get_thread()
             self.__thread.start()
+            # print("thread id is {}".format(int(self.__thread.currentThreadId())))
 
+
+    def __get_thread_plc(self):
+        # print("Sono in A")
+        self.thread_plc = QtCore.QThread()
+        self.plcworker = PLCWorker()
+        self.plcworker.moveToThread(self.thread_plc)
+
+        self.thread_plc.plcworker = self.plcworker
+
+        self.thread_plc.started.connect(self.plcworker.run)
+        self.plcworker.finished.connect(lambda: self.quit_thread_plc())
+        self.plcworker.messaged.connect(lambda: self.update_plc_status())
+
+        return self.thread_plc
 
     def __get_thread(self):
+        # print("Sono in B")
         self.thread = QtCore.QThread()
         self.worker = Worker()
         self.worker.give_values(self.duration, self.freq_list, self.power_list)
@@ -300,19 +381,22 @@ class MainWindow(QMainWindow):
         # this is essential when worker is in local scope!
         self.thread.worker =  self.worker
 
-        self.thread.started.connect( self.worker.run)
+        self.thread.started.connect(self.worker.run)
         self.worker.finished.connect(lambda: self.quit_thread())
 
         # worker.progressed.connect(lambda value: update_progress(self.ui.progressBar, value))   #for a progress bar
         # worker.messaged.connect(lambda msg: update_status(self.statusBar(), msg))
         self.worker.messaged.connect(lambda: self.update_status())
-
         return self.thread
-
 
     def quit_thread(self):
         global interruption_type
         self.thread.quit
+
+    def quit_thread_plc(self):
+        global plc_thread_exec
+        plc_thread_exec = False
+        self.thread_plc.quit
 
     def restore_buttons(self):
         self.enablePlayButton()
@@ -341,8 +425,9 @@ class MainWindow(QMainWindow):
             # print("Update the scheme")
             lines[0] = self.scheme + " " + updated_line + "\n"
             update = True
-        else:
-            print("Not in PLAY mode")
+        # else:
+            # print("Not in PLAY mode")
+
 
         # Write the updated contents back to the file
         if update:
@@ -354,13 +439,13 @@ class MainWindow(QMainWindow):
         if self.rf_values.Error != "No error":
             if len(self.error_history) != 0:
                 if self.error_history[-1][1] != self.rf_values.Error:
-                    print("Add: new value")
+                    # print("Add: new value")
                     to_add = True
                 elif time.time()-self.error_history[-1][0] >= 60:
-                    print("Add with {} seconds!".format(time.time()-self.error_history[-1][0]))
+                    # print("Add with {} seconds!".format(time.time()-self.error_history[-1][0]))
                     to_add = True
             else:
-                print("Add: first elem")
+                # print("Add: first elem")
                 to_add = True
             if to_add:
                 self.error_history.append([time.time(), self.rf_values.Error])
@@ -449,6 +534,12 @@ class MainWindow(QMainWindow):
         self.ui.QOpen_CSV.setEnabled(False)
 
     def close(self):
+        global plc_thread_exec
+        if self.thread:
+            self.thread.quit
+        if self.thread_plc:
+            plc_thread_exec = False
+            self.thread_plc.quit
         QApplication.quit()
 
     def update_status(self):
@@ -490,6 +581,19 @@ class MainWindow(QMainWindow):
         if time.time() > self.last_status_update + 60:
             self.status_log_file(log_file, "{} - cycle num: {} - cycle progress: {}%".format(date_time, rf_data.cycle_count, rf_data.cycle_percentage))
             self.last_status_update = time.time()
+
+    def update_plc_status(self):
+        global plc_status
+
+        if plc_status:
+            # print("Update with green color")
+            self.ui.QPLCInfo.setStyleSheet("color: rgb(41, 45, 62);\n"
+                                             "background-color: rgb(85, 255, 0);")
+        else:
+            # print("Update with red color")
+            # self.ui.Qonoff_label.setText(_translate("MainWindow", "Off"))
+            self.ui.QPLCInfo.setStyleSheet("color: rgb(41, 45, 62);\n"
+                                             "background-color: rgb(255, 0, 0);")
 
 
 def update_progress(progress_bar, value):
