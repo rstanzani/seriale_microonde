@@ -4,3 +4,4 @@
 *.jpg
 /__pycache__
 log.txt
+config.txt
