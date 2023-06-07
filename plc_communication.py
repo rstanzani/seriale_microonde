@@ -35,11 +35,11 @@ def getState():
     url = "api/get/data?elm=STATE"
     return request(url)
 
-def get_val(content):
+def get_val(content, letter="M"):
     data = json.loads(content)
     operands = data['OPERANDS']
-    msingle = operands['MSINGLE']
-    parameters = msingle[0]
+    singleop = operands['{}SINGLE'.format(letter)]
+    parameters = singleop[0]
     index = parameters['INDEX']
     value = parameters['V']
     return value
@@ -64,7 +64,8 @@ def is_plc_on_air():
 #        # print("Value is {}".format(value))
 #        # counter += 1
 
-
+# resp, content = getOp("MB", "26") #counter
+# print(get_val(content, "MB"))
 # main()
 
 

@@ -78,7 +78,7 @@ class PLCWorker(QtCore.QObject):
         self.start_execution()
 
         while plc_thread_exec:
-            plc_status = plcc.is_plc_on_air()  #TODO set to 1 for testing purposes
+            plc_status = 1 # plcc.is_plc_on_air()  #TODO set to 1 for testing purposes
             time.sleep(2)
             self.messaged.emit()
             # print(plc_status)
@@ -451,7 +451,6 @@ class MainWindow(QMainWindow):
                 self.error_history.append([time.time(), self.rf_values.Error])
         self.rf_values.Error = "No error"
 
-
     def open_file(self, button_name):
         # Reads the file path from the prompt
         self.disablePlayButton()
@@ -584,7 +583,8 @@ class MainWindow(QMainWindow):
 
     def update_plc_status(self):
         global plc_status
-
+        date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+        
         if plc_status:
             # print("Update with green color")
             self.ui.QPLCInfo.setStyleSheet("color: rgb(41, 45, 62);\n"
@@ -594,7 +594,7 @@ class MainWindow(QMainWindow):
             # self.ui.Qonoff_label.setText(_translate("MainWindow", "Off"))
             self.ui.QPLCInfo.setStyleSheet("color: rgb(41, 45, 62);\n"
                                              "background-color: rgb(255, 0, 0);")
-
+            write_to_file(log_file, "{} {}".format(date_time, "stop from PLC"))
 
 def update_progress(progress_bar, value):
     progress_bar.setValue(value)
