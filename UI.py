@@ -12,7 +12,15 @@ import plc_communication as plcc
 
 from threading import Thread
 
-comport = "COM9"
+# Set the COM port
+
+def read_COM_name(filename):
+    with open(filename, "r") as f:
+        read = f.readline()
+        com = "COM"+str(read)
+    return com
+
+comport = read_COM_name("config.txt")
 plc_thread_exec = True # used to stop the plc reading thread
 plc_status = 0
 
