@@ -210,8 +210,13 @@ class Worker(QtCore.QObject):
         power = self.power_list[0]
 
         srw.send_cmd_string(ser,"ON")
+        
         srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
         srw.empty_buffer(ser, wait=1)
+        srw.send_cmd_string(ser,"FLDBCK_ON", redundancy=3)
+        srw.empty_buffer(ser, wait=0.5)
+        srw.send_cmd_string(ser,"FLDBCK_VAL", 5, redundancy=3)
+        srw.empty_buffer(ser, wait=0.5)
         srw.send_cmd_string(ser,"FREQ", freq, redundancy=1)
 
         rf_data = srw.read_param(ser, rf_data, "STATUS", 1, False)

@@ -138,7 +138,7 @@ def send_cmd_string(ser, string, val=0, redundancy=1):
         elif string == "READ_PWR":
             send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x06, 0x00000000)
         elif string == "FLDBCK_ON":
-            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x26, 0x1) # turn on
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x26, 0x00000001) # turn on
         elif string == "FLDBCK_VAL":
             if value != 0:
                 value = hex(value)  # todo devono essere unsigned long
