@@ -230,16 +230,20 @@ def empty_buffer(ser, wait=2):
             continue
 
 
-def read_param(ser, rf_values, param="STATUS", wait=1, verbose=False):
+def read_param(ser, noresp_counter, rf_values, param="STATUS", wait=1, verbose=False):
     # read response
     start_waiting = time.time()
+    resp_len = 0
 
     send_cmd_string(ser, param)
     while time.time() <= start_waiting + wait:
         r = ser.read(100)
-        if len(r) == 0:
+        resp_len = len(r)
+        if resp_len == 0:
+            noresp_counter += 1
             continue
 
+        noresp_counter = 0 # reset if it reads something
         r_hex = hexlify(r)
         prova_int = int(r_hex, 16)
 
@@ -250,7 +254,7 @@ def read_param(ser, rf_values, param="STATUS", wait=1, verbose=False):
         rf_values = set_status_values(rf_values, payload_list, False)
         if verbose:
             print_rfdata(rf_values, 2)
-    return rf_values
+    return rf_values, noresp_counter
     # return payload_list
 
 

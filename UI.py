@@ -115,6 +115,8 @@ class Worker(QtCore.QObject):
     safety_mode_counter = 0
     force_change_pwr_safety = False
 
+    noresp_counter = 0
+
     def stop_worker_execution(self):
         if self.execution:
             self.execution = False
@@ -210,7 +212,7 @@ class Worker(QtCore.QObject):
         power = self.power_list[0]
 
         srw.send_cmd_string(ser,"ON")
-        
+
         srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
         srw.empty_buffer(ser, wait=1)
         srw.send_cmd_string(ser,"FLDBCK_ON", redundancy=3)
@@ -219,7 +221,7 @@ class Worker(QtCore.QObject):
         srw.empty_buffer(ser, wait=0.5)
         srw.send_cmd_string(ser,"FREQ", freq, redundancy=1)
 
-        rf_data = srw.read_param(ser, rf_data, "STATUS", 1, False)
+        rf_data, self.noresp_counter = srw.read_param(ser, self.noresp_counter, rf_data, "STATUS", 1, False)
         time.sleep(0.2)
 
         # Start the main functions
@@ -231,6 +233,10 @@ class Worker(QtCore.QObject):
         while self.execution and threshold_stop == False and plc_status:
             if time.time() >= timestamp + min_refresh: # minimum refresh period
 
+                if self.noresp_counter >= 30:
+                    print("Exit because of: No Response from serial!")
+                    self.execution = False
+                    rf_data.On_Off = 0
                 # print("Il plc al momento vale: {}".format(plc_status))
                 self.safe_mode(rf_data)
                 if self.force_change_pwr_safety:
@@ -254,7 +260,7 @@ class Worker(QtCore.QObject):
                     srw.send_cmd_string(ser,"FREQ", freq, redundancy=3)
 
 
-                rf_data = srw.read_param(ser, rf_data, "STATUS", False)
+                rf_data, self.noresp_counter = srw.read_param(ser, self.noresp_counter, rf_data, "STATUS", 1, False)
                 rf_data.cycle_count = num_executed_cycles
                 rf_data.cycle_percentage = round(index/(len(self.duration))*100, 0)
                 self.messaged.emit()
@@ -272,7 +278,7 @@ class Worker(QtCore.QObject):
                     while check == False:
                         srw.send_cmd_string(ser,"ON")
                         print("Setting pwr {}".format(power))
-                        rf_data = srw.read_param(ser, rf_data, "STATUS", 1, False)
+                        rf_data, self.noresp_counter = srw.read_param(ser, self.noresp_counter, rf_data, "STATUS", 1, False)
                         time.sleep(1)
                         if rf_data.On_Off == 1:
                             srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
@@ -287,7 +293,7 @@ class Worker(QtCore.QObject):
         srw.empty_buffer(ser, wait=1)
 
         prev_execution_time = execution_time
-        rf_data = srw.read_param(ser, rf_data, "STATUS")
+        rf_data, self.noresp_counter = srw.read_param(ser, self.noresp_counter, rf_data, "STATUS", 1, False)
 
         rf_data.Temperature = "--"
         rf_data.PLL = "--"
@@ -597,7 +603,7 @@ class MainWindow(QMainWindow):
     def update_plc_status(self):
         global plc_status
         date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
-        
+
         if plc_status:
             # print("Update with green color")
             self.ui.QPLCInfo.setStyleSheet("color: rgb(41, 45, 62);\n"
