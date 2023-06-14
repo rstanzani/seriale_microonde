@@ -55,7 +55,7 @@ def write_to_file(filename, text):
 
 rf_data = RFdata()
 index = 0
-interruption_type = "" # "pause", "stop"
+interruption_type = "" # "stop", "reset"
 num_executed_cycles = 1
 execution_time = 0
 prev_execution_time = 0
@@ -162,7 +162,7 @@ class Worker(QtCore.QObject):
                 if time.time() >= self.starttime_security_mode + self.duration_security_mode:
                     if self.check_thresholds(rf_data):
                         self.starttime_security_mode = time.time()
-                        # try to gradually reduce the output power. After N times, the system is stopped.
+                        # try to gradually reduce the output power. After N times, the system is stopped (equivalent to a Reset).
                         self.safety_mode_counter += 1
                         self.safe_mode_param = (2-0.5*self.safety_mode_counter)/3
                         self.force_change_pwr_safety = True # force the change of pwr
@@ -190,7 +190,7 @@ class Worker(QtCore.QObject):
         global thres_status
         global plc_status
 
-        if interruption_type == "stop":
+        if interruption_type == "reset":
             prev_execution_time = 0
 
         print("In run...")
@@ -277,7 +277,7 @@ class Worker(QtCore.QObject):
 
         # Soft turn off
         print("\nShutting down...")
-        srw.send_cmd_string(ser,"PWM", 0)
+        srw.send_cmd_string(ser,"PWM", 0, 2)
         srw.send_cmd_string(ser,"OFF")
         srw.empty_buffer(ser, wait=1)
 
@@ -330,8 +330,8 @@ class MainWindow(QMainWindow):
         self.ui.QOpen_CSV.clicked.connect(lambda: self.open_file("Open_CSV"))
         self.ui.Qexit.clicked.connect(lambda: self.close())
         self.ui.Qplay.clicked.connect(lambda: self.play_execution())
-        self.ui.Qpause.clicked.connect(lambda: self.pause_execution())
         self.ui.Qstop.clicked.connect(lambda: self.stop_execution())
+        self.ui.Qreset.clicked.connect(lambda: self.reset_execution())
 
         self.run_plc_check()
 
@@ -408,12 +408,12 @@ class MainWindow(QMainWindow):
 
     def restore_buttons(self):
         self.enablePlayButton()
-        if interruption_type == "pause":
-            self.disablePauseButton()
-            self.ui.QoutputLabel.setText("Process paused.")
-        elif interruption_type == "stop":
+        if interruption_type == "stop":
             self.disableStopButton()
-            self.disablePauseButton()
+            self.ui.QoutputLabel.setText("Process stopped.")
+        elif interruption_type == "reset":
+            self.disableResetButton()
+            self.disableStopButton()
             self.enableOpenCSVButton()
             self.enableExitButton()
             self.ui.QoutputLabel.setText("Process ended.")
@@ -480,32 +480,32 @@ class MainWindow(QMainWindow):
         date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
         write_to_file(log_file, "{} {}".format(date_time, "play"))
         self.disablePlayButton()
-        self.enablePauseButton()
         self.enableStopButton()
+        self.enableResetButton()
         self.disableExitButton()
         self.disableOpenCSVButton()
         self.run_long_task()
 
-    def stop_execution(self):
+    def reset_execution(self):
         global index
         global interruption_type
         global num_executed_cycles
-        interruption_type = "stop"
+        interruption_type = "reset"
         num_executed_cycles = 1
         date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
-        write_to_file(log_file, "{} {}".format(date_time, "stop"))
+        write_to_file(log_file, "{} {}".format(date_time, "reset"))
         write_to_file(log_file, "{}".format("--"))
-        self.ui.QoutputLabel.setText("Process stopped.")
+        self.ui.QoutputLabel.setText("Process reset.")
         self.worker.stop_worker_execution()
         index = 0
         self.restore_buttons()
 
-    def pause_execution(self):
+    def stop_execution(self):
         global interruption_type
-        interruption_type = "pause"
+        interruption_type = "stop"
         date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
-        write_to_file(log_file, "{} {}".format(date_time, "pause"))
-        self.ui.QoutputLabel.setText("Process paused.")
+        write_to_file(log_file, "{} {}".format(date_time, "stop"))
+        self.ui.QoutputLabel.setText("Process stopped.")
         self.worker.stop_worker_execution()
         self.restore_buttons()
 
@@ -516,17 +516,17 @@ class MainWindow(QMainWindow):
     def disablePlayButton(self):
         self.ui.Qplay.setEnabled(False)
 
-    def enablePauseButton(self):
-        self.ui.Qpause.setEnabled(True)
-
-    def disablePauseButton(self):
-        self.ui.Qpause.setEnabled(False)
-
     def enableStopButton(self):
         self.ui.Qstop.setEnabled(True)
 
     def disableStopButton(self):
         self.ui.Qstop.setEnabled(False)
+
+    def enableResetButton(self):
+        self.ui.Qreset.setEnabled(True)
+
+    def disableResetButton(self):
+        self.ui.Qreset.setEnabled(False)
 
     def enableExitButton(self):
         self.ui.Qexit.setEnabled(True)

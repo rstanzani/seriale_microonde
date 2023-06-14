@@ -38,7 +38,7 @@ background-color: rgb(41, 45, 62);</string>
      <string>PLAY</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="Qstop">
+   <widget class="QPushButton" name="Qreset">
     <property name="enabled">
      <bool>false</bool>
     </property>
@@ -55,7 +55,7 @@ background-color: rgb(41, 45, 62);</string>
 :disabled {color:rgb(150, 150, 180); background-color:rgb(88, 96, 104) }</string>
     </property>
     <property name="text">
-     <string>STOP</string>
+     <string>RESET</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="QGDML">
@@ -630,7 +630,7 @@ background-color: rgb(255, 0, 0);</string>
      <string>Messages:</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="Qpause">
+   <widget class="QPushButton" name="Qstop">
     <property name="enabled">
      <bool>false</bool>
     </property>
@@ -647,7 +647,7 @@ background-color: rgb(255, 0, 0);</string>
 :disabled {color:rgb(150, 150, 180); background-color:rgb(88, 96, 104) }</string>
     </property>
     <property name="text">
-     <string>PAUSE</string>
+     <string>STOP</string>
     </property>
    </widget>
    <widget class="Line" name="line_3">
@@ -959,7 +959,7 @@ background-color: rgb(255, 0, 0);</string>
      <x>0</x>
      <y>0</y>
      <width>1116</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
