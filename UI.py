@@ -191,6 +191,7 @@ class Worker(QtCore.QObject):
         global threshold_alarm
         global thres_status
         global plc_status
+        global log_file
 
         if interruption_type == "reset":
             prev_execution_time = 0
@@ -235,6 +236,8 @@ class Worker(QtCore.QObject):
 
                 if self.noresp_counter >= 30:
                     print("Exit because of: No Response from serial!")
+                    date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+                    write_to_file(log_file, "{} {}".format(date_time, "stopped execution: no response from serial"))
                     self.execution = False
                     rf_data.On_Off = 0
                 # print("Il plc al momento vale: {}".format(plc_status))
