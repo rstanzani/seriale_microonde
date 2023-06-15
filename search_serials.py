@@ -6,10 +6,14 @@ Created on Wed Feb 22 15:55:06 2023
 """
 
 import serial
+
+#%% Old version
 import glob
 import sys
 
-def serial_ports():
+import serial.tools.list_ports
+
+def serial_ports(): # the hard way, it finds also virtual com ports
     """ Lists serial port names
 
         :raises EnvironmentError:
@@ -37,22 +41,22 @@ def serial_ports():
             pass
     return result
 
+
+def serial_ports_compact():
+    ports_new = serial.tools.list_ports.comports()
+
+    port_list = []
+    for port, desc, hwid in sorted(ports_new):
+        port_list.append(str(port))
+    # print(port_list)
+    return port_list
+
+
 def print_serials():
-    list_serials = serial_ports()
+    list_serials = serial_ports_compact()
     printable = ""
     for ser in list_serials:
         printable += str(ser) + " "
     return printable
 
-# lista = print_serials()
-# print(serial_ports())
 
-
-
-
-# ## https://stackoverflow.com/questions/12090503/listing-available-com-ports-with-python
-# import serial.tools.list_ports
-# ports = serial.tools.list_ports.comports()
-
-# for port, desc, hwid in sorted(ports):
-#         print("{}: {} [{}]".format(port, desc, hwid))

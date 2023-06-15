@@ -14,7 +14,6 @@ from binascii import hexlify
 
 
 def connect_serial(comport="COM11"):
-    # comport = "COM11"
     try:
         ser = serial.Serial(comport, 250000, timeout=0.1, bytesize=8) #nota: se metto un timeout dopo quel tempo mi legge tutto quello che ha ricevuto
         time.sleep(3)
@@ -46,7 +45,6 @@ def rnd_hex_freq(randomize=True, list_val=[2420, 2480]):
         rnd = random.randint(0, len(list_val)-1)
         freq = list_val[rnd]
 
-    # print(freq)
     freq_hex = float_to_hex(freq)
     converted = literal_eval(freq_hex) # Create the int with the hexadecimal value contained in the string (source: https://linuxhint.com/string-to-hexadecimal-in-python/)
     return converted
@@ -123,85 +121,99 @@ def send_cmd(ser, start, address, length, typee, operand, content):
     ser.write(command.to_bytes(length_conversion, 'big'))
 
 
-def send_cmd_string(ser, string, value=0):
-    if string == "ON":
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0B, 0x00000001)
-    elif string == "OFF":
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0B, 0x00000000)
-    elif string == "STATUS":
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x16, 0x00000000)
-    elif string == "RNDFREQ":
-        hex_freq = rnd_hex_freq(True)
-        # print("Send freq {}".format(hex_freq))
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x09, hex_freq)
-    elif string == "READ_PWR":
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x06, 0x00000000)
-    elif string == "FLDBCK_ON":
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x26, 0x1) # turn on
-    elif string == "FLDBCK_VAL":
-        if value != 0:
-            value = hex(value)  # todo devono essere unsigned long
-            value = literal_eval(value)
+def send_cmd_string(ser, string, val=0, redundancy=1):
+    for i in range(0, redundancy):
+        value = val # do not remove, useful for the redundancy
+        if string == "ON":
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0B, 0x00000001)
+            time.sleep(0.3)
+        elif string == "OFF":
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0B, 0x00000000)
+        elif string == "STATUS":
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x16, 0x00000000)
+        elif string == "RNDFREQ":
+            hex_freq = rnd_hex_freq(True)
+            # print("Send freq {}".format(hex_freq))
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x09, hex_freq)
+        elif string == "READ_PWR":
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x06, 0x00000000)
+        elif string == "FLDBCK_ON":
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x26, 0x00000001) # turn on
+        elif string == "FLDBCK_VAL":
+            if value != 0:
+                value = hex(value)  # todo devono essere unsigned long
+                value = literal_eval(value)
+            else:
+                value = 0x5 # default values 5W
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x51, value) # set value
+        elif string == "FLDBCK_READ":
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x51, 0x00000000)
+        elif string == "ERROR_READ":
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x09, 0x00000000)
+        elif string == "PWM_READ":
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x08, 0x0)
+        elif string == "V_READ":
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x04, 0x0)
+        elif string == "PWR":
+            # print("Set power to: {}".format(value))
+            if value != 0:
+                value = float_to_hex(value)
+                value = literal_eval(value)
+            else:
+                value = 0x00000000
+            value = literal_eval(float_to_hex(255)) if value >= literal_eval(float_to_hex(255)) else value # maximum value il 260 with a certain error (security)
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0E,  value)
+            time.sleep(0.3)
+        elif string == "PWM":
+            if value != 0:
+                value = hex(value)
+                value = literal_eval(value)
+            else:
+                value = 0x00000000
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x08,  value)
+            time.sleep(0.3)
+        elif string == "FREQ":
+            if value != 0:
+                value = float_to_hex(value)
+                value = literal_eval(value)
+            else:
+                value = 0x00000000
+            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x09,  value)
+            time.sleep(0.3)
         else:
-            value = 0x5 # default values 5W
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x51, value) # set value
-    elif string == "FLDBCK_READ":
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x51, 0x00000000)
-    elif string == "ERROR_READ":
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x09, 0x00000000)
-    elif string == "PWM_READ":
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x08, 0x0)
-    elif string == "V_READ":
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x04, 0x0)
-    elif string == "PWR":
-        # print("Set power to: {}".format(value))
-        if value != 0:
-            value = float_to_hex(value)
-            value = literal_eval(value)
-        else:
-            value = 0x00000000
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0E,  value)
-    elif string == "PWM":
-        if value != 0:
-            value = hex(value)
-            value = literal_eval(value)
-        else:
-            value = 0x00000000
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x08,  value)
-    elif string == "FREQ":
-        if value != 0:
-            value = float_to_hex(value)
-            value = literal_eval(value)
-        else:
-            value = 0x00000000
-        send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x09,  value)
-    else:
-        print("Command not recognized!")
+            print("Command not recognized!")
+
 
 
 def read_reply_values(reply):
     '''Read reply payloads from the rf.
     Return a list of the read operands'''
     converted = hex(reply)[2:]
-
-    # Read the header structure
-    start = converted[0:2]
-    address = converted[2:4]
-    length = int(converted[4:6], 16)
-    # checksum = converted[6:8]
+    error = False
+    try:
+        # Read the header structure
+        start = converted[0:2]
+        address = converted[2:4]
+        length = int(converted[4:6], 16)
+        # checksum = converted[6:8]
+    except Exception as e:
+        print("Error in serial_RW: {}, with converted equal to: {}".format(e, converted))
+        error = True
+        pass
 
     payload_list = []
 
-    # TODO: read and analyze the checksum!
-    if start == "55" and address == "00":
-        for i in range(0, length):
-            payload = converted[8+i*12:20+i*12]
-            typee = payload[0:2]
-            operand = payload[2:4]
-            value = payload[4:12]
-            if (len(payload) *  len(typee) *  len(operand) * len(value) != 0):
-                payload_list.append([typee, operand, value])
-                # print(value)
+    if not error:
+        # TODO: read and analyze the checksum!
+        if start == "55" and address == "00":
+            for i in range(0, length):
+                payload = converted[8+i*12:20+i*12]
+                typee = payload[0:2]
+                operand = payload[2:4]
+                value = payload[4:12]
+                if (len(payload) *  len(typee) *  len(operand) * len(value) != 0):
+                    payload_list.append([typee, operand, value])
+                    # print(value)
     return payload_list
 
 #%% Updte status values
@@ -218,16 +230,20 @@ def empty_buffer(ser, wait=2):
             continue
 
 
-def read_param(ser, rf_values, param="STATUS", wait=1, verbose=False):
+def read_param(ser, noresp_counter, rf_values, param="STATUS", wait=1, verbose=False):
     # read response
     start_waiting = time.time()
+    resp_len = 0
 
     send_cmd_string(ser, param)
     while time.time() <= start_waiting + wait:
         r = ser.read(100)
-        if len(r) == 0:
+        resp_len = len(r)
+        if resp_len == 0:
+            noresp_counter += 1
             continue
 
+        noresp_counter = 0 # reset if it reads something
         r_hex = hexlify(r)
         prova_int = int(r_hex, 16)
 
@@ -238,7 +254,7 @@ def read_param(ser, rf_values, param="STATUS", wait=1, verbose=False):
         rf_values = set_status_values(rf_values, payload_list, False)
         if verbose:
             print_rfdata(rf_values, 2)
-    return rf_values
+    return rf_values, noresp_counter
     # return payload_list
 
 

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>450</width>
-    <height>521</height>
+    <width>1116</width>
+    <height>691</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,7 +25,7 @@ background-color: rgb(41, 45, 62);</string>
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>90</y>
+      <y>180</y>
       <width>120</width>
       <height>28</height>
      </rect>
@@ -38,14 +38,14 @@ background-color: rgb(41, 45, 62);</string>
      <string>PLAY</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="Qstop">
+   <widget class="QPushButton" name="Qreset">
     <property name="enabled">
      <bool>false</bool>
     </property>
     <property name="geometry">
      <rect>
-      <x>320</x>
-      <y>90</y>
+      <x>350</x>
+      <y>180</y>
       <width>120</width>
       <height>28</height>
      </rect>
@@ -55,14 +55,14 @@ background-color: rgb(41, 45, 62);</string>
 :disabled {color:rgb(150, 150, 180); background-color:rgb(88, 96, 104) }</string>
     </property>
     <property name="text">
-     <string>STOP</string>
+     <string>RESET</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="QGDML">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>50</y>
+      <x>160</x>
+      <y>130</y>
       <width>311</width>
       <height>21</height>
      </rect>
@@ -93,9 +93,9 @@ color:rgb(150, 150, 180);
    <widget class="QDialogButtonBox" name="QOpen_CSV">
     <property name="geometry">
      <rect>
-      <x>350</x>
-      <y>50</y>
-      <width>101</width>
+      <x>370</x>
+      <y>90</y>
+      <width>131</width>
       <height>28</height>
      </rect>
     </property>
@@ -118,10 +118,10 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="QoutputLabel">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>450</y>
+      <x>50</x>
+      <y>600</y>
       <width>301</width>
-      <height>21</height>
+      <height>31</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -137,51 +137,12 @@ color:rgb(150, 150, 180);
      <enum>Qt::RichText</enum>
     </property>
    </widget>
-   <widget class="QCheckBox" name="Qenable_plot">
-    <property name="geometry">
-     <rect>
-      <x>120</x>
-      <y>9</y>
-      <width>81</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="checked">
-     <bool>false</bool>
-    </property>
-   </widget>
-   <widget class="QLabel" name="QinfoLabel_2">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>10</y>
-      <width>81</width>
-      <height>28</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>7</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">color: rgb(255, 255, 255);</string>
-    </property>
-    <property name="text">
-     <string>Plot the csv:</string>
-    </property>
-   </widget>
    <widget class="QLabel" name="QinfoLabel_3">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>220</y>
-      <width>81</width>
+      <x>30</x>
+      <y>390</y>
+      <width>121</width>
       <height>28</height>
      </rect>
     </property>
@@ -202,9 +163,9 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="QinfoLabel_4">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>260</y>
-      <width>81</width>
+      <x>30</x>
+      <y>430</y>
+      <width>121</width>
       <height>28</height>
      </rect>
     </property>
@@ -225,9 +186,9 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="QinfoLabel_5">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>300</y>
-      <width>81</width>
+      <x>30</x>
+      <y>470</y>
+      <width>121</width>
       <height>28</height>
      </rect>
     </property>
@@ -248,9 +209,9 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="QinfoLabel_6">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>340</y>
-      <width>81</width>
+      <x>30</x>
+      <y>510</y>
+      <width>121</width>
       <height>28</height>
      </rect>
     </property>
@@ -272,8 +233,8 @@ color:rgb(150, 150, 180);
     <property name="geometry">
      <rect>
       <x>260</x>
-      <y>260</y>
-      <width>81</width>
+      <y>430</y>
+      <width>101</width>
       <height>28</height>
      </rect>
     </property>
@@ -294,9 +255,9 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="QinfoLabel_8">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>180</y>
-      <width>81</width>
+      <x>30</x>
+      <y>350</y>
+      <width>121</width>
       <height>28</height>
      </rect>
     </property>
@@ -318,8 +279,8 @@ color:rgb(150, 150, 180);
     <property name="geometry">
      <rect>
       <x>260</x>
-      <y>300</y>
-      <width>81</width>
+      <y>470</y>
+      <width>101</width>
       <height>28</height>
      </rect>
     </property>
@@ -337,35 +298,12 @@ color:rgb(150, 150, 180);
      <string>PWM:</string>
     </property>
    </widget>
-   <widget class="QLabel" name="QinfoLabel_10">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>140</y>
-      <width>81</width>
-      <height>28</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>7</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">color: rgb(255, 255, 255);</string>
-    </property>
-    <property name="text">
-     <string>On Off:</string>
-    </property>
-   </widget>
    <widget class="QLabel" name="QinfoLabel_11">
     <property name="geometry">
      <rect>
       <x>260</x>
-      <y>180</y>
-      <width>81</width>
+      <y>350</y>
+      <width>101</width>
       <height>28</height>
      </rect>
     </property>
@@ -380,15 +318,15 @@ color:rgb(150, 150, 180);
      <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
-     <string>Enable foldback:</string>
+     <string>Enable fldk:</string>
     </property>
    </widget>
    <widget class="QLabel" name="QinfoLabel_12">
     <property name="geometry">
      <rect>
       <x>260</x>
-      <y>340</y>
-      <width>61</width>
+      <y>510</y>
+      <width>101</width>
       <height>28</height>
      </rect>
     </property>
@@ -403,15 +341,15 @@ color:rgb(150, 150, 180);
      <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
-     <string>Foldback in:</string>
+     <string>Fldk in:</string>
     </property>
    </widget>
    <widget class="QLabel" name="QinfoLabel_13">
     <property name="geometry">
      <rect>
       <x>260</x>
-      <y>220</y>
-      <width>61</width>
+      <y>390</y>
+      <width>101</width>
       <height>28</height>
      </rect>
     </property>
@@ -432,9 +370,9 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="Qforwardpower_label">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>180</y>
-      <width>121</width>
+      <x>170</x>
+      <y>350</y>
+      <width>71</width>
       <height>31</height>
      </rect>
     </property>
@@ -442,7 +380,7 @@ color:rgb(150, 150, 180);
      <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
-     <string>0 W</string>
+     <string>-- W</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -451,9 +389,9 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="Qreflectedpower_label">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>220</y>
-      <width>121</width>
+      <x>170</x>
+      <y>390</y>
+      <width>71</width>
       <height>31</height>
      </rect>
     </property>
@@ -461,7 +399,7 @@ color:rgb(150, 150, 180);
      <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
-     <string>0 W</string>
+     <string>-- W</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -470,28 +408,39 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="Qonoff_label">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>140</y>
-      <width>121</width>
+      <x>260</x>
+      <y>40</y>
+      <width>111</width>
       <height>31</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
     <property name="styleSheet">
-     <string notr="true">color: rgb(255, 255, 255);</string>
+     <string notr="true">color: rgb(41, 45, 62);
+background-color: rgb(255, 0, 0);</string>
     </property>
     <property name="text">
-     <string>0</string>
+     <string>Off</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
     </property>
    </widget>
    <widget class="QLabel" name="Qtemperature_label">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>300</y>
-      <width>121</width>
+      <x>170</x>
+      <y>470</y>
+      <width>71</width>
       <height>31</height>
      </rect>
     </property>
@@ -499,7 +448,7 @@ color:rgb(150, 150, 180);
      <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
-     <string>0 C</string>
+     <string>-- C</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -508,9 +457,9 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="Qvoltage_label">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>260</y>
-      <width>121</width>
+      <x>170</x>
+      <y>430</y>
+      <width>71</width>
       <height>31</height>
      </rect>
     </property>
@@ -518,7 +467,7 @@ color:rgb(150, 150, 180);
      <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
-     <string>0 V</string>
+     <string>-- V</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -527,9 +476,9 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="Qpll_label">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>340</y>
-      <width>121</width>
+      <x>170</x>
+      <y>510</y>
+      <width>71</width>
       <height>31</height>
      </rect>
     </property>
@@ -537,7 +486,7 @@ color:rgb(150, 150, 180);
      <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
-     <string>0</string>
+     <string>--</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -546,9 +495,9 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="Qfoldbackin_label">
     <property name="geometry">
      <rect>
-      <x>360</x>
-      <y>340</y>
-      <width>121</width>
+      <x>390</x>
+      <y>510</y>
+      <width>81</width>
       <height>31</height>
      </rect>
     </property>
@@ -556,7 +505,7 @@ color:rgb(150, 150, 180);
      <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
-     <string>0 W</string>
+     <string>-- W</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -565,9 +514,9 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="Qpwm_label">
     <property name="geometry">
      <rect>
-      <x>360</x>
-      <y>300</y>
-      <width>121</width>
+      <x>390</x>
+      <y>470</y>
+      <width>81</width>
       <height>31</height>
      </rect>
     </property>
@@ -575,7 +524,7 @@ color:rgb(150, 150, 180);
      <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
-     <string>0</string>
+     <string>--</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -584,9 +533,9 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="Qcurrent_label">
     <property name="geometry">
      <rect>
-      <x>360</x>
-      <y>260</y>
-      <width>121</width>
+      <x>390</x>
+      <y>430</y>
+      <width>81</width>
       <height>31</height>
      </rect>
     </property>
@@ -594,7 +543,7 @@ color:rgb(150, 150, 180);
      <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
-     <string>0 A</string>
+     <string>-- A</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -603,9 +552,9 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="Qerror_label">
     <property name="geometry">
      <rect>
-      <x>360</x>
-      <y>220</y>
-      <width>121</width>
+      <x>390</x>
+      <y>390</y>
+      <width>81</width>
       <height>31</height>
      </rect>
     </property>
@@ -622,9 +571,9 @@ color:rgb(150, 150, 180);
    <widget class="QLabel" name="Qenablefoldback_label">
     <property name="geometry">
      <rect>
-      <x>360</x>
-      <y>180</y>
-      <width>121</width>
+      <x>390</x>
+      <y>350</y>
+      <width>81</width>
       <height>31</height>
      </rect>
     </property>
@@ -632,7 +581,7 @@ color:rgb(150, 150, 180);
      <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
-     <string>0</string>
+     <string>--</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -644,8 +593,8 @@ color:rgb(150, 150, 180);
     </property>
     <property name="geometry">
      <rect>
-      <x>320</x>
-      <y>450</y>
+      <x>360</x>
+      <y>600</y>
       <width>121</width>
       <height>31</height>
      </rect>
@@ -658,55 +607,12 @@ color:rgb(150, 150, 180);
      <string>EXIT</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="Qsearchserial">
-    <property name="enabled">
-     <bool>true</bool>
-    </property>
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>390</y>
-      <width>111</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">:enabled {color:rgb(255, 255, 255); background-color: rgb(65, 72, 99)} 
-:disabled {color:rgb(150, 150, 180); background-color:rgb(88, 96, 104) }</string>
-    </property>
-    <property name="text">
-     <string>Search serials</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="QinfoLabel_14">
-    <property name="geometry">
-     <rect>
-      <x>130</x>
-      <y>390</y>
-      <width>171</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>7</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">color: rgb(255, 255, 255);</string>
-    </property>
-    <property name="text">
-     <string>Click and wait up to 30 seconds. </string>
-    </property>
-   </widget>
    <widget class="QLabel" name="QinfoLabel_15">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>420</y>
-      <width>171</width>
+      <x>50</x>
+      <y>570</y>
+      <width>91</width>
       <height>21</height>
      </rect>
     </property>
@@ -724,14 +630,14 @@ color:rgb(150, 150, 180);
      <string>Messages:</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="Qpause">
+   <widget class="QPushButton" name="Qstop">
     <property name="enabled">
      <bool>false</bool>
     </property>
     <property name="geometry">
      <rect>
-      <x>170</x>
-      <y>90</y>
+      <x>180</x>
+      <y>180</y>
       <width>120</width>
       <height>28</height>
      </rect>
@@ -741,14 +647,14 @@ color:rgb(150, 150, 180);
 :disabled {color:rgb(150, 150, 180); background-color:rgb(88, 96, 104) }</string>
     </property>
     <property name="text">
-     <string>PAUSE</string>
+     <string>STOP</string>
     </property>
    </widget>
    <widget class="Line" name="line_3">
     <property name="geometry">
      <rect>
-      <x>330</x>
-      <y>150</y>
+      <x>410</x>
+      <y>350</y>
       <width>118</width>
       <height>3</height>
      </rect>
@@ -760,23 +666,290 @@ color:rgb(150, 150, 180);
      <enum>Qt::Horizontal</enum>
     </property>
    </widget>
-   <widget class="QFrame" name="frame">
+   <widget class="QLabel" name="QPLCInfo">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
-      <x>520</x>
-      <y>429</y>
-      <width>431</width>
-      <height>51</height>
+      <x>100</x>
+      <y>40</y>
+      <width>121</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>7</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(41, 45, 62);
+background-color: rgb(255, 0, 0);</string>
+    </property>
+    <property name="text">
+     <string>PLC ON AIR</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="QinfoLabel_17">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>220</y>
+      <width>211</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>7</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>Numero di cicli eseguiti:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="Qcyclenumber">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>220</y>
+      <width>101</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">border: rgb(255, 255, 255);</string>
+     <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
-    <property name="frameShape">
-     <enum>QFrame::Box</enum>
+    <property name="text">
+     <string>0</string>
     </property>
-    <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
+    <property name="textFormat">
+     <enum>Qt::RichText</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="QinfoLabel_18">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>260</y>
+      <width>211</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>7</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>Ciclo corrente (%):</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="Qcurrentcycle">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>260</y>
+      <width>101</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>0</string>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::RichText</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="QinfoLabel_19">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>300</y>
+      <width>211</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>7</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>Tempo di esecuzione:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="Qexecution_time">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>300</y>
+      <width>101</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>00:00:00</string>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::RichText</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="QinfoLabel_20">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>90</y>
+      <width>301</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>7</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>Clicca su &quot;Open&quot; per selezionare il file csv con i dati RF:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="QinfoLabel_21">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>120</y>
+      <width>91</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>7</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>file selezionato:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="QinfoLabel_22">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>10</y>
+      <width>111</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>7</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>RF status:</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="QinfoLabel_23">
+    <property name="geometry">
+     <rect>
+      <x>100</x>
+      <y>10</y>
+      <width>121</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>7</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>PLC status:</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="Mplwidget" name="MplWidget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>500</x>
+      <y>0</y>
+      <width>611</width>
+      <height>320</height>
+     </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>480</width>
+      <height>320</height>
+     </size>
+    </property>
+   </widget>
+   <widget class="Mplwidget" name="MplWidget_2" native="true">
+    <property name="geometry">
+     <rect>
+      <x>500</x>
+      <y>330</y>
+      <width>611</width>
+      <height>320</height>
+     </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>0</width>
+      <height>0</height>
+     </size>
     </property>
    </widget>
   </widget>
@@ -785,13 +958,21 @@ color:rgb(150, 150, 180);
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>450</width>
+     <width>1116</width>
      <height>21</height>
     </rect>
    </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Mplwidget</class>
+   <extends>QWidget</extends>
+   <header>mplwidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
