@@ -58,7 +58,7 @@ background-color: rgb(41, 45, 62);</string>
      <string>RESET</string>
     </property>
    </widget>
-   <widget class="QLineEdit" name="QGDML">
+   <widget class="QLineEdit" name="Qcsvpath">
     <property name="geometry">
      <rect>
       <x>160</x>

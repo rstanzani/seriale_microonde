@@ -14,15 +14,21 @@ from threading import Thread
 
 # Set the COM port
 
-def read_COM_name(filename):
-    with open(filename, "r") as f:
-        read = f.readline()
-        com = "COM"+str(read)
-    return com
+def read_config(filename):
+    csv_name = ""
 
-comport = read_COM_name("config.txt")
+    with open(filename, 'r') as file:
+        lines = file.readlines()
+
+    com = "COM"+str(lines[0])
+    if len(lines) >= 2:
+        csv_name = str(lines[1])
+    return com, csv_name
+
+comport, csv_name = read_config("config.txt")
 plc_thread_exec = True # used to stop the plc reading thread
 plc_status = 0
+is_plot_present = False # tells if the csv plot is already present and therefore will be overwritten by another csv
 
 class RFdata:
     Temperature = "--"
@@ -87,7 +93,7 @@ class PLCWorker(QtCore.QObject):
 
         while plc_thread_exec:
             plc_status = 1 # plcc.is_plc_on_air()  #TODO set to 1 for testing purposes
-            time.sleep(2)
+            time.sleep(0.5)
             self.messaged.emit()
             # print(plc_status)
             # self.messaged.emit()
@@ -334,6 +340,10 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
 
+        global csv_name
+
+        global is_plot_present
+
         self.__thread = QtCore.QThread()
         self.__thread_plc = QtCore.QThread()
 
@@ -343,11 +353,21 @@ class MainWindow(QMainWindow):
 
         self.ui.QOpen_CSV.clicked.connect(lambda: self.open_file("Open_CSV"))
         self.ui.Qexit.clicked.connect(lambda: self.close())
+
         self.ui.Qplay.clicked.connect(lambda: self.play_execution())
+
         self.ui.Qstop.clicked.connect(lambda: self.stop_execution())
         self.ui.Qreset.clicked.connect(lambda: self.reset_execution())
 
         self.run_plc_check()
+
+
+        self.duration, self.freq_list, self.power_list, self.error, self.msg  = rcsv.read_and_plot(self.ui, csv_name, is_plot_present)
+        if not self.error:
+            self.ui.Qcsvpath.setText(csv_name)
+            is_plot_present = True
+            self.enablePlayButton()
+            self.ui.QoutputLabel.setText(self.msg)
 
 
     def run_plc_check(self):
@@ -380,7 +400,6 @@ class MainWindow(QMainWindow):
 
 
     def __get_thread_plc(self):
-        # print("Sono in A")
         self.thread_plc = QtCore.QThread()
         self.plcworker = PLCWorker()
         self.plcworker.moveToThread(self.thread_plc)
@@ -394,7 +413,6 @@ class MainWindow(QMainWindow):
         return self.thread_plc
 
     def __get_thread(self):
-        # print("Sono in B")
         self.thread = QtCore.QThread()
         self.worker = Worker()
         self.worker.give_values(self.duration, self.freq_list, self.power_list)
@@ -440,11 +458,9 @@ class MainWindow(QMainWindow):
             lines = f.readlines()
 
         if "play" in lines[0]:
-            # print("Add scheme after a play")
             lines[0] = self.scheme + " " + updated_line + "\n" + lines[0]
             update = True
         elif self.scheme in lines[0]:
-            # print("Update the scheme")
             lines[0] = self.scheme + " " + updated_line + "\n"
             update = True
         # else:
@@ -461,7 +477,6 @@ class MainWindow(QMainWindow):
         if self.rf_values.Error != "No error":
             if len(self.error_history) != 0:
                 if self.error_history[-1][1] != self.rf_values.Error:
-                    # print("Add: new value")
                     to_add = True
                 elif time.time()-self.error_history[-1][0] >= 60:
                     # print("Add with {} seconds!".format(time.time()-self.error_history[-1][0]))
@@ -474,17 +489,21 @@ class MainWindow(QMainWindow):
         self.rf_values.Error = "No error"
 
     def open_file(self, button_name):
+        global csv_name
+        global is_plot_present
         # Reads the file path from the prompt
         self.disablePlayButton()
         file_type = button_name.split("_")[1]
         path = ""
+
         opened_path, _ = QFileDialog.getOpenFileName(None, "Open the {} file".format(file_type), path, "*")
         # Read parameters from csv file
         if opened_path != "":
-            self.ui.QGDML.setText(opened_path)
-            self.duration, self.freq_list, self.power_list, self.error, self.msg  = rcsv.read_and_plot(self.ui, opened_path)
+            self.ui.Qcsvpath.setText(opened_path)
+            self.duration, self.freq_list, self.power_list, self.error, self.msg  = rcsv.read_and_plot(self.ui, opened_path, is_plot_present)
             self.ui.QoutputLabel.setText(self.msg)
             if not self.error:
+                is_plot_present = True
                 self.enablePlayButton()
 
     def play_execution(self):
@@ -492,7 +511,7 @@ class MainWindow(QMainWindow):
         self.ui.QoutputLabel.setText("Process started.")
         # Save log file
         date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
-        write_to_file(log_file, "{} {}".format(date_time, "play"))
+        write_to_file(log_file, "{} {}".format(date_time, "Software ON, ready to start."))
         self.disablePlayButton()
         self.enableStopButton()
         self.enableResetButton()
