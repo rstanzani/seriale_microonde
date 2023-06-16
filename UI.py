@@ -21,9 +21,13 @@ def read_config(filename):
         csv_name = str(lines[1])
     return com, csv_name
 
+# import time
+# inizio = time.time()
+
 comport, csv_name = read_config("config.txt")
 plc_thread_exec = True # used to stop the plc reading thread
 plc_status = 0
+old_plc_status = 0
 is_plot_present = False # tells if the csv plot is already present and therefore will be overwritten by another csv
 
 duration = 0
@@ -72,7 +76,6 @@ prev_execution_time = 0
 threshold_stop = False
 thres_status = ""
 
-
 class PLCWorker(QtCore.QObject):
     execution = False
     messaged = pyqtSignal()
@@ -94,12 +97,16 @@ class PLCWorker(QtCore.QObject):
     def run(self):
         global plc_status
         global plc_thread_exec
+        global inizio
 
         print("In run for plc communication...")
         self.start_execution()
 
         while plc_thread_exec:
+            # controllo = time.time() - inizio
             plc_status = 1 # plcc.is_plc_on_air()  #TODO set to 1 for testing purposes
+            # if controllo > 30 and controllo < 60:
+            #     plc_status = 0 # plcc.is_plc_on_air()  #TODO set to 1 for testing purposes
             time.sleep(0.5)
             self.messaged.emit()
 
@@ -181,6 +188,7 @@ class Worker(QtCore.QObject):
                         self.force_change_pwr_safety = True
 
 
+
     def run(self):
         global rf_data
         global comport
@@ -192,6 +200,7 @@ class Worker(QtCore.QObject):
         global threshold_alarm
         global thres_status
         global plc_status
+        global old_plc_status
         global log_file
 
         global duration
@@ -302,6 +311,9 @@ class Worker(QtCore.QObject):
                                 rf_data.Error = 0
             elif just_turned_off:
                 print("\nShutting down...")
+                if plc_status == 0:
+                    interruption_type = "stop"
+
                 srw.send_cmd_string(ser,"PWM", 0, 2)
                 srw.send_cmd_string(ser,"OFF")
                 srw.empty_buffer(ser, wait=1)
@@ -316,6 +328,17 @@ class Worker(QtCore.QObject):
             else:
                 if time.time() >= timestamp + min_refresh:
                     rf_data, self.noresp_counter = srw.read_param(ser, self.noresp_counter, rf_data, "STATUS", 1, False)
+
+            # check plc variation
+            if old_plc_status != plc_status:
+                print("PLC status changes")
+                date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+                if plc_status:
+                    write_to_file(log_file, "{} {}".format(date_time, "PLC status ON."))
+                else:
+                    write_to_file(log_file, "{} {}".format(date_time, "PLC status OFF."))
+            old_plc_status = plc_status
+
 
         # Soft turn off
         print("Main thread killed by the user, shut down and close serial")
@@ -652,6 +675,7 @@ class MainWindow(QMainWindow):
             threshold_stop = False
             interruption_type = "reset"
 
+
         self.ui.Qenablefoldback_label.setText(_translate("MainWindow", str(rf_data.Enable_foldback)))
         self.ui.Qfoldbackin_label.setText(_translate("MainWindow", str(rf_data.Foldback_in)+" W"))
         self.ui.Qerror_label.setText(_translate("MainWindow", str(rf_data.Error)))
@@ -674,7 +698,6 @@ class MainWindow(QMainWindow):
         else:
             self.ui.QPLCInfo.setStyleSheet("color: rgb(41, 45, 62);\n"
                                              "background-color: rgb(255, 0, 0);")
-            write_to_file(log_file, "{} {}".format(date_time, "stop from PLC"))
 
 
 def update_progress(progress_bar, value):
