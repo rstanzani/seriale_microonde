@@ -555,6 +555,9 @@ class MainWindow(QMainWindow):
 
     def play_execution(self):
         global log_file
+        global modifica_alf
+        
+        modifica_alf = True
 
         self.disablePlayButton()
         self.enableStopButton()
@@ -690,6 +693,7 @@ class MainWindow(QMainWindow):
 
     def update_plc_status(self):
         global plc_status
+        global modifica_alf
         date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
 
         if plc_status:
@@ -698,7 +702,12 @@ class MainWindow(QMainWindow):
         else:
             self.ui.QPLCInfo.setStyleSheet("color: rgb(41, 45, 62);\n"
                                              "background-color: rgb(255, 0, 0);")
+            if modifica_alf:
+                self.reset_execution()   # MODIFICA ALFONSO
+                modifica_alf = False
 
+
+modifica_alf = True
 
 def update_progress(progress_bar, value):
     progress_bar.setValue(value)
