@@ -5,3 +5,7 @@
 /__pycache__
 log.txt
 config.txt
+*.exe
+*.spec
+/build
+*.csv
