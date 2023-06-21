@@ -24,6 +24,11 @@ def read_config(filename):
 # import time
 # inizio = time.time()
 
+#TODO list:
+# (001) - re-enable plc_status check
+# (002) - remove plc_status hardcoded to 1
+# (003) - re-enable autostart after
+
 comport, csv_name = read_config("config.txt")
 plc_thread_exec = True # used to stop the plc reading thread
 plc_status = 0
@@ -106,7 +111,7 @@ class PLCWorker(QtCore.QObject):
             # controllo = time.time() - inizio
             plc_status = 1 # plcc.is_plc_on_air()  #TODO set to 1 for testing purposes
             # if controllo > 30 and controllo < 60:
-            #     plc_status = 0 # plcc.is_plc_on_air()  #TODO set to 1 for testing purposes
+            #     plc_status = 0 # plcc.is_plc_on_air()  #TODO (002)
             time.sleep(0.5)
             self.messaged.emit()
 
@@ -188,7 +193,6 @@ class Worker(QtCore.QObject):
                         self.force_change_pwr_safety = True
 
 
-
     def run(self):
         global rf_data
         global comport
@@ -223,7 +227,7 @@ class Worker(QtCore.QObject):
         while plc_thread_exec:
 
             # ACTIVE STATUS
-            if self.execution and not threshold_stop and plc_status:
+            if self.execution and not threshold_stop: # and plc_status:   #TODO (001)
 
                 if turn_on: # to turn on only in the first iteration
 
@@ -311,8 +315,8 @@ class Worker(QtCore.QObject):
                                 rf_data.Error = 0
             elif just_turned_off:
                 print("\nShutting down...")
-                if plc_status == 0:
-                    interruption_type = "stop"
+                # if plc_status == 0:     # TODO (001)
+                #     interruption_type = "stop"
 
                 srw.send_cmd_string(ser,"PWM", 0, 2)
                 srw.send_cmd_string(ser,"OFF")
@@ -338,7 +342,6 @@ class Worker(QtCore.QObject):
                 else:
                     write_to_file(log_file, "{} {}".format(date_time, "PLC status OFF."))
             old_plc_status = plc_status
-
 
         # Soft turn off
         print("Main thread killed by the user, shut down and close serial")
@@ -555,9 +558,9 @@ class MainWindow(QMainWindow):
 
     def play_execution(self):
         global log_file
-        global modifica_alf
-        
-        modifica_alf = True
+        global modifica_alf   # TODO (003): remove this 
+
+        modifica_alf = True    # TODO (003): remove this 
 
         self.disablePlayButton()
         self.enableStopButton()
@@ -693,7 +696,7 @@ class MainWindow(QMainWindow):
 
     def update_plc_status(self):
         global plc_status
-        global modifica_alf
+        global modifica_alf    # TODO (003): remove this 
         date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
 
         if plc_status:
@@ -702,12 +705,12 @@ class MainWindow(QMainWindow):
         else:
             self.ui.QPLCInfo.setStyleSheet("color: rgb(41, 45, 62);\n"
                                              "background-color: rgb(255, 0, 0);")
-            if modifica_alf:
-                self.reset_execution()   # MODIFICA ALFONSO
+            if modifica_alf:  # TODO (003): remove this 
+                # self.reset_execution()
                 modifica_alf = False
 
 
-modifica_alf = True
+modifica_alf = True # TODO (003): remove this 
 
 def update_progress(progress_bar, value):
     progress_bar.setValue(value)
