@@ -332,6 +332,7 @@ class Worker(QtCore.QObject):
             else:
                 if time.time() >= timestamp + min_refresh:
                     rf_data, self.noresp_counter = srw.read_param(ser, self.noresp_counter, rf_data, "STATUS", 1, False)
+                    self.messaged.emit()
 
             # check plc variation
             if old_plc_status != plc_status:
