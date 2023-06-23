@@ -39,6 +39,8 @@ duration = 0
 freq_list = []
 power_list = []
 
+freq = 0
+
 turn_on = True
 just_turned_off = True   #when the user click STOP or RESET buttons
 
@@ -209,6 +211,7 @@ class Worker(QtCore.QObject):
 
         global duration
         global freq_list
+        global freq
         global power_list
 
         global turn_on
@@ -657,6 +660,7 @@ class MainWindow(QMainWindow):
         global threshold_stop
         global thres_status
         global interruption_type
+        global freq
         date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
 
         _translate = QtCore.QCoreApplication.translate
@@ -682,6 +686,7 @@ class MainWindow(QMainWindow):
             threshold_stop = False
             interruption_type = "reset"
 
+        self.ui.Qfrequency.setText(_translate("MainWindow", str(freq)))
 
         self.ui.Qenablefoldback_label.setText(_translate("MainWindow", str(rf_data.Enable_foldback)))
         self.ui.Qfoldbackin_label.setText(_translate("MainWindow", str(rf_data.Foldback_in)+" W"))
