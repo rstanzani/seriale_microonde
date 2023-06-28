@@ -111,7 +111,7 @@ class PLCWorker(QtCore.QObject):
 
         while plc_thread_exec:
             # controllo = time.time() - inizio
-            plc_status = 1 # plcc.is_plc_on_air()  #TODO set to 1 for testing purposes
+            plc_status = plcc.is_plc_on_air()  #TODO set to 1 for testing purposes
             # if controllo > 30 and controllo < 60:
             #     plc_status = 0 # plcc.is_plc_on_air()  #TODO (002)
             time.sleep(0.5)
