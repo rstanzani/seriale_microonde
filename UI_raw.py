@@ -134,7 +134,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addItem(spacerItem5)
         self.Qcsvpath = QtWidgets.QLineEdit(self.centralwidget)
         font = QtGui.QFont()
-        font.setPointSize(7)
+        font.setPointSize(8)
         self.Qcsvpath.setFont(font)
         self.Qcsvpath.setStyleSheet("background-color: rgb(58, 66, 74);\n"
 "color:rgb(150, 150, 180);\n"
@@ -194,6 +194,9 @@ class Ui_MainWindow(object):
         spacerItem10 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_4.addItem(spacerItem10)
         self.Qcyclenumber = QtWidgets.QLabel(self.centralwidget)
+        font = QtGui.QFont()
+        font.setPointSize(8)
+        self.Qcyclenumber.setFont(font)
         self.Qcyclenumber.setStyleSheet("color: rgb(255, 255, 255);")
         self.Qcyclenumber.setTextFormat(QtCore.Qt.RichText)
         self.Qcyclenumber.setObjectName("Qcyclenumber")
@@ -577,7 +580,6 @@ class Ui_MainWindow(object):
         self.verticalLayout_4.setStretch(2, 100)
         self.horizontalLayout_15.addLayout(self.verticalLayout_4)
         self.horizontalLayout_15.setStretch(0, 100)
-        self.horizontalLayout_15.setStretch(1, 2)
         self.horizontalLayout_15.setStretch(2, 100)
         self.gridLayout.addLayout(self.horizontalLayout_15, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
