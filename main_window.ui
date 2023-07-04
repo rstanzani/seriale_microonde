@@ -56,7 +56,7 @@ background-color: rgb(41, 45, 62);</string>
              <widget class="QLabel" name="QinfoLabel_23">
               <property name="font">
                <font>
-                <pointsize>7</pointsize>
+                <pointsize>8</pointsize>
                 <weight>75</weight>
                 <bold>true</bold>
                </font>
@@ -79,7 +79,7 @@ background-color: rgb(41, 45, 62);</string>
               </property>
               <property name="font">
                <font>
-                <pointsize>7</pointsize>
+                <pointsize>8</pointsize>
                 <weight>75</weight>
                 <bold>true</bold>
                </font>
@@ -117,7 +117,7 @@ background-color: rgb(255, 0, 0);</string>
              <widget class="QLabel" name="QinfoLabel_22">
               <property name="font">
                <font>
-                <pointsize>7</pointsize>
+                <pointsize>8</pointsize>
                 <weight>75</weight>
                 <bold>true</bold>
                </font>
@@ -199,7 +199,7 @@ background-color: rgb(255, 0, 0);</string>
             </property>
             <property name="font">
              <font>
-              <pointsize>7</pointsize>
+              <pointsize>8</pointsize>
               <weight>75</weight>
               <bold>true</bold>
              </font>
@@ -216,7 +216,7 @@ background-color: rgb(255, 0, 0);</string>
            <widget class="QDialogButtonBox" name="QOpen_CSV">
             <property name="font">
              <font>
-              <pointsize>7</pointsize>
+              <pointsize>8</pointsize>
              </font>
             </property>
             <property name="styleSheet">
@@ -252,7 +252,7 @@ background-color: rgb(255, 0, 0);</string>
            <widget class="QLabel" name="QinfoLabel_21">
             <property name="font">
              <font>
-              <pointsize>7</pointsize>
+              <pointsize>8</pointsize>
               <weight>75</weight>
               <bold>true</bold>
              </font>
@@ -410,7 +410,7 @@ color:rgb(150, 150, 180);
            <widget class="QLabel" name="QinfoLabel_17">
             <property name="font">
              <font>
-              <pointsize>7</pointsize>
+              <pointsize>8</pointsize>
               <weight>75</weight>
               <bold>true</bold>
              </font>
@@ -470,7 +470,7 @@ color:rgb(150, 150, 180);
            <widget class="QLabel" name="QinfoLabel_18">
             <property name="font">
              <font>
-              <pointsize>7</pointsize>
+              <pointsize>8</pointsize>
               <weight>75</weight>
               <bold>true</bold>
              </font>
@@ -530,7 +530,7 @@ color:rgb(150, 150, 180);
            <widget class="QLabel" name="QinfoLabel_19">
             <property name="font">
              <font>
-              <pointsize>7</pointsize>
+              <pointsize>8</pointsize>
               <weight>75</weight>
               <bold>true</bold>
              </font>
@@ -590,7 +590,7 @@ color:rgb(150, 150, 180);
            <widget class="QLabel" name="QinfoLabel_24">
             <property name="font">
              <font>
-              <pointsize>7</pointsize>
+              <pointsize>8</pointsize>
               <weight>75</weight>
               <bold>true</bold>
              </font>
@@ -650,7 +650,7 @@ color:rgb(150, 150, 180);
            <widget class="QLabel" name="QinfoLabel_8">
             <property name="font">
              <font>
-              <pointsize>7</pointsize>
+              <pointsize>8</pointsize>
               <weight>75</weight>
               <bold>true</bold>
              </font>
@@ -706,7 +706,7 @@ color:rgb(150, 150, 180);
            <widget class="QLabel" name="QinfoLabel_11">
             <property name="font">
              <font>
-              <pointsize>7</pointsize>
+              <pointsize>8</pointsize>
               <weight>75</weight>
               <bold>true</bold>
              </font>
@@ -766,7 +766,7 @@ color:rgb(150, 150, 180);
            <widget class="QLabel" name="QinfoLabel_3">
             <property name="font">
              <font>
-              <pointsize>7</pointsize>
+              <pointsize>8</pointsize>
               <weight>75</weight>
               <bold>true</bold>
              </font>
@@ -794,6 +794,11 @@ color:rgb(150, 150, 180);
           </item>
           <item>
            <widget class="QLabel" name="Qreflectedpower_label">
+            <property name="font">
+             <font>
+              <pointsize>8</pointsize>
+             </font>
+            </property>
             <property name="styleSheet">
              <string notr="true">color: rgb(255, 255, 255);</string>
             </property>
@@ -822,7 +827,7 @@ color:rgb(150, 150, 180);
            <widget class="QLabel" name="QinfoLabel_13">
             <property name="font">
              <font>
-              <pointsize>7</pointsize>
+              <pointsize>8</pointsize>
               <weight>75</weight>
               <bold>true</bold>
              </font>
@@ -882,7 +887,7 @@ color:rgb(150, 150, 180);
            <widget class="QLabel" name="QinfoLabel_4">
             <property name="font">
              <font>
-              <pointsize>7</pointsize>
+              <pointsize>8</pointsize>
               <weight>75</weight>
               <bold>true</bold>
              </font>
@@ -938,7 +943,7 @@ color:rgb(150, 150, 180);
            <widget class="QLabel" name="QinfoLabel_7">
             <property name="font">
              <font>
-              <pointsize>7</pointsize>
+              <pointsize>8</pointsize>
               <weight>75</weight>
               <bold>true</bold>
              </font>
@@ -998,7 +1003,7 @@ color:rgb(150, 150, 180);
            <widget class="QLabel" name="QinfoLabel_5">
             <property name="font">
              <font>
-              <pointsize>7</pointsize>
+              <pointsize>8</pointsize>
               <weight>75</weight>
               <bold>true</bold>
              </font>
@@ -1054,7 +1059,7 @@ color:rgb(150, 150, 180);
            <widget class="QLabel" name="QinfoLabel_9">
             <property name="font">
              <font>
-              <pointsize>7</pointsize>
+              <pointsize>8</pointsize>
               <weight>75</weight>
               <bold>true</bold>
              </font>
@@ -1114,7 +1119,7 @@ color:rgb(150, 150, 180);
            <widget class="QLabel" name="QinfoLabel_6">
             <property name="font">
              <font>
-              <pointsize>7</pointsize>
+              <pointsize>8</pointsize>
               <weight>75</weight>
               <bold>true</bold>
              </font>
@@ -1170,7 +1175,7 @@ color:rgb(150, 150, 180);
            <widget class="QLabel" name="QinfoLabel_12">
             <property name="font">
              <font>
-              <pointsize>7</pointsize>
+              <pointsize>8</pointsize>
               <weight>75</weight>
               <bold>true</bold>
              </font>
@@ -1333,7 +1338,7 @@ color:rgb(150, 150, 180);
      <x>0</x>
      <y>0</y>
      <width>1171</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

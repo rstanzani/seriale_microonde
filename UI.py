@@ -494,7 +494,7 @@ class MainWindow(QMainWindow):
         with open(filename, 'r') as f:
             lines = f.readlines()
 
-        if "RF on" in lines[0]:
+        if "RF on" in lines[0] or "PLC status ON" in lines[0]:
             lines[0] = "LAST_CYCLE_STATUS" + " " + updated_line + "\n" + lines[0]
             update = True
         elif "LAST_CYCLE_STATUS" in lines[0]:
