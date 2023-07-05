@@ -106,7 +106,7 @@ def read_and_plot(ui, filepath, is_plot_present = False):
 
                 ui.MplWidget_2.canvas.axes.step(time, power, color='orange', alpha=0.5, where='post', zorder=-2)
                 ui.MplWidget_2.canvas.axes.set_xlabel("Time [s]", fontsize=9, labelpad=6)
-                ui.MplWidget_2.canvas.axes.set_ylabel("{}".format(label[0][2]), color="orange", fontsize=10)
+                ui.MplWidget_2.canvas.axes.set_ylabel("{}".format(label[0][2]), color="orange", fontsize=10, labelpad=-6)
                 ui.MplWidget_2.canvas.axes.tick_params(axis='y', colors='orange', labelsize=9)
                 ui.MplWidget_2.canvas.axes.fill_between(time, power, step="post", alpha=0.2, color="orange")
                 ui.MplWidget_2.canvas.axes.grid(linestyle = '--', linewidth = 0.4, zorder=-1)

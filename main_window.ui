@@ -10,8 +10,18 @@
     <height>751</height>
    </rect>
   </property>
+  <property name="baseSize">
+   <size>
+    <width>0</width>
+    <height>0</height>
+   </size>
+  </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>RF control interface</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="res.qrc">
+    <normaloff>:/icon/app_icon</normaloff>:/icon/app_icon</iconset>
   </property>
   <property name="styleSheet">
    <string notr="true">color: rgb(41, 45, 62);
@@ -282,7 +292,7 @@ background-color: rgb(255, 0, 0);</string>
            <widget class="QLineEdit" name="Qcsvpath">
             <property name="font">
              <font>
-              <pointsize>8</pointsize>
+              <pointsize>9</pointsize>
              </font>
             </property>
             <property name="styleSheet">
@@ -440,7 +450,7 @@ color:rgb(150, 150, 180);
            <widget class="QLabel" name="Qcyclenumber">
             <property name="font">
              <font>
-              <pointsize>8</pointsize>
+              <pointsize>9</pointsize>
              </font>
             </property>
             <property name="styleSheet">
@@ -503,6 +513,11 @@ color:rgb(150, 150, 180);
           </item>
           <item>
            <widget class="QLabel" name="Qcurrentcycle">
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="styleSheet">
              <string notr="true">color: rgb(255, 255, 255);</string>
             </property>
@@ -563,6 +578,11 @@ color:rgb(150, 150, 180);
           </item>
           <item>
            <widget class="QLabel" name="Qexecution_time">
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="styleSheet">
              <string notr="true">color: rgb(255, 255, 255);</string>
             </property>
@@ -623,6 +643,11 @@ color:rgb(150, 150, 180);
           </item>
           <item>
            <widget class="QLabel" name="Qfrequency">
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="styleSheet">
              <string notr="true">color: rgb(255, 255, 255);</string>
             </property>
@@ -683,6 +708,11 @@ color:rgb(150, 150, 180);
           </item>
           <item>
            <widget class="QLabel" name="Qforwardpower_label">
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="styleSheet">
              <string notr="true">color: rgb(255, 255, 255);</string>
             </property>
@@ -739,6 +769,11 @@ color:rgb(150, 150, 180);
           </item>
           <item>
            <widget class="QLabel" name="Qenablefoldback_label">
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="styleSheet">
              <string notr="true">color: rgb(255, 255, 255);</string>
             </property>
@@ -801,7 +836,7 @@ color:rgb(150, 150, 180);
            <widget class="QLabel" name="Qreflectedpower_label">
             <property name="font">
              <font>
-              <pointsize>8</pointsize>
+              <pointsize>9</pointsize>
              </font>
             </property>
             <property name="styleSheet">
@@ -860,6 +895,11 @@ color:rgb(150, 150, 180);
           </item>
           <item>
            <widget class="QLabel" name="Qerror_label">
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="styleSheet">
              <string notr="true">color: rgb(255, 255, 255);</string>
             </property>
@@ -920,6 +960,11 @@ color:rgb(150, 150, 180);
           </item>
           <item>
            <widget class="QLabel" name="Qvoltage_label">
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="styleSheet">
              <string notr="true">color: rgb(255, 255, 255);</string>
             </property>
@@ -976,6 +1021,11 @@ color:rgb(150, 150, 180);
           </item>
           <item>
            <widget class="QLabel" name="Qcurrent_label">
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="styleSheet">
              <string notr="true">color: rgb(255, 255, 255);</string>
             </property>
@@ -1036,6 +1086,11 @@ color:rgb(150, 150, 180);
           </item>
           <item>
            <widget class="QLabel" name="Qtemperature_label">
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="styleSheet">
              <string notr="true">color: rgb(255, 255, 255);</string>
             </property>
@@ -1092,6 +1147,11 @@ color:rgb(150, 150, 180);
           </item>
           <item>
            <widget class="QLabel" name="Qpwm_label">
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="styleSheet">
              <string notr="true">color: rgb(255, 255, 255);</string>
             </property>
@@ -1152,6 +1212,11 @@ color:rgb(150, 150, 180);
           </item>
           <item>
            <widget class="QLabel" name="Qpll_label">
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="styleSheet">
              <string notr="true">color: rgb(255, 255, 255);</string>
             </property>
@@ -1208,6 +1273,11 @@ color:rgb(150, 150, 180);
           </item>
           <item>
            <widget class="QLabel" name="Qfoldbackin_label">
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="styleSheet">
              <string notr="true">color: rgb(255, 255, 255);</string>
             </property>
@@ -1238,6 +1308,11 @@ color:rgb(150, 150, 180);
          <layout class="QHBoxLayout" name="horizontalLayout_13" stretch="20,1,7">
           <item>
            <widget class="QLabel" name="QoutputLabel">
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="styleSheet">
              <string notr="true">color: rgb(255, 255, 255);</string>
             </property>
@@ -1357,6 +1432,8 @@ color:rgb(150, 150, 180);
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="res.qrc"/>
+ </resources>
  <connections/>
 </ui>
