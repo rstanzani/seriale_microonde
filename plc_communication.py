@@ -45,7 +45,7 @@ def get_val(content, letter="M"):
     return value
 
 def is_plc_on_air():
-    resp, content = getOp("M","40") #TODO set to M04 for working version
+    resp, content = getOp("M","04")
     time.sleep(.5)
     value = 0
     if content:

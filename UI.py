@@ -21,13 +21,7 @@ def read_config(filename):
         csv_name = str(lines[1])
     return com, csv_name
 
-# import time
-# inizio = time.time()
-
 #TODO list:
-# (001) - re-enable plc_status check
-# (002) - remove plc_status hardcoded to 1
-# (003) - re-enable autostart after
 
 comport, csv_name = read_config("config.txt")
 plc_thread_exec = True # used to stop the plc reading thread
@@ -230,7 +224,7 @@ class Worker(QtCore.QObject):
         while plc_thread_exec:
 
             # ACTIVE STATUS
-            if self.execution and not threshold_stop: # and plc_status:   #TODO (001)
+            if self.execution and not threshold_stop and plc_status:
 
                 if turn_on: # to turn on only in the first iteration
 
@@ -561,10 +555,7 @@ class MainWindow(QMainWindow):
 
 
     def play_execution(self):
-        global log_file
-        global modifica_alf   # TODO (003): remove this 
-
-        modifica_alf = True    # TODO (003): remove this 
+        global log_file 
 
         self.disablePlayButton()
         self.enableStopButton()
@@ -702,8 +693,7 @@ class MainWindow(QMainWindow):
 
     def update_plc_status(self):
         global plc_status
-        global modifica_alf    # TODO (003): remove this 
-        date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+        # date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
 
         if plc_status:
             self.ui.QPLCInfo.setStyleSheet("color: rgb(41, 45, 62);\n"
@@ -711,12 +701,7 @@ class MainWindow(QMainWindow):
         else:
             self.ui.QPLCInfo.setStyleSheet("color: rgb(41, 45, 62);\n"
                                              "background-color: rgb(255, 0, 0);")
-            if modifica_alf:  # TODO (003): remove this 
-                # self.reset_execution()
-                modifica_alf = False
 
-
-modifica_alf = True # TODO (003): remove this 
 
 def update_progress(progress_bar, value):
     progress_bar.setValue(value)
