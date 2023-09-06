@@ -9,6 +9,7 @@ import sys
 # from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, QThreadPool
 from PyQt5.QtCore import pyqtSignal # QThread
 import plc_communication as plcc
+import os
 
 from threading import Thread
 
@@ -55,7 +56,6 @@ class RFdata:
     cycle_percentage = 0
 
 # File di log
-import os
 log_file = "log.txt"
 logger = "logger_EATON.csv"
 
@@ -76,16 +76,18 @@ def write_to_logger(filename, line):
     desktop = os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop')
     path = os.path.join(desktop, filename)
 
-    try:
-        with open(path, "r") as f:
-            content = f.read()
-    except FileNotFoundError:
-        content = ""
-    content = line + "\n" + content
-    with open(path, "w") as f:
-        f.write(content)
+    # Check if the file is empty
+    empty= False
+    f = open(path, "r")
+    if f.readline() == "":
+        empty = True
     f.close()
-
+    
+    f = open(path, "a")
+    if empty:
+        f.write("MB70;MB80;MB110;MB120;MB130;MB140;MB150;" + "\n") #name of the PLC values
+    f.write(line + "\n")
+    f.close()
 
 rf_data = RFdata()
 index = 0
@@ -97,7 +99,7 @@ threshold_stop = False
 thres_status = ""
 
 prev_logging_time = 0
-logging_period = 0.1 #minutes
+logging_period = 15 #minutes
 
 class PLCWorker(QtCore.QObject):
     execution = False

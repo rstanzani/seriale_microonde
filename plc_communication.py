@@ -56,18 +56,20 @@ def is_plc_on_air():
 
 def get_logger_values():
     resp = ['','','','','','']
-    val = [0,0,0,0,0,0]
-    resp[0] = getOp("MB","80")[1]
+    val = [0,0,0,0,0,0,0]
+    resp[0] = getOp("MB","70")[1]
     time.sleep(0.001)
-    resp[1] = getOp("MB","110")[1]
+    resp[1] = getOp("MB","80")[1]
     time.sleep(0.001)
-    resp[2] = getOp("MB","120")[1]
+    resp[2] = getOp("MB","110")[1]
     time.sleep(0.001)
-    resp[3] = getOp("MB","130")[1]
+    resp[3] = getOp("MB","120")[1]
     time.sleep(0.001)
-    resp[4] = getOp("MB","140")[1]
+    resp[4] = getOp("MB","130")[1]
     time.sleep(0.001)
-    resp[5] =getOp("MB","150")[1]
+    resp[5] = getOp("MB","140")[1]
+    time.sleep(0.001)
+    resp[6] =getOp("MB","150")[1]
 
     time.sleep(.01)
     val[0] = get_val(resp[0], "MB")
@@ -76,6 +78,7 @@ def get_logger_values():
     val[3] = get_val(resp[3], "MB")
     val[4] = get_val(resp[4], "MB")
     val[5] = get_val(resp[5], "MB")
+    val[6] = get_val(resp[6], "MB")
 
     # In string format for the csv file
     strng = ""
