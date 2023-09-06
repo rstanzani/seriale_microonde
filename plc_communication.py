@@ -46,11 +46,51 @@ def get_val(content, letter="M"):
 
 def is_plc_on_air():
     resp, content = getOp("M","04")
+
     time.sleep(.5)
     value = 0
     if content:
         value = get_val(content)
     return value
+
+
+def get_logger_values():
+    resp = ['','','','','','']
+    val = [0,0,0,0,0,0]
+    resp[0] = getOp("MB","80")[1]
+    time.sleep(0.01)
+    resp[1] = getOp("MB","110")[1]
+    time.sleep(0.01)
+    resp[2] = getOp("MB","120")[1]
+    time.sleep(0.01)
+    resp[3] = getOp("MB","130")[1]
+    time.sleep(0.01)
+    resp[4] = getOp("MB","140")[1]
+    time.sleep(0.01)
+    resp[5] =getOp("MB","150")[1]
+
+    time.sleep(.5)
+    val[0] = get_val(resp[0], "MB")
+    val[1] = get_val(resp[1], "MB")
+    val[2] = get_val(resp[2], "MB")
+    val[3] = get_val(resp[3], "MB")
+    val[4] = get_val(resp[4], "MB")
+    val[5] = get_val(resp[5], "MB")
+
+    # In string format for the csv file
+    strng = ""
+    for el in val:
+        strng += str(el) + ";"
+    return val, strng
+
+
+# import time
+# import zmq
+
+# context = zmq.Context()
+# # context = zmq.Context()
+# socket = context.socket(zmq.REP)
+# socket.bind("tcp://*:5555")
 
 # def main():
 #     counter = 0

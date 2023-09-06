@@ -22,6 +22,7 @@ def read_config(filename):
     return com, csv_name
 
 #TODO list:
+# (001) - enable param reading from plc
 
 comport, csv_name = read_config("config.txt")
 plc_thread_exec = True # used to stop the plc reading thread
@@ -55,7 +56,7 @@ class RFdata:
 
 # File di log
 log_file = "log.txt"
-
+logger = "logger.csv"
 
 def write_to_file(filename, text):
     try:
@@ -68,6 +69,18 @@ def write_to_file(filename, text):
         f.write(content)
     f.close()
 
+def write_to_logger(filename, line):
+    try:
+        with open(filename, "r") as f:
+            content = f.read()
+    except FileNotFoundError:
+        content = ""
+    content = line + "\n" + content
+    with open(filename, "w") as f:
+        f.write(content)
+    f.close()
+
+
 rf_data = RFdata()
 index = 0
 interruption_type = "reset" # "stop", "reset", default value reset
@@ -76,6 +89,9 @@ execution_time = 0
 prev_execution_time = 0
 threshold_stop = False
 thres_status = ""
+
+prev_logging_time = 0
+logging_period = 0.1 #minutes
 
 class PLCWorker(QtCore.QObject):
     execution = False
@@ -105,7 +121,7 @@ class PLCWorker(QtCore.QObject):
 
         while plc_thread_exec:
             # controllo = time.time() - inizio
-            plc_status = plcc.is_plc_on_air()  #TODO set to 1 for testing purposes
+            plc_status = 1# plcc.is_plc_on_air()  #TODO set to 1 for testing purposes
             # if controllo > 30 and controllo < 60:
             #     plc_status = 0 # plcc.is_plc_on_air()  #TODO (002)
             time.sleep(0.5)
@@ -211,6 +227,9 @@ class Worker(QtCore.QObject):
         global turn_on
         global just_turned_off
 
+        global prev_logging_time
+        global logging_period
+
         print("In run...")
         self.start_execution()
 
@@ -219,9 +238,22 @@ class Worker(QtCore.QObject):
         self.threshold_security_mode = False
         self.starttime_security_mode = 0
 
+        # First log on csv file
+        # _, logger_val_str = plcc.get_logger_values() # TODO (001)
+        logger_val_str = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";"+"23;23;23;23;23;23;"
+
+        write_to_logger(logger, logger_val_str)
+        prev_logging_time = time.time()
+
         print("Opening connection with RF...")
         ser = srw.connect_serial(comport)
         while plc_thread_exec:
+
+            if time.time() - prev_logging_time >= logging_period*60:
+                # _, logger_val_str = plcc.get_logger_values()  # TODO (001)
+                logger_val_str =  datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";"+"23;23;23;23;23;23;"
+                write_to_logger(logger, logger_val_str)
+                prev_logging_time = time.time()
 
             # ACTIVE STATUS
             if self.execution and not threshold_stop and plc_status:
@@ -555,7 +587,7 @@ class MainWindow(QMainWindow):
 
 
     def play_execution(self):
-        global log_file 
+        global log_file
 
         self.disablePlayButton()
         self.enableStopButton()
