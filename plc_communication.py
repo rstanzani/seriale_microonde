@@ -58,18 +58,18 @@ def get_logger_values():
     resp = ['','','','','','']
     val = [0,0,0,0,0,0]
     resp[0] = getOp("MB","80")[1]
-    time.sleep(0.01)
+    time.sleep(0.001)
     resp[1] = getOp("MB","110")[1]
-    time.sleep(0.01)
+    time.sleep(0.001)
     resp[2] = getOp("MB","120")[1]
-    time.sleep(0.01)
+    time.sleep(0.001)
     resp[3] = getOp("MB","130")[1]
-    time.sleep(0.01)
+    time.sleep(0.001)
     resp[4] = getOp("MB","140")[1]
-    time.sleep(0.01)
+    time.sleep(0.001)
     resp[5] =getOp("MB","150")[1]
 
-    time.sleep(.5)
+    time.sleep(.01)
     val[0] = get_val(resp[0], "MB")
     val[1] = get_val(resp[1], "MB")
     val[2] = get_val(resp[2], "MB")

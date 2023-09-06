@@ -55,8 +55,9 @@ class RFdata:
     cycle_percentage = 0
 
 # File di log
+import os
 log_file = "log.txt"
-logger = "logger.csv"
+logger = "logger_EATON.csv"
 
 def write_to_file(filename, text):
     try:
@@ -70,13 +71,18 @@ def write_to_file(filename, text):
     f.close()
 
 def write_to_logger(filename, line):
+
+    # Save on desktop
+    desktop = os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop')
+    path = os.path.join(desktop, filename)
+
     try:
-        with open(filename, "r") as f:
+        with open(path, "r") as f:
             content = f.read()
     except FileNotFoundError:
         content = ""
     content = line + "\n" + content
-    with open(filename, "w") as f:
+    with open(path, "w") as f:
         f.write(content)
     f.close()
 
@@ -121,7 +127,7 @@ class PLCWorker(QtCore.QObject):
 
         while plc_thread_exec:
             # controllo = time.time() - inizio
-            plc_status = 1# plcc.is_plc_on_air()  #TODO set to 1 for testing purposes
+            plc_status = plcc.is_plc_on_air()  #TODO set to 1 for testing purposes
             # if controllo > 30 and controllo < 60:
             #     plc_status = 0 # plcc.is_plc_on_air()  #TODO (002)
             time.sleep(0.5)
@@ -239,9 +245,7 @@ class Worker(QtCore.QObject):
         self.starttime_security_mode = 0
 
         # First log on csv file
-        # _, logger_val_str = plcc.get_logger_values() # TODO (001)
-        logger_val_str = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";"+"23;23;23;23;23;23;"
-
+        logger_val_str = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";"+plcc.get_logger_values()[1]
         write_to_logger(logger, logger_val_str)
         prev_logging_time = time.time()
 
@@ -250,8 +254,7 @@ class Worker(QtCore.QObject):
         while plc_thread_exec:
 
             if time.time() - prev_logging_time >= logging_period*60:
-                # _, logger_val_str = plcc.get_logger_values()  # TODO (001)
-                logger_val_str =  datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";"+"23;23;23;23;23;23;"
+                logger_val_str = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";"+plcc.get_logger_values()[1]
                 write_to_logger(logger, logger_val_str)
                 prev_logging_time = time.time()
 
