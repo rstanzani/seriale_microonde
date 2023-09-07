@@ -74,18 +74,17 @@ def write_to_logger(filename, line):
 
     # Save on desktop
     desktop = os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop')
-    path = os.path.join(desktop, filename)
+    path_file = os.path.join(desktop, filename)
 
-    # Check if the file is empty
-    empty= False
-    f = open(path, "r")
-    if f.readline() == "":
-        empty = True
-    f.close()
-    
-    f = open(path, "a")
-    if empty:
+    if os.path.isfile(path_file):
+        print("File exists")
+    else:
+        f = open(path_file, "w")
         f.write("MB70;MB80;MB110;MB120;MB130;MB140;MB150;" + "\n") #name of the PLC values
+        print("Logger file created: {}".format(path_file))
+        f.close()
+    
+    f = open(path_file, "a")
     f.write(line + "\n")
     f.close()
 

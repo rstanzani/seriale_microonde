@@ -55,7 +55,7 @@ def is_plc_on_air():
 
 
 def get_logger_values():
-    resp = ['','','','','','']
+    resp = ['','','','','','','']
     val = [0,0,0,0,0,0,0]
     resp[0] = getOp("MB","70")[1]
     time.sleep(0.001)
