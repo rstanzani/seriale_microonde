@@ -69,7 +69,7 @@ def get_logger_values():
     time.sleep(0.001)
     resp[5] = getOp("MB","140")[1]
     time.sleep(0.001)
-    resp[6] =getOp("MB","150")[1]
+    resp[6] = getOp("MB","150")[1]
 
     time.sleep(.01)
     val[0] = get_val(resp[0], "MB")

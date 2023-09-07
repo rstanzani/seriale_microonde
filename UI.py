@@ -436,6 +436,9 @@ class MainWindow(QMainWindow):
             self.enablePlayButton()
             self.ui.QoutputLabel.setText(self.msg)
 
+		# Disable the X close button
+        self.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)
+
         self.open_window_init()    # init the functionalities when opening the program
         self.ui.Qplay.clicked.connect(lambda: self.play_execution())
         self.ui.Qstop.clicked.connect(lambda: self.stop_execution())
