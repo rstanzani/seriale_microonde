@@ -45,7 +45,7 @@ def get_val(content, letter="M"):
     return value
 
 def is_plc_on_air():
-    resp, content = getOp("M","04")
+    resp, content = getOp("M","17")
 
     time.sleep(.5)
     value = 0
