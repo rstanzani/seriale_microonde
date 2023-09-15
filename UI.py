@@ -20,12 +20,18 @@ def read_config(filename):
     com = "COM"+str(lines[0][0])
     if len(lines) >= 2:
         csv_name = str(lines[1])
-    return com, csv_name
+        execution_from_config = 1 if str(lines[2])=="1" else 0
+    return com, csv_name, execution_from_config
 
 #TODO list:
 # (001) - enable param reading from plc
 
-comport, csv_name = read_config("config.txt")
+# File di log
+log_file = "log.txt"
+logger = "logger_EATON.csv"
+config_file = "config.txt"
+
+comport, csv_name, execution_from_config = read_config(config_file)
 plc_thread_exec = True # used to stop the plc reading thread
 plc_status = 0
 old_plc_status = 0
@@ -56,9 +62,18 @@ class RFdata:
     cycle_count = 0
     cycle_percentage = 0
 
-# File di log
-log_file = "log.txt"
-logger = "logger_EATON.csv"
+def set_configfile_exec(path, state):
+    '''Change the execution status in the config file (used for the next startup)'''
+    with open(path, 'r') as file:
+        lines = file.readlines()
+
+    if len(lines) >= 3:
+        lines[2] = state
+
+        with open(path, 'w') as file:
+            file.writelines(lines)
+    print("Config file execution set to {}".format(state))
+
 
 def write_to_file(filename, text):
     try:
@@ -115,9 +130,13 @@ class PLCWorker(QtCore.QObject):
 
 
     def start_execution(self):
-        print("Started execution in PLCworker")
-        self.execution = True
+        global execution_from_config
 
+        if execution_from_config:
+            print("Started execution in PLCworker")
+            self.execution = True
+        else:
+            print("Execution set to Stop from the config file")
 
     def run(self):
         global plc_status
@@ -596,10 +615,11 @@ class MainWindow(QMainWindow):
         self.disableOpenCSVButton()
         self.run_long_task()
 
-
     def play_execution(self):
         global log_file
+        global config_file
 
+        set_configfile_exec(config_file, "1")
         self.disablePlayButton()
         self.enableStopButton()
         self.enableResetButton()
@@ -612,6 +632,9 @@ class MainWindow(QMainWindow):
         global index
         global interruption_type
         global num_executed_cycles
+        global config_file
+
+        set_configfile_exec(config_file, "0")
         interruption_type = "reset"
         num_executed_cycles = 1
         date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
@@ -624,6 +647,9 @@ class MainWindow(QMainWindow):
 
     def stop_execution(self):
         global interruption_type
+        global config_file
+
+        set_configfile_exec(config_file, "0")
         interruption_type = "stop"
         date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
         write_to_file(log_file, "{} {}".format(date_time, "Stop"))
