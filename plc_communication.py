@@ -10,7 +10,7 @@ def request(pTarget):
     try:
         resp, content = h.request(URL+pTarget, method="GET", headers=header)
     except:
-        print("No response from server")
+        print("PLC error: No response from server. Check the connection.")
     return resp, content
 
 def isRunning():

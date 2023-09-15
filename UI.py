@@ -39,6 +39,7 @@ freq = 0
 
 turn_on = True
 just_turned_off = True   #when the user click STOP or RESET buttons
+min_refresh = 1  # minimum refresh rate
 
 class RFdata:
     Temperature = "--"
@@ -83,7 +84,7 @@ def write_to_logger(filename, line):
         f.write("MB70;MB80;MB110;MB120;MB130;MB140;MB150;" + "\n") #name of the PLC values
         print("Logger file created: {}".format(path_file))
         f.close()
-    
+
     f = open(path_file, "a")
     f.write(line + "\n")
     f.close()
@@ -150,6 +151,7 @@ class Worker(QtCore.QObject):
     safety_mode_counter = 0
     force_change_pwr_safety = False
     noresp_counter = 0
+    min_refresh = 1
 
 
     def stop_worker_execution(self):
@@ -237,6 +239,7 @@ class Worker(QtCore.QObject):
         global prev_logging_time
         global logging_period
 
+        global min_refresh
         print("In run...")
         self.start_execution()
 
@@ -288,7 +291,6 @@ class Worker(QtCore.QObject):
                     # Start the main functions
                     timestamp = time.time()
                     starttime = time.time()
-                    min_refresh = 1
                     cycle_time = time.time()
                     turn_on = False
                     just_turned_off = True
@@ -307,7 +309,7 @@ class Worker(QtCore.QObject):
                         srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
                         self.force_change_pwr_safety = False
 
-                    if time.time()-cycle_time >= next_time:
+                    if time.time()-cycle_time >= next_time: # to change the current cycle from the csv
 
                         index += 1
                         index = index % len(duration)  # set to 0 if is the last line in the csv
@@ -328,7 +330,7 @@ class Worker(QtCore.QObject):
                     rf_data.cycle_percentage = round(index/(len(duration))*100, 0)
                     self.messaged.emit()
                     timestamp = time.time()
-                    execution_time = prev_execution_time + (timestamp - starttime)
+                    execution_time = prev_execution_time + (timestamp - starttime) # calculate the total execution time for the RF generator
                     if rf_data.Error == 4:   #tentativo
                         print("Re-set parameters")
                         srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param)
@@ -363,6 +365,8 @@ class Worker(QtCore.QObject):
 
             # IDLE STATUS
             else:
+                if not 'timestamp' in locals(): # timestamp is not defined if it does not enter in the previous IF (e.g. if pls_status is off when turning on)
+                    timestamp = time.time()
                 if time.time() >= timestamp + min_refresh:
                     rf_data, self.noresp_counter = srw.read_param(ser, self.noresp_counter, rf_data, "STATUS", 1, False)
                     self.messaged.emit()
