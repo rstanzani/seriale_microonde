@@ -9,6 +9,7 @@ import sys
 # from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, QThreadPool
 from PyQt5.QtCore import pyqtSignal # QThread
 import plc_communication as plcc
+import os
 
 from threading import Thread
 
@@ -19,11 +20,18 @@ def read_config(filename):
     com = "COM"+str(lines[0][0])
     if len(lines) >= 2:
         csv_name = str(lines[1])
-    return com, csv_name
+        execution_from_config = 1 if str(lines[2])=="1" else 0
+    return com, csv_name, execution_from_config
 
 #TODO list:
+# (001) - enable param reading from plc
 
-comport, csv_name = read_config("config.txt")
+# File di log
+log_file = "log.txt"
+logger = "logger_EATON.csv"
+config_file = "config.txt"
+
+comport, csv_name, execution_from_config = read_config(config_file)
 plc_thread_exec = True # used to stop the plc reading thread
 plc_status = 0
 old_plc_status = 0
@@ -37,6 +45,7 @@ freq = 0
 
 turn_on = True
 just_turned_off = True   #when the user click STOP or RESET buttons
+min_refresh = 1  # minimum refresh rate
 
 class RFdata:
     Temperature = "--"
@@ -53,8 +62,17 @@ class RFdata:
     cycle_count = 0
     cycle_percentage = 0
 
-# File di log
-log_file = "log.txt"
+def set_configfile_exec(path, state):
+    '''Change the execution status in the config file (used for the next startup)'''
+    with open(path, 'r') as file:
+        lines = file.readlines()
+
+    if len(lines) >= 3:
+        lines[2] = state
+
+        with open(path, 'w') as file:
+            file.writelines(lines)
+    print("Config file execution set to {}".format(state))
 
 
 def write_to_file(filename, text):
@@ -68,6 +86,24 @@ def write_to_file(filename, text):
         f.write(content)
     f.close()
 
+def write_to_logger(filename, line):
+
+    # Save on desktop
+    desktop = os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop')
+    path_file = os.path.join(desktop, filename)
+
+    if os.path.isfile(path_file):
+        print("File exists")
+    else:
+        f = open(path_file, "w")
+        f.write("MB70;MB80;MB110;MB120;MB130;MB140;MB150;" + "\n") #name of the PLC values
+        print("Logger file created: {}".format(path_file))
+        f.close()
+
+    f = open(path_file, "a")
+    f.write(line + "\n")
+    f.close()
+
 rf_data = RFdata()
 index = 0
 interruption_type = "reset" # "stop", "reset", default value reset
@@ -76,6 +112,9 @@ execution_time = 0
 prev_execution_time = 0
 threshold_stop = False
 thres_status = ""
+
+prev_logging_time = 0
+logging_period = 15 #minutes
 
 class PLCWorker(QtCore.QObject):
     execution = False
@@ -91,9 +130,13 @@ class PLCWorker(QtCore.QObject):
 
 
     def start_execution(self):
-        print("Started execution in PLCworker")
-        self.execution = True
+        global execution_from_config
 
+        if execution_from_config:
+            print("Started execution in PLCworker")
+            self.execution = True
+        else:
+            print("Execution set to Stop from the config file")
 
     def run(self):
         global plc_status
@@ -127,6 +170,7 @@ class Worker(QtCore.QObject):
     safety_mode_counter = 0
     force_change_pwr_safety = False
     noresp_counter = 0
+    min_refresh = 1
 
 
     def stop_worker_execution(self):
@@ -211,6 +255,10 @@ class Worker(QtCore.QObject):
         global turn_on
         global just_turned_off
 
+        global prev_logging_time
+        global logging_period
+
+        global min_refresh
         print("In run...")
         self.start_execution()
 
@@ -219,9 +267,19 @@ class Worker(QtCore.QObject):
         self.threshold_security_mode = False
         self.starttime_security_mode = 0
 
+        # First log on csv file
+        logger_val_str = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";"+plcc.get_logger_values()[1]
+        write_to_logger(logger, logger_val_str)
+        prev_logging_time = time.time()
+
         print("Opening connection with RF...")
         ser = srw.connect_serial(comport)
         while plc_thread_exec:
+
+            if time.time() - prev_logging_time >= logging_period*60:
+                logger_val_str = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";"+plcc.get_logger_values()[1]
+                write_to_logger(logger, logger_val_str)
+                prev_logging_time = time.time()
 
             # ACTIVE STATUS
             if self.execution and not threshold_stop and plc_status:
@@ -252,7 +310,6 @@ class Worker(QtCore.QObject):
                     # Start the main functions
                     timestamp = time.time()
                     starttime = time.time()
-                    min_refresh = 1
                     cycle_time = time.time()
                     turn_on = False
                     just_turned_off = True
@@ -271,7 +328,7 @@ class Worker(QtCore.QObject):
                         srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
                         self.force_change_pwr_safety = False
 
-                    if time.time()-cycle_time >= next_time:
+                    if time.time()-cycle_time >= next_time: # to change the current cycle from the csv
 
                         index += 1
                         index = index % len(duration)  # set to 0 if is the last line in the csv
@@ -292,7 +349,7 @@ class Worker(QtCore.QObject):
                     rf_data.cycle_percentage = round(index/(len(duration))*100, 0)
                     self.messaged.emit()
                     timestamp = time.time()
-                    execution_time = prev_execution_time + (timestamp - starttime)
+                    execution_time = prev_execution_time + (timestamp - starttime) # calculate the total execution time for the RF generator
                     if rf_data.Error == 4:   #tentativo
                         print("Re-set parameters")
                         srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param)
@@ -327,6 +384,8 @@ class Worker(QtCore.QObject):
 
             # IDLE STATUS
             else:
+                if not 'timestamp' in locals(): # timestamp is not defined if it does not enter in the previous IF (e.g. if pls_status is off when turning on)
+                    timestamp = time.time()
                 if time.time() >= timestamp + min_refresh:
                     rf_data, self.noresp_counter = srw.read_param(ser, self.noresp_counter, rf_data, "STATUS", 1, False)
                     self.messaged.emit()
@@ -399,6 +458,9 @@ class MainWindow(QMainWindow):
             is_plot_present = True
             self.enablePlayButton()
             self.ui.QoutputLabel.setText(self.msg)
+
+		# Disable the X close button
+        self.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)
 
         self.open_window_init()    # init the functionalities when opening the program
         self.ui.Qplay.clicked.connect(lambda: self.play_execution())
@@ -553,10 +615,11 @@ class MainWindow(QMainWindow):
         self.disableOpenCSVButton()
         self.run_long_task()
 
-
     def play_execution(self):
-        global log_file 
+        global log_file
+        global config_file
 
+        set_configfile_exec(config_file, "1")
         self.disablePlayButton()
         self.enableStopButton()
         self.enableResetButton()
@@ -569,6 +632,9 @@ class MainWindow(QMainWindow):
         global index
         global interruption_type
         global num_executed_cycles
+        global config_file
+
+        set_configfile_exec(config_file, "0")
         interruption_type = "reset"
         num_executed_cycles = 1
         date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
@@ -581,6 +647,9 @@ class MainWindow(QMainWindow):
 
     def stop_execution(self):
         global interruption_type
+        global config_file
+
+        set_configfile_exec(config_file, "0")
         interruption_type = "stop"
         date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
         write_to_file(log_file, "{} {}".format(date_time, "Stop"))
