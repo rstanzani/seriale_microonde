@@ -4,13 +4,13 @@ APIKEY = "0641cbefbfb63378999e572968c7259519b6457b12a797b7b3415079eed4b7eb248373
 
 def request(pTarget):
     header = {'Authorization': "Bearer %s" % APIKEY}
-    h = httplib2.Http()
+    h = httplib2.Http(timeout = 2)
     resp = ''
     content = ''
     try:
         resp, content = h.request(URL+pTarget, method="GET", headers=header)
     except:
-        print("No response from server")
+        print("PLC error: No response from server. Check the connection.")
     return resp, content
 
 def isRunning():
@@ -36,21 +36,66 @@ def getState():
     return request(url)
 
 def get_val(content, letter="M"):
-    data = json.loads(content)
-    operands = data['OPERANDS']
-    singleop = operands['{}SINGLE'.format(letter)]
-    parameters = singleop[0]
-    index = parameters['INDEX']
-    value = parameters['V']
+    value = 0 # 0 = default value
+    if content != "":
+        data = json.loads(content)
+        operands = data['OPERANDS']
+        singleop = operands['{}SINGLE'.format(letter)]
+        parameters = singleop[0]
+        # index = parameters['INDEX']
+        value = parameters['V']
     return value
 
 def is_plc_on_air():
-    resp, content = getOp("M","40") #TODO set to M04 for working version
-    time.sleep(.5)
+    resp, content = getOp("M","17")
+
+    time.sleep(.3)
     value = 0
-    if content:
+    if content != "":
         value = get_val(content)
     return value
+
+
+def get_logger_values():
+    resp = ['','','','','','','']
+    val = [0,0,0,0,0,0,0]
+    resp[0] = getOp("MB","70")[1]
+    if resp[0] != "":    # use the first value as a connection check
+        time.sleep(0.001)
+        resp[1] = getOp("MB","80")[1]
+        time.sleep(0.001)
+        resp[2] = getOp("MB","110")[1]
+        time.sleep(0.001)
+        resp[3] = getOp("MB","120")[1]
+        time.sleep(0.001)
+        resp[4] = getOp("MB","130")[1]
+        time.sleep(0.001)
+        resp[5] = getOp("MB","140")[1]
+        time.sleep(0.001)
+        resp[6] = getOp("MB","150")[1]
+        time.sleep(.01)
+        val[0] = get_val(resp[0], "MB")
+        val[1] = get_val(resp[1], "MB")
+        val[2] = get_val(resp[2], "MB")
+        val[3] = get_val(resp[3], "MB")
+        val[4] = get_val(resp[4], "MB")
+        val[5] = get_val(resp[5], "MB")
+        val[6] = get_val(resp[6], "MB")
+
+    # In string format for the csv file
+    strng = ""
+    for el in val:
+        strng += str(el) + ";"
+    return val, strng
+
+
+# import time
+# import zmq
+
+# context = zmq.Context()
+# # context = zmq.Context()
+# socket = context.socket(zmq.REP)
+# socket.bind("tcp://*:5555")
 
 # def main():
 #     counter = 0

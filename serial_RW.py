@@ -16,7 +16,7 @@ from binascii import hexlify
 def connect_serial(comport="COM11"):
     try:
         ser = serial.Serial(comport, 250000, timeout=0.1, bytesize=8) #nota: se metto un timeout dopo quel tempo mi legge tutto quello che ha ricevuto
-        time.sleep(3)
+        time.sleep(2)
         if (ser.isOpen()):
             print("Correctly opened port: {}".format(ser.name))
         return ser

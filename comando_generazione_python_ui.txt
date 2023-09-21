@@ -1,7 +1,8 @@
 Nella cartella dove metto il codic e python e il file qt:
 
 
-pyuic5 -x .\main_window.ui -o UI_raw.py
+pyuic5 -x .\main_window.ui -o UI_raw.py   # per la mainwindow
+pyrcc5 resource.qrc -o resource_rc.py  #per il file resource con l'icona
 
 
 this creates an exe starting with the file main_window.ui and with output file the file python defined
