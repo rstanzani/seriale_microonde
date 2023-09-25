@@ -96,7 +96,7 @@ def write_to_logger(filename, line):
         print("File exists")
     else:
         f = open(path_file, "w")
-        f.write("MB70;MB80;MB110;MB120;MB130;MB140;MB150;" + "\n") #name of the PLC values
+        f.write("MB70;MB80;MB110;MB120;MB130;MB140;MB150;MB160" + "\n") #name of the PLC values
         print("Logger file created: {}".format(path_file))
         f.close()
 
