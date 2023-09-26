@@ -13,14 +13,15 @@ import os
 
 from threading import Thread
 
-def read_config(filename):
+def read_config(filename="config.csv"):
     csv_name = ""
     with open(filename, 'r') as file:
-        lines = file.readlines()
-    com = "COM"+str(lines[0][0])
-    if len(lines) >= 2:
-        csv_name = str(lines[1])
-        execution_from_config = 1 if str(lines[2])=="1" else 0
+        line = file.readline()
+    elem = line.split(";")
+    com = "COM"+str(elem[0])
+    if len(elem) >= 2:
+        csv_name = str(elem[1])
+        execution_from_config = 1 if str(elem[0])=="1" else 0
     return com, csv_name, execution_from_config
 
 #TODO list:
@@ -29,7 +30,7 @@ def read_config(filename):
 # File di log
 log_file = "log.txt"
 logger = "logger_EATON.csv"
-config_file = "config.txt"
+config_file = "config.csv"
 
 comport, csv_name, execution_from_config = read_config(config_file)
 plc_thread_exec = True # used to stop the plc reading thread

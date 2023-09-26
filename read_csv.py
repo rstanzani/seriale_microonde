@@ -7,19 +7,27 @@ Created on Tue Mar 28 08:57:22 2023
 
 import pandas #USED ONLY TO AVOID AN IMPORT ERROR FROM MATPLOTLIB IN SOME CONFIGURATIONS
 import re
-
+import os
 
 def update_config(config_path, new_csv_path):
+
     with open(config_path, 'r') as file:
-        lines = file.readlines()
+        line = file.readline()
+    file.close()
+    elem = line.split(";")
+    if len(elem) >=2:
+        elem[1] = new_csv_path
+    else: # case with only one value not ending with ";"
+        elem.append(new_csv_path)
 
-    if len(lines) >= 2:
-        lines[1] = new_csv_path
-    else:
-        lines.append("\n"+new_csv_path)
+    lines = ""
+    for i in range(0, 3): # save only 3 values in the csv (to remove old empty values)
+        lines += elem[i] + ";"
 
-    with open(config_path, 'w') as file:
-        file.writelines(lines)
+    with open(config_path, 'w', encoding='utf-8') as file:
+        file.write(lines)
+
+    file.close()
 
 
 def read_and_plot(ui, filepath, is_plot_present = False):
@@ -34,10 +42,17 @@ def read_and_plot(ui, filepath, is_plot_present = False):
     if filepath == "": # in this case it only initializes the canvas
         ui.MplWidget.canvas.axes = ui.MplWidget.canvas.figure.add_subplot(111)
         ui.MplWidget_2.canvas.axes = ui.MplWidget_2.canvas.figure.add_subplot(111)
+        error = True
+
 
     else:
-        if filepath[-7:] == ".rf.csv":
-            execute = True
+        if filepath[-7:] == ".rf.csv": # check if the name is correct and if the file exists
+            if os.path.isfile(filepath):
+                execute = True
+            else:
+                msg = "ERROR: missing file, please check the file name."
+                print("ERROR: missing file, please check the file name.")
+                error = True
         if execute:
             file = open(filepath, 'r')
             lines = file.readlines()
@@ -121,7 +136,7 @@ def read_and_plot(ui, filepath, is_plot_present = False):
                     ui.MplWidget.canvas.draw()  #TODO very slow with this, understand why
                     ui.MplWidget_2.canvas.draw()
 
-                update_config("config.txt", filepath)
+                update_config("config.csv", filepath)
 
         else:
             msg = "ERROR: the file has the wrong name. Please retry with another one."
