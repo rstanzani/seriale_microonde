@@ -44,8 +44,8 @@ def read_and_plot(ui, filepath, is_plot_present = False):
         ui.MplWidget_2.canvas.axes = ui.MplWidget_2.canvas.figure.add_subplot(111)
         error = True
 
-
     else:
+        print("### Analyzing the filename... ")
         if filepath[-7:] == ".rf.csv": # check if the name is correct and if the file exists
             if os.path.isfile(filepath):
                 execute = True
@@ -139,6 +139,7 @@ def read_and_plot(ui, filepath, is_plot_present = False):
                 update_config("config.csv", filepath)
 
         else:
+            print("The filename is wrong.")
             msg = "ERROR: the file has the wrong name. Please retry with another one."
             error = True
     return duration, freq, power, error, msg

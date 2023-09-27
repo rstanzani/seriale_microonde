@@ -14,14 +14,24 @@ import os
 from threading import Thread
 
 def read_config(filename="config.csv"):
+    print("##### STEP 1")
     csv_name = ""
     with open(filename, 'r') as file:
         line = file.readline()
+    file.close()
     elem = line.split(";")
     com = "COM"+str(elem[0])
     if len(elem) >= 2:
         csv_name = str(elem[1])
-        execution_from_config = 1 if str(elem[0])=="1" else 0
+        execution_from_config = 1 if str(elem[2])=="1" else 0
+
+        # Analyzing the filename...
+        if csv_name[-7:] == ".rf.csv": # not existant csv
+            if not os.path.isfile(csv_name):
+                print("ERROR: missing file, please check the file name.")
+                execution_from_config = 0
+        else:  #invalid csv
+            execution_from_config = 0
     return com, csv_name, execution_from_config
 
 #TODO list:
@@ -66,13 +76,16 @@ class RFdata:
 def set_configfile_exec(path, state):
     '''Change the execution status in the config file (used for the next startup)'''
     with open(path, 'r') as file:
-        lines = file.readlines()
-
-    if len(lines) >= 3:
-        lines[2] = state
-
-        with open(path, 'w') as file:
-            file.writelines(lines)
+        line = file.readline()
+    file.close()
+    elem = line.split(";")
+    if len(elem) >=3:
+        elem[2] = state
+    lines = ""
+    for i in range(0, 3):
+        lines += elem[i] + ";"
+    with open(path, 'w') as file:
+        file.writelines(lines)
     print("Config file execution set to {}".format(state))
 
 
@@ -107,7 +120,7 @@ def write_to_logger(filename, line):
 
 rf_data = RFdata()
 index = 0
-interruption_type = "reset" # "stop", "reset", default value reset
+interruption_type = "reset" # "stop" or "reset" (default value)
 num_executed_cycles = 1
 execution_time = 0
 prev_execution_time = 0
@@ -117,41 +130,41 @@ thres_status = ""
 prev_logging_time = 0
 logging_period = 15 #minutes
 
+execution = False
+
 class PLCWorker(QtCore.QObject):
-    execution = False
+    # execution = False
     messaged = pyqtSignal()
     finished = pyqtSignal()
 
 
-    def stop_worker_execution(self):
-        if self.execution:
-            self.execution = False
-        else:
-            print("Execution stopped.")
+    # def stop_worker_execution(self):
+    #     if self.execution:
+    #         self.execution = False
+    #     else:
+    #         print("Execution stopped.")
 
 
     def start_execution(self):
         global execution_from_config
-
+        global execution
+        print("##### STEP 2")
         if execution_from_config:
             print("Started execution in PLCworker")
-            self.execution = True
+            execution = True
         else:
             print("Execution set to Stop from the config file")
 
     def run(self):
         global plc_status
         global plc_thread_exec
-        global inizio
+        # global inizio
 
         print("In run for plc communication...")
         self.start_execution()
 
         while plc_thread_exec:
-            # controllo = time.time() - inizio
             plc_status = plcc.is_plc_on_air()  #TODO set to 1 for testing purposes
-            # if controllo > 30 and controllo < 60:
-            #     plc_status = 0 # plcc.is_plc_on_air()  #TODO (002)
             time.sleep(0.5)
             self.messaged.emit()
 
@@ -161,7 +174,7 @@ class PLCWorker(QtCore.QObject):
 
 
 class Worker(QtCore.QObject):
-    execution = False
+    # execution = False
     messaged = pyqtSignal()
     finished = pyqtSignal()
     safe_mode_param = 1 # base value 1, in safe mode 2/3
@@ -175,15 +188,17 @@ class Worker(QtCore.QObject):
 
 
     def stop_worker_execution(self):
-        if self.execution:
-            self.execution = False
+        global execution
+        if execution:
+            execution = False
         else:
             print("Execution stopped.")
 
 
     def start_execution(self):
+        global execution
         print("Started execution in Worker")
-        self.execution = True
+        execution = True
 
 
     def check_thresholds(self, rf_data):
@@ -235,11 +250,14 @@ class Worker(QtCore.QObject):
 
 
     def run(self):
+        print("In run...")
         global rf_data
         global comport
         global index
         global num_executed_cycles
         global execution_time
+        global execution
+        print("*** in run Execution is {}".format(execution))
         global prev_execution_time
         global interruption_type
         global threshold_alarm
@@ -255,13 +273,11 @@ class Worker(QtCore.QObject):
 
         global turn_on
         global just_turned_off
-
         global prev_logging_time
         global logging_period
-
         global min_refresh
-        print("In run...")
-        self.start_execution()
+#
+        # self.start_execution()
 
         self.safe_mode_param = 1
         self.safety_mode_counter = 0
@@ -283,7 +299,8 @@ class Worker(QtCore.QObject):
                 prev_logging_time = time.time()
 
             # ACTIVE STATUS
-            if self.execution and not threshold_stop and plc_status:
+            # print("/// Execution value is {}".format(execution))
+            if execution and not threshold_stop and plc_status:
 
                 if turn_on: # to turn on only in the first iteration
 
@@ -321,7 +338,7 @@ class Worker(QtCore.QObject):
                         print("Exit: no Response from serial!")
                         date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
                         write_to_file(log_file, "{} {}".format(date_time, "stopped execution: no response from serial"))
-                        self.execution = False
+                        execution = False
                         rf_data.On_Off = 0
 
                     self.safe_mode(rf_data)
@@ -425,7 +442,7 @@ class MainWindow(QMainWindow):
     msg = ""
     error_history = []
     timestamp_old = 0
-    execution = True
+    # execution = True
     worker = None
     plcworker = None
     thread = None
@@ -434,11 +451,15 @@ class MainWindow(QMainWindow):
 
 
     def __init__(self):
+
+        print("##### STEP 3")
         global csv_name
         global is_plot_present
         global duration
         global freq_list
         global power_list
+        global execution
+        global execution_from_config
 
         self.__thread = QtCore.QThread()
         self.__thread_plc = QtCore.QThread()
@@ -457,8 +478,22 @@ class MainWindow(QMainWindow):
         if not self.error:
             self.ui.Qcsvpath.setText(csv_name)
             is_plot_present = True
-            self.enablePlayButton()
+            if not execution_from_config:
+                print("Enable play!")
+                self.enablePlayButton()
+                self.enableExitButton()
+            else:
+                print("Disable play!")
+                self.disablePlayButton()
+                self.enableResetButton()
+                self.enableStopButton()
+                self.disableOpenCSVButton()
+                self.disableExitButton()
             self.ui.QoutputLabel.setText(self.msg)
+
+        else:
+            execution = False
+            print("The path is invalid, values of duration, freq_list and others cannot be set.")
 
 		# Disable the X close button
         self.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)
@@ -580,11 +615,13 @@ class MainWindow(QMainWindow):
 
 
     def open_file(self, button_name):
+        print("CI PASSO ORA!")
         global csv_name
         global is_plot_present
         global duration
         global freq_list
         global power_list
+        global execution
 
         # Reads the file path from the prompt
         self.disablePlayButton()
@@ -596,24 +633,39 @@ class MainWindow(QMainWindow):
         if opened_path != "":
             self.ui.Qcsvpath.setText(opened_path)
             duration, freq_list, power_list, self.error, self.msg  = rcsv.read_and_plot(self.ui, opened_path, is_plot_present)
+            print("### The error value is {}".format(self.error))
 
             self.ui.QoutputLabel.setText(self.msg)
             if not self.error:
                 is_plot_present = True
-                self.enablePlayButton()
+                if not execution_from_config:
+                    self.enablePlayButton()
+                    self.enableExitButton()
+                else:
+                    self.disablePlayButton()
+                    self.enableResetButton()
+                    self.enableStopButton()
+                    self.disableOpenCSVButton()
+                    self.disableExitButton()
+            else:
+                execution = False
+                print("The path is invalid, values of duration, freq_list and others cannot be set.")
 
 
     def open_window_init(self):
+        print("#### STEP 4")
+        global execution_from_config
         global log_file
         self.ui.QoutputLabel.setText("Process started.")
         # Save log file
         date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
         write_to_file(log_file, "{} {}".format(date_time, "Software ON, ready to start."))
-        self.disablePlayButton()
-        self.enableStopButton()
-        self.enableResetButton()
-        self.disableExitButton()
-        self.disableOpenCSVButton()
+        if execution_from_config:
+            self.disablePlayButton()
+            self.enableStopButton()
+            self.enableResetButton()
+            self.disableExitButton()
+            self.disableOpenCSVButton()
         self.run_long_task()
 
     def play_execution(self):
