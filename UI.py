@@ -313,7 +313,9 @@ class Worker(QtCore.QObject):
                 try:
                     read = plcc.get_values()
                     if not read[0]:
-                        cell_data.append_values(plcc.get_values())
+                        cell_data.append_values(read[1])
+                    else:
+                        print("Skipped because data is empty!" )                
                 except:
                     print("Error while reading from plc ")
                 prev_logging_time_SHORT = time.time()

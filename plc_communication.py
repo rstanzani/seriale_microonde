@@ -111,19 +111,17 @@ def is_plc_on_air():
     return value
 
 def get_time_values():
-    noresp = True
     global time_values
     resp = [''] * len(time_values)
     val = [0] * len(time_values)
     resp[0] = getOp(time_values[0][0], time_values[0][1])[1]
     if resp[0] != "":    # use the first value as a connection check
-        noresp = False
         val[0] = get_val(resp[0], time_values[0][0])
         for i in range(1, len(time_values)):
             time.sleep(0.001)
             resp[i] = getOp(time_values[i][0], time_values[i][1])[1]
             val[i] = get_val(resp[i], time_values[i][0])
-    return noresp, val
+    return val
 
 def get_values():
     noresp = True
