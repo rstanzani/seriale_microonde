@@ -55,40 +55,28 @@ def is_plc_on_air():
         value = get_val(content)
     return value
 
+plc_values = [["MB","11"],["MB","13"],["MB","110"],["MB","120"],["MB","130"],["MB","150"],["MB","70"],["MB","80"],["MB","140"],["MB","160"],["MW","20"],["MW","22"],["MW","24"],["MW","26"],["MW","28"],["MW","30"]]
 
 def get_logger_values():
-    resp = ['','','','','','','','']
-    val = [0,0,0,0,0,0,0,0]
-    resp[0] = getOp("MB","70")[1]
+    global plc_values
+    resp = [''] * len(plc_values)
+    val = [0] * len(plc_values)
+    resp[0] = getOp(plc_values[0][0], plc_values[0][1])[1]
     if resp[0] != "":    # use the first value as a connection check
-        time.sleep(0.001)
-        resp[1] = getOp("MB","80")[1]
-        time.sleep(0.001)
-        resp[2] = getOp("MB","110")[1]
-        time.sleep(0.001)
-        resp[3] = getOp("MB","120")[1]
-        time.sleep(0.001)
-        resp[4] = getOp("MB","130")[1]
-        time.sleep(0.001)
-        resp[5] = getOp("MB","140")[1]
-        time.sleep(0.001)
-        resp[6] = getOp("MB","150")[1]
-        time.sleep(.01)
-        resp[7] = getOp("MB","160")[1]
-        time.sleep(.01)
-        val[0] = get_val(resp[0], "MB")
-        val[1] = get_val(resp[1], "MB")
-        val[2] = get_val(resp[2], "MB")
-        val[3] = get_val(resp[3], "MB")
-        val[4] = get_val(resp[4], "MB")
-        val[5] = get_val(resp[5], "MB")
-        val[6] = get_val(resp[6], "MB")
-        val[7] = get_val(resp[7], "MB")
+        val[0] = get_val(resp[0], plc_values[0][0])
+        for i in range(1, len(plc_values)):
+            time.sleep(0.001)
+            resp[i] = getOp(plc_values[i][0], plc_values[i][1])[1]
+            val[i] = get_val(resp[i], plc_values[i][0])
 
     # In string format for the csv file
     strng = ""
-    for el in val:
-        strng += str(el) + ";"
+    spaces_pos = [1, 5, 9, 11, 13]  # Index for empty column, as from requirements
+    for i in range(0, len(val)):
+        column_sign = ";;" if i in spaces_pos else ";"
+        strng += str(val[i]) + column_sign
+
+
     return val, strng
 
 
