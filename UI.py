@@ -311,14 +311,19 @@ class Worker(QtCore.QObject):
 
             if time.time() - prev_logging_time_SHORT >= logging_period_SHORT: # save each 10 s the value from the PLC
                 try:
-                    cell_data.append_values(plcc.get_values())
+                    read = plcc.get_values()
+                    if not read[0]:
+                        cell_data.append_values(plcc.get_values())
                 except:
                     print("Error while reading from plc ")
                 prev_logging_time_SHORT = time.time()
 
             if time.time() - prev_logging_time_LONG >= logging_period_LONG*60:  # save to logger and reset the list of values in cell_data
-                logger_val_str = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";"+plcc.get_logger_values(cell_data)
-                write_to_logger(logger, logger_val_str)
+                try:
+                    logger_val_str = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";"+plcc.get_logger_values(cell_data)
+                    write_to_logger(logger, logger_val_str)
+                except:
+                    print("Error with PLC reading")
                 cell_data.reset()
                 prev_logging_time_LONG = time.time()
 

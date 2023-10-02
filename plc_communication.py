@@ -111,30 +111,34 @@ def is_plc_on_air():
     return value
 
 def get_time_values():
+    noresp = True
     global time_values
     resp = [''] * len(time_values)
     val = [0] * len(time_values)
     resp[0] = getOp(time_values[0][0], time_values[0][1])[1]
     if resp[0] != "":    # use the first value as a connection check
+        noresp = False
         val[0] = get_val(resp[0], time_values[0][0])
         for i in range(1, len(time_values)):
             time.sleep(0.001)
             resp[i] = getOp(time_values[i][0], time_values[i][1])[1]
             val[i] = get_val(resp[i], time_values[i][0])
-    return val
+    return noresp, val
 
 def get_values():
+    noresp = True
     global values_to_average
     resp = [''] * len(values_to_average)
     val = [0] * len(values_to_average)
     resp[0] = getOp(values_to_average[0][0], values_to_average[0][1])[1]
     if resp[0] != "":    # use the first value as a connection check
+        noresp = False
         val[0] = get_val(resp[0], values_to_average[0][0])
         for i in range(1, 10):
             time.sleep(0.001)
             resp[i] = getOp(values_to_average[i][0], values_to_average[i][1])[1]
             val[i] = get_val(resp[i], values_to_average[i][0])
-    return val
+    return noresp, val
     
 def get_logger_values(cell_data):
     
