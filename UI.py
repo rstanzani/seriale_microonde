@@ -299,8 +299,13 @@ class Worker(QtCore.QObject):
 
         print("Opening connection with RF...")
         ser = srw.connect_serial(comport)
+
+        if isinstance(duration, list):
+            remaining_cycle_time = duration[0]
+
         while plc_thread_exec:
 
+            stopwatch_START = time.time() # START for the stopwatch for the cycle
             if time.time() - prev_logging_time >= logging_period*60:
                 logger_val_str = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";"+plcc.get_logger_values()[1]
                 write_to_logger(logger, logger_val_str)
@@ -319,7 +324,7 @@ class Worker(QtCore.QObject):
 
                     if interruption_type == "reset":
                         if isinstance(duration, list):
-                            next_time = duration[0]
+                            remaining_cycle_time = duration[0]
                             freq = freq_list[0]
                             power = power_list[0]
                         prev_execution_time = 0
@@ -341,7 +346,6 @@ class Worker(QtCore.QObject):
                     # Start the main functions
                     timestamp = time.time()
                     starttime = time.time()
-                    cycle_time = time.time()
                     turn_on = False
                     just_turned_off = True
 
@@ -364,18 +368,16 @@ class Worker(QtCore.QObject):
                         srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
                         self.force_change_pwr_safety = False
 
-                    if time.time()-cycle_time >= next_time: # to change the current cycle from the csv
-
+                    if remaining_cycle_time <= 0:    # change the cycle position when the remaining time for this cycle is finished
+                        print("Cycle changed!" )
                         index += 1
                         index = index % len(duration)  # set to 0 if is the last line in the csv
 
-                        next_time = next_time + duration[index]
+                        remaining_cycle_time = duration[index]
                         power = power_list[index]
                         freq = freq_list[index]
                         if index == 0:
                             num_executed_cycles += 1
-                            cycle_time = time.time()
-                            next_time = duration[index]
 
                         srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
                         srw.send_cmd_string(ser,"FREQ", freq, redundancy=3)
@@ -441,6 +443,9 @@ class Worker(QtCore.QObject):
                 else:
                     write_to_file(log_file, "{} {}".format(date_time, "PLC status OFF."))
             old_plc_status = plc_status
+            stopwatch_STOP = time.time()
+            if not no_resp_mode and str(rf_data.On_Off) == "1":
+                remaining_cycle_time -= stopwatch_STOP - stopwatch_START # reduce the time only when the RF is working
 
         # Soft turn off
         print("Main thread killed by the user, shut down and close serial")
