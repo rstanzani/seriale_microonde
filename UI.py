@@ -37,7 +37,7 @@ def read_config(filename="config.csv"):
 
 # File di log
 log_file = "log.txt"
-logger = "logger_EATON.csv"
+logger = r"C:\Users\admin\Documents\LOG\logger_EATON.csv"
 config_file = "config.csv"
 
 comport, csv_name, execution_from_config = read_config(config_file)
@@ -55,6 +55,8 @@ freq = 0
 turn_on = True
 just_turned_off = True   #when the user click STOP or RESET buttons
 min_refresh = 1  # minimum refresh rate
+
+cell_data = plcc.Cell_Data()
 
 class RFdata:
     Temperature = "--"
@@ -116,20 +118,16 @@ def write_to_file(filename, text):
 
 def write_to_logger(filename, line):
 
-    # Save on desktop
-    desktop = os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop')
-    path_file = os.path.join(desktop, filename)
-
-    if os.path.isfile(path_file):
+    if os.path.isfile(filename):
         print("File exists")
     else:
-        f = open(path_file, "w")
+        f = open(filename, "w")
         f.write("data;MB11;MB13;;MB110;MB120;MB130;MB150;;MB70;MB80;MB140;MB160;;MW20;MW22;;MW24;MW26;;MW28;MW30;" + "\n") #name of the PLC values
         f.write("data;SP_TAria;SP_TAcqua;;T_Comp1;T_Comp2;T_AriaRF;T_AriaNORF;;T_Bollitore;T_Basale;T_TerraRF;T_TerraNORF;;h_MotoComp;min_MotoComp;;h_SP_Raggiunto;min_SP_Raggiunto;;h_ScaldON;min_ScaldON;" + "\n")
-        print("Logger file created: {}".format(path_file))
+        print("Logger file created: {}".format(filename))
         f.close()
 
-    f = open(path_file, "a")
+    f = open(filename, "a")
     f.write(line + "\n")
     f.close()
 
@@ -142,8 +140,10 @@ prev_execution_time = 0
 threshold_stop = False
 thres_status = ""
 
-prev_logging_time = 0
-logging_period = 15 #minutes
+prev_logging_time_SHORT = 0
+prev_logging_time_LONG = 0
+logging_period_LONG = 15 #minutes
+logging_period_SHORT = 10 #seconds
 
 execution = False
 
@@ -280,8 +280,10 @@ class Worker(QtCore.QObject):
 
         global turn_on
         global just_turned_off
-        global prev_logging_time
-        global logging_period
+        global prev_logging_time_SHORT
+        global prev_logging_time_LONG
+        global logging_period_SHORT
+        global logging_period_LONG
         global min_refresh
 
         global no_resp_mode
@@ -291,10 +293,10 @@ class Worker(QtCore.QObject):
         self.threshold_security_mode = False
         self.starttime_security_mode = 0
 
-        # First log on csv file
-        logger_val_str = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";"+plcc.get_logger_values()[1]
-        write_to_logger(logger, logger_val_str)
-        prev_logging_time = time.time()
+        # Initialize timers for PLC logging
+        prev_logging_time_SHORT = time.time()
+        prev_logging_time_LONG = time.time()
+        
         prev_noresp_time = time.time()
 
         print("Opening connection with RF...")
@@ -306,10 +308,19 @@ class Worker(QtCore.QObject):
         while plc_thread_exec:
 
             stopwatch_START = time.time() # START for the stopwatch for the cycle
-            if time.time() - prev_logging_time >= logging_period*60:
-                logger_val_str = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";"+plcc.get_logger_values()[1]
+
+            if time.time() - prev_logging_time_SHORT >= logging_period_SHORT: # save each 10 s the value from the PLC
+                try:
+                    cell_data.append_values(plcc.get_values())
+                except:
+                    print("Error while reading from plc ")
+                prev_logging_time_SHORT = time.time()
+
+            if time.time() - prev_logging_time_LONG >= logging_period_LONG*60:  # save to logger and reset the list of values in cell_data
+                logger_val_str = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";"+plcc.get_logger_values(cell_data)
                 write_to_logger(logger, logger_val_str)
-                prev_logging_time = time.time()
+                cell_data.reset()
+                prev_logging_time_LONG = time.time()
 
             if no_resp_mode: # when there is no response from the serial
                 if time.time() - prev_noresp_time >= 10:  # each 10 seconds it checks
