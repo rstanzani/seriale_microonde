@@ -8,7 +8,7 @@ values_to_average = [["MB","11"],["MB","13"],["MB","110"],["MB","120"],["MB","13
 
 def Average(lst):
     avg = 0
-    
+
     if len(lst) > 0:
         print("Avrg on {} values".format(len(lst)))
         avg = round(sum(lst) / len(lst), 1)
@@ -37,7 +37,7 @@ class Cell_Data:
         self.MB80 = []
         self.MB140 = []
         self.MB160 = []
-        
+
     def append_values(self, val):
         # print("Append these values: {}".format(val))
         self.MB11.append(val[0])
@@ -51,11 +51,10 @@ class Cell_Data:
         self.MB140.append(val[8])
         self.MB160.append(val[9])
         # print("MB11 is now {}".format(self.MB11) )
-        
+
     def get_average(self):
-        return [Average(self.MB11), Average(self.MB13), Average(self.MB110), Average(self.MB120), Average(self.MB130),
-            Average(self.MB150), Average(self.MB70), Average(self.MB80), Average(self.MB140), Average(self.MB160)]
-        
+        return [Average(lst) for lst in [self.MB11,self.MB13,self.MB110,self.MB120,self.MB130,self.MB150,self.MB70,self.MB80,self.MB140,self.MB160]]
+
 
 def request(pTarget):
     header = {'Authorization': "Bearer %s" % APIKEY}
@@ -137,13 +136,13 @@ def get_values():
             resp[i] = getOp(values_to_average[i][0], values_to_average[i][1])[1]
             val[i] = get_val(resp[i], values_to_average[i][0])
     return noresp, val
-    
+
 def get_logger_values(cell_data):
-    
+
     avrg_val = cell_data.get_average()
     time_val = get_time_values()
     val = avrg_val + time_val
-    
+
     # In string format for the csv file
     strng = ""
     spaces_pos = [1, 5, 9, 11, 13]  # Index for empty column, as from requirements
@@ -151,10 +150,10 @@ def get_logger_values(cell_data):
         column_sign = ";;" if i in spaces_pos else ";"
         strng += str(val[i]) + column_sign
     return strng
-        
-        
-        
-        
+
+
+
+
 # import time
 # import zmq
 
