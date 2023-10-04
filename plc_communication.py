@@ -67,15 +67,18 @@ def request(pTarget):
         print("PLC error: No response from server. Check the connection.")
     return resp, content
 
-def isRunning():
-    r = False
-    resp, content = request("api/get/data?elm=STATE");
-    try:
-        o = json. loads(content);
-        r = (o["SYSINFO"]["STATE"]) == "RUN"
-    except ValueError:
-        print ('JSON Decoding failed')
-    return r
+# def isRunning():
+#     r = False
+#     try:
+#         resp, content = request("api/get/data?elm=STATE");
+#     except:
+#         print("PLC error: No response from server. Check the connection.")
+#     try:
+#         o = json. loads(content);
+#         r = (o["SYSINFO"]["STATE"]) == "RUN"
+#     except ValueError:
+#         print ('JSON Decoding failed')
+#     return r
 
 def setOp(pOp, pIndex, pVal):
     url = "api/set/op?op="+pOp+"&index="+str(pIndex)+"&val="+str(pVal)
@@ -150,32 +153,4 @@ def get_logger_values(cell_data):
         column_sign = ";;" if i in spaces_pos else ";"
         strng += str(val[i]) + column_sign
     return strng
-
-
-
-
-# import time
-# import zmq
-
-# context = zmq.Context()
-# # context = zmq.Context()
-# socket = context.socket(zmq.REP)
-# socket.bind("tcp://*:5555")
-
-# def main():
-#     counter = 0
-#     # if(not isRunning()):
-#     #     resp, content = request("api/set/op=state&v1=RUN")
-#     #     time.sleep(.300)
-#     # resp, content = getOp("Q","4")
-#     while 1:
-#        value = is_plc_on_air()
-#        time.sleep(1)
-#        # print("Value is {}".format(value))
-#        # counter += 1
-
-# resp, content = getOp("MB", "26") #counter
-# print(get_val(content, "MB"))
-# main()
-
 

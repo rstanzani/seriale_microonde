@@ -14,14 +14,18 @@ from binascii import hexlify
 
 
 def connect_serial(comport="COM11"):
+    ser = None
+    opened = False
     try:
         ser = serial.Serial(comport, 250000, timeout=0.1, bytesize=8) #nota: se metto un timeout dopo quel tempo mi legge tutto quello che ha ricevuto
-        time.sleep(2)
+        time.sleep(1)
         if (ser.isOpen()):
             print("Correctly opened port: {}".format(ser.name))
-        return ser
+            opened = True
+        return ser, opened
     except:
-        print("Error, maybe the port is already open.")
+        print("Error in opening the port (not found or maybe already opened).")
+    return ser, opened
 
 def rnd_hex_freq(randomize=True, list_val=[2420, 2480]):
     '''Return the hex of a random frequency in the range 2420-2480 MHz.
@@ -113,13 +117,12 @@ def send_cmd(ser, start, address, length, typee, operand, content):
         payload = payload << 48 | single_cmd
 
     command = header << (len(payload_list) * 48) | payload
-
-    # print("Sending the command {}".format(hex(command)))
     length_conversion = 4 + 6*len(payload_list)
 
-    # print("Send:" + hex(command))
-    ser.write(command.to_bytes(length_conversion, 'big'))
-
+    try:
+        ser.write(command.to_bytes(length_conversion, 'big'))
+    except:
+        print("Error in writing to the port.")
 
 def send_cmd_string(ser, string, val=0, redundancy=1):
     for i in range(0, redundancy):

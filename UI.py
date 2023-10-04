@@ -10,8 +10,13 @@ import sys
 from PyQt5.QtCore import pyqtSignal # QThread
 import plc_communication as plcc
 import os
+import logging
+logging.basicConfig(filename='D:\\Downloads\\UI_err.log', level=logging.DEBUG,
+                    format='%(asctime)s %(levelname)s %(name)s %(message)s')
+err_logger = logging.getLogger(__name__)
 
-from threading import Thread
+
+# from threading import Thread
 
 def read_config(filename="config.csv"):
     csv_name = ""
@@ -37,7 +42,7 @@ def read_config(filename="config.csv"):
 
 # File di log
 log_file = "log.txt"
-logger = r"C:\Users\admin\Documents\LOG\logger_EATON.csv"
+logger = os.path.expanduser('~\\Documents\\LOG\\logger_EATON.csv')
 config_file = "config.csv"
 
 comport, csv_name, execution_from_config = read_config(config_file)
@@ -116,6 +121,11 @@ def write_to_file(filename, text):
         f.write(content)
     f.close()
 
+
+def rf_log(text):
+  write_to_file(log_file, "{} {}".format(datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S"), text))
+
+
 def write_to_logger(filename, line):
 
     if os.path.isfile(filename):
@@ -137,6 +147,7 @@ interruption_type = "reset" # "stop" or "reset" (default value)
 num_executed_cycles = 1
 execution_time = 0
 prev_execution_time = 0
+serial_open = 0
 threshold_stop = False
 thres_status = ""
 
@@ -148,6 +159,7 @@ logging_period_SHORT = 10 #seconds
 execution = False
 
 class PLCWorker(QtCore.QObject):
+    global err_logger
     # execution = False
     messaged = pyqtSignal()
     finished = pyqtSignal()
@@ -170,9 +182,12 @@ class PLCWorker(QtCore.QObject):
         self.start_execution()
 
         while plc_thread_exec:
-            plc_status = plcc.is_plc_on_air()  #TODO set to 1 for testing purposes
-            time.sleep(0.5)
-            self.messaged.emit()
+            try:
+                plc_status = plcc.is_plc_on_air()
+                # time.sleep(0.5)
+                self.messaged.emit()
+            except Exception as err:
+                err_logger.error(err)
 
         print("plc communication finished")
         self.messaged.emit()
@@ -256,6 +271,30 @@ class Worker(QtCore.QObject):
                         self.force_change_pwr_safety = True
 
 
+    def log_EATON_state(prev_logging_time_SHORT, prev_logging_time_LONG, logging_period_SHORT, logging_period_LONG):
+        if time.time() - prev_logging_time_SHORT >= logging_period_SHORT: # save each 10 s the value from the PLC
+            try:
+                read = plcc.get_values()
+                if not read[0]:
+                    cell_data.append_values(read[1])
+                else:
+                    print("Skipped because data is empty!")
+            except:
+                print("Error while reading from plc ")
+            prev_logging_time_SHORT = time.time()
+
+        if time.time() - prev_logging_time_LONG >= logging_period_LONG*60:  # save to logger and reset the list of values in cell_data
+            try:
+                logger_val_str = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";"+plcc.get_logger_values(cell_data)
+                write_to_logger(logger, logger_val_str)
+            except:
+                print("Error with PLC reading")
+            cell_data.reset()
+            prev_logging_time_LONG = time.time()
+
+        return prev_logging_time_SHORT, prev_logging_time_LONG
+
+
     def run(self):
         print("In run...")
         global rf_data
@@ -264,6 +303,7 @@ class Worker(QtCore.QObject):
         global num_executed_cycles
         global execution_time
         global execution
+        global serial_open
         print("*** in run Execution is {}".format(execution))
         global prev_execution_time
         global interruption_type
@@ -296,50 +336,37 @@ class Worker(QtCore.QObject):
         # Initialize timers for PLC logging
         prev_logging_time_SHORT = time.time()
         prev_logging_time_LONG = time.time()
-        
+
         prev_noresp_time = time.time()
 
         print("Opening connection with RF...")
-        ser = srw.connect_serial(comport)
+
+        # Check the connection to the serial
+        ser, serial_open = srw.connect_serial(comport)  #TODO IMPLEMENTARE BOOLEANO SERIALE APERTA
 
         if isinstance(duration, list):
             remaining_cycle_time = duration[0]
 
         while plc_thread_exec:
-
             stopwatch_START = time.time() # START for the stopwatch for the cycle
 
-            if time.time() - prev_logging_time_SHORT >= logging_period_SHORT: # save each 10 s the value from the PLC
-                try:
-                    read = plcc.get_values()
-                    if not read[0]:
-                        cell_data.append_values(read[1])
-                    else:
-                        print("Skipped because data is empty!" )                
-                except:
-                    print("Error while reading from plc ")
-                prev_logging_time_SHORT = time.time()
+            # Eaton logger
+            prev_logging_time_SHORT, prev_logging_time_LONG = self.log_EATON_state(prev_logging_time_SHORT, prev_logging_time_LONG, logging_period_SHORT, logging_period_LONG)
 
-            if time.time() - prev_logging_time_LONG >= logging_period_LONG*60:  # save to logger and reset the list of values in cell_data
-                try:
-                    logger_val_str = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";"+plcc.get_logger_values(cell_data)
-                    write_to_logger(logger, logger_val_str)
-                except:
-                    print("Error with PLC reading")
-                cell_data.reset()
-                prev_logging_time_LONG = time.time()
-
-            if no_resp_mode: # when there is no response from the serial
+            # No response from serial Mode
+            if no_resp_mode:
                 if time.time() - prev_noresp_time >= 10:  # each 10 seconds it checks
                     if execution == False and not threshold_stop and plc_status: # restore execution after a stop from serial not responding
                         execution = True
                     prev_noresp_time = time.time()
 
             # ACTIVE STATUS
-            if execution and not threshold_stop and plc_status:
+            if execution and serial_open and not threshold_stop and plc_status:
 
-                if turn_on: # to turn on only in the first iteration
+                # First turn on
+                if turn_on:
 
+                    # Initialize variables
                     if interruption_type == "reset":
                         if isinstance(duration, list):
                             remaining_cycle_time = duration[0]
@@ -347,6 +374,7 @@ class Worker(QtCore.QObject):
                             power = power_list[0]
                         prev_execution_time = 0
 
+                    # Set parameters to the RF generator
                     srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
                     srw.empty_buffer(ser, wait=1)
                     srw.send_cmd_string(ser,"FLDBCK_ON", redundancy=3)
@@ -354,9 +382,7 @@ class Worker(QtCore.QObject):
                     srw.send_cmd_string(ser,"FLDBCK_VAL", 5, redundancy=3)
                     srw.empty_buffer(ser, wait=0.5)
                     srw.send_cmd_string(ser,"FREQ", freq, redundancy=1)
-
-                    date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
-                    write_to_file(log_file, "{} {}".format(date_time, "RF on"))
+                    rf_log("RF on")
 
                     rf_data, self.noresp_counter = srw.read_param(ser, self.noresp_counter, rf_data, "STATUS", 1, False)
                     time.sleep(0.2)
@@ -367,14 +393,14 @@ class Worker(QtCore.QObject):
                     turn_on = False
                     just_turned_off = True
 
-                if time.time() >= timestamp + min_refresh: # minimum refresh period
+                # Normal cycle with the selected refresh rate
+                if time.time() >= timestamp + min_refresh:
 
                     if self.noresp_counter >= 30:
                         print("Exit: no Response from serial!")
                         if not no_resp_mode:
-                            # print("Exit: write on file.")
-                            date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
-                            write_to_file(log_file, "{} {}".format(date_time, "stopped execution: no response from serial"))
+                            # Update log file
+                            rf_log("Stopped execution: no response from serial")
                             no_resp_mode = True
                             execution = False
                             rf_data.On_Off = 0
@@ -455,26 +481,19 @@ class Worker(QtCore.QObject):
             # check plc variation
             if old_plc_status != plc_status:
                 print("PLC status changes")
-                date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
                 if plc_status:
-                    write_to_file(log_file, "{} {}".format(date_time, "PLC status ON."))
+                    rf_log("PLC status ON.")
                 else:
-                    write_to_file(log_file, "{} {}".format(date_time, "PLC status OFF."))
+                    rf_log("PLC status OFF.")
             old_plc_status = plc_status
             stopwatch_STOP = time.time()
             if not no_resp_mode and str(rf_data.On_Off) == "1":
                 remaining_cycle_time -= stopwatch_STOP - stopwatch_START # reduce the time only when the RF is working
 
+
         # Soft turn off
         print("Main thread killed by the user, shut down and close serial")
-        rf_data.Temperature = "--"
-        rf_data.PLL = "--"
-        rf_data.Current = "--"
-        rf_data.PWM = "--"
-        rf_data.Foldback_in = "--"
-        rf_data.Enable_foldback = "--"
-        rf_data.Error = "--"
-        rf_data.Voltage = "--"
+        rf_data.reset()
 
         # Close ports
         ser.close()
@@ -703,8 +722,7 @@ class MainWindow(QMainWindow):
         global log_file
         self.ui.QoutputLabel.setText("Process started.")
         # Save log file
-        date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
-        write_to_file(log_file, "{} {}".format(date_time, "Software ON, ready to start."))
+        rf_log("Software ON, ready to start.")
         if execution_from_config:
             self.disablePlayButton()
             self.enableStopButton()
@@ -737,8 +755,7 @@ class MainWindow(QMainWindow):
         set_configfile_exec(config_file, "0")
         interruption_type = "reset"
         num_executed_cycles = 1
-        date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
-        write_to_file(log_file, "{} {}".format(date_time, "Reset"))
+        rf_log("Reset")
         self.ui.QoutputLabel.setText("Process reset.")
         self.worker.stop_worker_execution()
         index = 0
@@ -753,8 +770,7 @@ class MainWindow(QMainWindow):
         set_configfile_exec(config_file, "0")
         no_resp_mode = False # restore this flag
         interruption_type = "stop"
-        date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
-        write_to_file(log_file, "{} {}".format(date_time, "Stop"))
+        rf_log("Stop")
         self.ui.QoutputLabel.setText("Process stopped.")
         self.worker.stop_worker_execution()
         self.restore_buttons()
@@ -823,7 +839,6 @@ class MainWindow(QMainWindow):
         global thres_status
         global interruption_type
         global freq
-        date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
 
         _translate = QtCore.QCoreApplication.translate
         self.ui.Qtemperature_label.setText(_translate("MainWindow", str(rf_data.Temperature)+" °C"))
@@ -844,7 +859,7 @@ class MainWindow(QMainWindow):
 
         if threshold_stop:
             self.ui.QoutputLabel.setText("THRESHOLD ALARM, see log file.")
-            write_to_file(log_file, "{} {}".format(date_time, thres_status))
+            rf_log(thres_status)
             threshold_stop = False
             interruption_type = "reset"
 
@@ -858,13 +873,12 @@ class MainWindow(QMainWindow):
         self.ui.Qexecution_time.setText(_translate("MainWindow", str(datetime.timedelta(seconds = int(execution_time)))))
 
         if time.time() > self.last_status_update + 60:
-            self.status_log_file(log_file, "{} - cycle num: {} - cycle progress: {}%".format(date_time, rf_data.cycle_count, rf_data.cycle_percentage))
+            self.status_log_file(log_file, "{} - cycle num: {} - cycle progress: {}%".format(datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S"), rf_data.cycle_count, rf_data.cycle_percentage))
             self.last_status_update = time.time()
 
 
     def update_plc_status(self):
         global plc_status
-        # date_time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
 
         if plc_status:
             self.ui.QPLCInfo.setStyleSheet("color: rgb(41, 45, 62);\n"
