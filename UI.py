@@ -11,7 +11,9 @@ from PyQt5.QtCore import pyqtSignal # QThread
 import plc_communication as plcc
 import os
 import logging
-logging.basicConfig(filename='D:\\Downloads\\UI_err.log', level=logging.DEBUG,
+
+curr_dir = os.getcwd()
+logging.basicConfig(filename=f'{curr_dir}\\UI_err.log', level=logging.ERROR,
                     format='%(asctime)s %(levelname)s %(name)s %(message)s')
 err_logger = logging.getLogger(__name__)
 
@@ -153,7 +155,7 @@ thres_status = ""
 
 prev_logging_time_SHORT = 0
 prev_logging_time_LONG = 0
-logging_period_LONG = 15 #minutes
+logging_period_LONG = 5 #minutes
 logging_period_SHORT = 10 #seconds
 
 execution = False
@@ -271,7 +273,7 @@ class Worker(QtCore.QObject):
                         self.force_change_pwr_safety = True
 
 
-    def log_EATON_state(prev_logging_time_SHORT, prev_logging_time_LONG, logging_period_SHORT, logging_period_LONG):
+    def log_EATON_state(self, prev_logging_time_SHORT, prev_logging_time_LONG, logging_period_SHORT, logging_period_LONG):
         if time.time() - prev_logging_time_SHORT >= logging_period_SHORT: # save each 10 s the value from the PLC
             try:
                 read = plcc.get_values()
@@ -327,6 +329,7 @@ class Worker(QtCore.QObject):
         global min_refresh
 
         global no_resp_mode
+        first_no_resp = True
 
         self.safe_mode_param = 1
         self.safety_mode_counter = 0
@@ -397,7 +400,9 @@ class Worker(QtCore.QObject):
                 if time.time() >= timestamp + min_refresh:
 
                     if self.noresp_counter >= 30:
-                        print("Exit: no Response from serial!")
+                        if first_no_resp:
+                            print("Exit: no Response from serial!")
+                            first_no_resp = False
                         if not no_resp_mode:
                             # Update log file
                             rf_log("Stopped execution: no response from serial")
@@ -432,6 +437,7 @@ class Worker(QtCore.QObject):
                         if self.noresp_counter <= 10:
                             # print("No resp mode reset!")
                             no_resp_mode = False
+                            first_no_resp = True
                             starttime = time.time()  # reset the timer count after a connection restore
                     rf_data.cycle_count = num_executed_cycles
                     rf_data.cycle_percentage = round(index/(len(duration))*100, 0)
