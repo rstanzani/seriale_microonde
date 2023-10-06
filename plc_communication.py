@@ -2,21 +2,19 @@ import httplib2, base64, json, time
 URL = "http://192.168.200.1/"
 APIKEY = "0641cbefbfb63378999e572968c7259519b6457b12a797b7b3415079eed4b7eb248373c7bd914e80"
 
-# plc_values = [["MB","11"],["MB","13"],["MB","110"],["MB","120"],["MB","130"],["MB","150"],["MB","70"],["MB","80"],["MB","140"],["MB","160"],["MW","20"],["MW","22"],["MW","24"],["MW","26"],["MW","28"],["MW","30"]]
-time_values = [["MW","20"],["MW","22"],["MW","24"],["MW","26"],["MW","28"],["MW","30"]]
 values_to_average = [["MB","13"],["MB","15"],["MB","110"],["MB","120"],["MB","130"],["MB","150"],["MB","70"],["MB","80"],["MB","140"],["MB","170"]]
+time_values = [["MW","20"],["MW","22"],["MW","24"],["MW","26"],["MW","28"],["MW","30"]]
 
 def Average(lst):
     avg = 0
 
     if len(lst) > 0:
-        print("Avrg on {} values".format(len(lst)))
         avg = round(sum(lst) / len(lst), 1)
     return avg
 
 class Cell_Data:
-    MB11 = []
     MB13 = []
+    MB15 = []
     MB110 = []
     MB120 = []
     MB130 = []
@@ -24,11 +22,11 @@ class Cell_Data:
     MB70 = []
     MB80 = []
     MB140 = []
-    MB160 = []
+    MB170 = []
 
     def reset(self):
-        self.MB11 = []
         self.MB13 = []
+        self.MB15 = []
         self.MB110 = []
         self.MB120 = []
         self.MB130 = []
@@ -36,12 +34,11 @@ class Cell_Data:
         self.MB70 = []
         self.MB80 = []
         self.MB140 = []
-        self.MB160 = []
+        self.MB170 = []
 
     def append_values(self, val):
-        # print("Append these values: {}".format(val))
-        self.MB11.append(val[0])
-        self.MB13.append(val[1])
+        self.MB13.append(val[0])
+        self.MB15.append(val[1])
         self.MB110.append(val[2])
         self.MB120.append(val[3])
         self.MB130.append(val[4])
@@ -49,11 +46,11 @@ class Cell_Data:
         self.MB70.append(val[6])
         self.MB80.append(val[7])
         self.MB140.append(val[8])
-        self.MB160.append(val[9])
-        # print("MB11 is now {}".format(self.MB11) )
+        self.MB170.append(val[9])
 
     def get_average(self):
-        return [Average(lst) for lst in [self.MB11,self.MB13,self.MB110,self.MB120,self.MB130,self.MB150,self.MB70,self.MB80,self.MB140,self.MB160]]
+        print("Avrg on {} values".format(len(self.MB13)))
+        return [Average(lst) for lst in [self.MB13,self.MB15,self.MB110,self.MB120,self.MB130,self.MB150,self.MB70,self.MB80,self.MB140,self.MB170]]
 
 
 def request(pTarget):

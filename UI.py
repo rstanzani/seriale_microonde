@@ -11,12 +11,14 @@ from PyQt5.QtCore import pyqtSignal # QThread
 import plc_communication as plcc
 import os
 import logging
+import psutil
+
+name = "UI.exe"
 
 curr_dir = os.getcwd()
 logging.basicConfig(filename=f'{curr_dir}\\UI_err.log', level=logging.ERROR,
                     format='%(asctime)s %(levelname)s %(name)s %(message)s')
 err_logger = logging.getLogger(__name__)
-
 
 # from threading import Thread
 
@@ -904,7 +906,14 @@ def update_progress(progress_bar, value):
 
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec())
+    if not name in (p.name() for p in psutil.process_iter()):
+        try:
+            app = QApplication(sys.argv)
+            window = MainWindow()
+            window.show()
+            sys.exit(app.exec())
+        except Exception as err:
+            err_logger.error(err)
+    else:
+        err_logger.error(f"{name} is already open!")
+        print(f"{name} is already open!")
