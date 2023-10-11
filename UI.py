@@ -20,7 +20,16 @@ logging.basicConfig(filename=f'{curr_dir}\\UI_err.log', level=logging.ERROR,
                     format='%(asctime)s %(levelname)s %(name)s %(message)s')
 err_logger = logging.getLogger(__name__)
 
+# def stopwatch(timestamp_old):
+#     if time.time() - timestamp_old >= 2:
+#         print("Time exceeds 2s: {}-{}={}!".format(time.time(),timestamp_old,time.time() - timestamp_old))
+#     return time.time()
+# tmstmp = 0
+# tmstmp = stopwatch(tmstmp)
+
 # from threading import Thread
+# TODO: contollare se con il refresh rate attuale non passi troppo tempo tra un ping e l'altro e quindi
+# si spenga la comunicazione
 
 def read_config(filename="config.csv"):
     csv_name = ""
@@ -63,7 +72,9 @@ freq = 0
 
 turn_on = True
 just_turned_off = True   #when the user click STOP or RESET buttons
-min_refresh = 1  # minimum refresh rate
+min_refresh = 0.3  # minimum refresh rate
+
+# timestamp_old = 0
 
 cell_data = plcc.Cell_Data()
 
@@ -157,7 +168,7 @@ thres_status = ""
 
 prev_logging_time_SHORT = 0
 prev_logging_time_LONG = 0
-logging_period_LONG = 5 #minutes
+logging_period_LONG = 12 #minutes
 logging_period_SHORT = 10 #seconds
 
 execution = False
@@ -188,7 +199,6 @@ class PLCWorker(QtCore.QObject):
         while plc_thread_exec:
             try:
                 plc_status = plcc.is_plc_on_air()
-                # time.sleep(0.5)
                 self.messaged.emit()
             except Exception as err:
                 err_logger.error(err)
@@ -210,7 +220,6 @@ class Worker(QtCore.QObject):
     safety_mode_counter = 0
     force_change_pwr_safety = False
     noresp_counter = 0
-    min_refresh = 1
 
 
     def stop_worker_execution(self):
@@ -308,7 +317,7 @@ class Worker(QtCore.QObject):
         global execution_time
         global execution
         global serial_open
-        print("*** in run Execution is {}".format(execution))
+        # print("*** in run Execution is {}".format(execution))
         global prev_execution_time
         global interruption_type
         global threshold_alarm
@@ -333,6 +342,13 @@ class Worker(QtCore.QObject):
         global no_resp_mode
         first_no_resp = True
 
+        # global tmstmp
+        
+        # Default values
+        remaining_cycle_time = 60
+        freq = 2450
+        power = 0
+
         self.safe_mode_param = 1
         self.safety_mode_counter = 0
         self.threshold_security_mode = False
@@ -349,9 +365,6 @@ class Worker(QtCore.QObject):
         # Check the connection to the serial
         ser, serial_open = srw.connect_serial(comport)  #TODO IMPLEMENTARE BOOLEANO SERIALE APERTA
 
-        if isinstance(duration, list):
-            remaining_cycle_time = duration[0]
-
         while plc_thread_exec:
             stopwatch_START = time.time() # START for the stopwatch for the cycle
 
@@ -361,8 +374,12 @@ class Worker(QtCore.QObject):
             # No response from serial Mode
             if no_resp_mode:
                 if time.time() - prev_noresp_time >= 10:  # each 10 seconds it checks
+                    print("In no response mode")
                     if execution == False and not threshold_stop and plc_status: # restore execution after a stop from serial not responding
                         execution = True
+                        srw.send_cmd_string(ser,"ON")
+                        # #tmstmp = stopwatch(tmstmp)
+                        print("restored from no_resp_mode")
                     prev_noresp_time = time.time()
 
             # ACTIVE STATUS
@@ -371,7 +388,7 @@ class Worker(QtCore.QObject):
                 # First turn on
                 if turn_on:
 
-                    # Initialize variables
+                    # Initialize or reset variables only after a Reset state
                     if interruption_type == "reset":
                         if isinstance(duration, list):
                             remaining_cycle_time = duration[0]
@@ -379,17 +396,23 @@ class Worker(QtCore.QObject):
                             power = power_list[0]
                         prev_execution_time = 0
 
+                    
                     # Set parameters to the RF generator
                     srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
+                    #tmstmp = stopwatch(tmstmp)
                     srw.empty_buffer(ser, wait=1)
                     srw.send_cmd_string(ser,"FLDBCK_ON", redundancy=3)
                     srw.empty_buffer(ser, wait=0.5)
                     srw.send_cmd_string(ser,"FLDBCK_VAL", 5, redundancy=3)
                     srw.empty_buffer(ser, wait=0.5)
                     srw.send_cmd_string(ser,"FREQ", freq, redundancy=1)
+                    #tmstmp = stopwatch(tmstmp)
+
                     rf_log("RF on")
 
                     rf_data, self.noresp_counter = srw.read_param(ser, self.noresp_counter, rf_data, "STATUS", 1, False)
+                    #tmstmp = stopwatch(tmstmp)
+
                     time.sleep(0.2)
 
                     # Start the main functions
@@ -397,6 +420,24 @@ class Worker(QtCore.QObject):
                     starttime = time.time()
                     turn_on = False
                     just_turned_off = True
+
+                if rf_data.On_Off == 0:
+                    # This state can happen when the time between two messages on the serial where too long and the RF generator turned off.
+                    print("Restore")
+                    check = False
+                    while check == False:
+                        srw.send_cmd_string(ser,"ON")
+                        #tmstmp = stopwatch(tmstmp)
+
+                        rf_data, self.noresp_counter = srw.read_param(ser, self.noresp_counter, rf_data, "STATUS", 1, False)
+                        time.sleep(1)
+                        if rf_data.On_Off == 1:
+                            srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
+                            #tmstmp = stopwatch(tmstmp)
+
+                            srw.send_cmd_string(ser,"FREQ", freq, redundancy=3)
+                            check = True
+                            rf_data.Error = 0
 
                 # Normal cycle with the selected refresh rate
                 if time.time() >= timestamp + min_refresh:
@@ -408,6 +449,7 @@ class Worker(QtCore.QObject):
                         if not no_resp_mode:
                             # Update log file
                             rf_log("Stopped execution: no response from serial")
+                            print("Stopped execution: no response from serial")
                             no_resp_mode = True
                             execution = False
                             rf_data.On_Off = 0
@@ -417,10 +459,12 @@ class Worker(QtCore.QObject):
                     self.safe_mode(rf_data)
                     if self.force_change_pwr_safety:
                         srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
+                        #tmstmp = stopwatch(tmstmp)
+
                         self.force_change_pwr_safety = False
 
                     if remaining_cycle_time <= 0:    # change the cycle position when the remaining time for this cycle is finished
-                        print("Cycle changed!" )
+                        #print("Cycle changed!" )
                         index += 1
                         index = index % len(duration)  # set to 0 if is the last line in the csv
 
@@ -431,9 +475,15 @@ class Worker(QtCore.QObject):
                             num_executed_cycles += 1
 
                         srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
+                        #tmstmp = stopwatch(tmstmp)
+
                         srw.send_cmd_string(ser,"FREQ", freq, redundancy=3)
+                        #tmstmp = stopwatch(tmstmp)
+
 
                     rf_data, self.noresp_counter = srw.read_param(ser, self.noresp_counter, rf_data, "STATUS", 1, False)
+                    #tmstmp = stopwatch(tmstmp)
+
                     # Note: the self.noresp_counter almost never gives perfect 0 due to the various messages that can be lost
                     if no_resp_mode:
                         if self.noresp_counter <= 10:
@@ -451,6 +501,8 @@ class Worker(QtCore.QObject):
                     if rf_data.Error == 4:
                         print("Re-set parameters")
                         srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param)
+                        #tmstmp = stopwatch(tmstmp)
+
                         srw.send_cmd_string(ser,"FREQ", freq)
                     if rf_data.Error == 203:   #writing not enabled (probably off?)
                         print("Restart")
@@ -459,6 +511,8 @@ class Worker(QtCore.QObject):
                         while check == False:
                             srw.send_cmd_string(ser,"ON")
                             rf_data, self.noresp_counter = srw.read_param(ser, self.noresp_counter, rf_data, "STATUS", 1, False)
+                            #tmstmp = stopwatch(tmstmp)
+
                             time.sleep(1)
                             if rf_data.On_Off == 1:
                                 srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
@@ -470,12 +524,14 @@ class Worker(QtCore.QObject):
 
                 srw.send_cmd_string(ser,"PWM", 0, 2)
                 srw.send_cmd_string(ser,"OFF")
+                #tmstmp = stopwatch(tmstmp)
+
                 srw.empty_buffer(ser, wait=1)
 
                 prev_execution_time = execution_time
                 rf_data, self.noresp_counter = srw.read_param(ser, self.noresp_counter, rf_data, "STATUS", 1, False)
 
-                turn_on = True
+                turn_on = True # used to re-set parameters in the next turn on
                 just_turned_off = False
 
             # IDLE STATUS
@@ -515,7 +571,7 @@ class MainWindow(QMainWindow):
     error = ""
     msg = ""
     error_history = []
-    timestamp_old = 0
+    # timestamp_old = 0
     # execution = True
     worker = None
     plcworker = None
@@ -633,7 +689,6 @@ class MainWindow(QMainWindow):
 
 
     def quit_thread(self):
-        global interruption_type
         self.thread.quit
 
 
