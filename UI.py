@@ -147,8 +147,8 @@ def write_to_logger(filename, line):
         print("File exists")
     else:
         f = open(filename, "w")
-        f.write("data;MB13;MB15;;MB110;MB120;MB130;MB150;;MB70;MB80;MB140;MB170;;MW20;MW22;;MW24;MW26;;MW28;MW30;" + "\n") #name of the PLC values
-        f.write("data;SP_TAria;SP_TAcqua;;T_Comp1;T_Comp2;T_AriaRF;T_AriaNORF;;T_Bollitore;T_Basale;T_TerraRF;T_TerraNORF;;h_MotoComp;min_MotoComp;;h_SP_Raggiunto;min_SP_Raggiunto;;h_ScaldON;min_ScaldON;" + "\n")
+        f.write("data;;;MB13;MB15;;MB110;MB120;MB130;MB150;;MB70;MB80;MB140;MB170;;MW20;MW22;;MW24;MW26;;MW28;MW30;" + "\n") #name of the PLC values
+        f.write("data;;;SP_TAria;SP_TAcqua;;T_Comp1;T_Comp2;T_AriaRF;T_AriaNORF;;T_Bollitore;T_Basale;T_TerraRF;T_TerraNORF;;h_MotoComp;min_MotoComp;;h_SP_Raggiunto;min_SP_Raggiunto;;h_ScaldON;min_ScaldON;" + "\n")
         print("Logger file created: {}".format(filename))
         f.close()
 
@@ -298,7 +298,7 @@ class Worker(QtCore.QObject):
 
         if time.time() - prev_logging_time_LONG >= logging_period_LONG*60:  # save to logger and reset the list of values in cell_data
             try:
-                logger_val_str = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";"+plcc.get_logger_values(cell_data)
+                logger_val_str = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";;;"+plcc.get_logger_values(cell_data)
                 write_to_logger(logger, logger_val_str)
             except:
                 print("Error with PLC reading")
