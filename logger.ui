@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>337</width>
-    <height>312</height>
+    <height>267</height>
    </rect>
   </property>
   <property name="baseSize">
@@ -62,7 +62,7 @@ background-color: rgb(41, 45, 62);</string>
                <string notr="true">color: rgb(255, 255, 255);</string>
               </property>
               <property name="text">
-               <string>PLC communication:</string>
+               <string>PLC communication</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -125,7 +125,7 @@ background-color: rgb(255, 0, 0);</string>
              <string notr="true">color: rgb(255, 255, 255);</string>
             </property>
             <property name="text">
-             <string>Log file on Desktop</string>
+             <string>Log file in: DocumentsLOG</string>
             </property>
            </widget>
           </item>
