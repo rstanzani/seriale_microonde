@@ -17,7 +17,6 @@ I rilasci vengono effettuati solo dal branch **main**. I tag dei rilasci sono ri
 |  Nome  |  Descrizione  |   
 |----------|----------| 
 |    |   |
-|  `1.2.0`  | Correzioni stabilità e logger in UI.  |
 |  `1.1.0`  | Auto-start e lettura da PLC. |
 |  `1.0.0`  | Prima release stabile. |
 
