@@ -10,3 +10,4 @@ config.txt
 /build
 *.csv
 /materiale
+UI_err.log
