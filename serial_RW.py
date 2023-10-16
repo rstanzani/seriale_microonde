@@ -12,12 +12,15 @@ import serial
 import time
 from binascii import hexlify
 
+# TODO list:
+#    (001) - implement the Write Timeout (e.g. when serial is not connected)
 
 def connect_serial(comport="COM11"):
     ser = None
     opened = False
     try:
-        ser = serial.Serial(comport, 250000, timeout=0.1, bytesize=8) #nota: se metto un timeout dopo quel tempo mi legge tutto quello che ha ricevuto
+        # ser = serial.Serial(comport, 250000, timeout=0.1, bytesize=8) # TODO (001)
+        ser = serial.Serial(comport, 250000, timeout=0.1, bytesize=8, write_timeout=1) #nota: se metto un timeout dopo quel tempo mi legge tutto quello che ha ricevuto
         time.sleep(1)
         if (ser.isOpen()):
             print("Correctly opened port: {}".format(ser.name))
@@ -100,8 +103,8 @@ def example_multiple_payloadlist():
 
 
 def send_cmd(ser, start, address, length, typee, operand, content):
-
     # List of commands (a list for the general case) #TODO move this list to another point
+    error = True
     payload_list = []
     payload_list.append([typee, operand, content]) # Example to try a list of commands: payload_list = example_multiple_payloadlist()
 
@@ -118,45 +121,48 @@ def send_cmd(ser, start, address, length, typee, operand, content):
 
     command = header << (len(payload_list) * 48) | payload
     length_conversion = 4 + 6*len(payload_list)
-
     try:
         ser.write(command.to_bytes(length_conversion, 'big'))
+        error = False
     except:
         print("Error in writing to the port.")
+    return error
+
 
 def send_cmd_string(ser, string, val=0, redundancy=1):
+    error = True
     for i in range(0, redundancy):
         value = val # do not remove, useful for the redundancy
         if string == "ON":
-            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0B, 0x00000001)
+            error = send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0B, 0x00000001)
             time.sleep(0.3)
         elif string == "OFF":
-            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0B, 0x00000000)
+            error = send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0B, 0x00000000)
         elif string == "STATUS":
-            send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x16, 0x00000000)
+            error = send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x16, 0x00000000)
         elif string == "RNDFREQ":
             hex_freq = rnd_hex_freq(True)
             # print("Send freq {}".format(hex_freq))
-            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x09, hex_freq)
+            error = send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x09, hex_freq)
         elif string == "READ_PWR":
-            send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x06, 0x00000000)
+            error = send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x06, 0x00000000)
         elif string == "FLDBCK_ON":
-            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x26, 0x00000001) # turn on
+            error = send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x26, 0x00000001) # turn on
         elif string == "FLDBCK_VAL":
             if value != 0:
                 value = hex(value)  # todo devono essere unsigned long
                 value = literal_eval(value)
             else:
                 value = 0x5 # default values 5W
-            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x51, value) # set value
+            error = send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x51, value) # set value
         elif string == "FLDBCK_READ":
-            send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x51, 0x00000000)
+            error = send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x51, 0x00000000)
         elif string == "ERROR_READ":
-            send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x09, 0x00000000)
+            error = send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x09, 0x00000000)
         elif string == "PWM_READ":
-            send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x08, 0x0)
+            error = send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x08, 0x0)
         elif string == "V_READ":
-            send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x04, 0x0)
+            error = send_cmd(ser, 0x55, 0x01, 0x01, 0x01, 0x04, 0x0)
         elif string == "PWR":
             # print("Set power to: {}".format(value))
             if value != 0:
@@ -165,7 +171,7 @@ def send_cmd_string(ser, string, val=0, redundancy=1):
             else:
                 value = 0x00000000
             value = literal_eval(float_to_hex(255)) if value >= literal_eval(float_to_hex(255)) else value # maximum value il 260 with a certain error (security)
-            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0E,  value)
+            error = send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0E,  value)
             time.sleep(0.3)
         elif string == "PWM":
             if value != 0:
@@ -173,7 +179,7 @@ def send_cmd_string(ser, string, val=0, redundancy=1):
                 value = literal_eval(value)
             else:
                 value = 0x00000000
-            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x08,  value)
+            error = send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x08,  value)
             time.sleep(0.3)
         elif string == "FREQ":
             if value != 0:
@@ -181,11 +187,11 @@ def send_cmd_string(ser, string, val=0, redundancy=1):
                 value = literal_eval(value)
             else:
                 value = 0x00000000
-            send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x09,  value)
+            error = send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x09,  value)
             time.sleep(0.3)
         else:
             print("Command not recognized!")
-
+    return error
 
 
 def read_reply_values(reply):
@@ -226,11 +232,12 @@ def empty_buffer(ser, wait=2):
     # read response
     start_waiting = time.time()
 
-    send_cmd_string(ser,"STATUS")
+    error = send_cmd_string(ser,"STATUS")
     while time.time() <= start_waiting + wait:
         r = ser.read(100)
         if len(r) == 0:
             continue
+    return error
 
 
 def read_param(ser, noresp_counter, rf_values, param="STATUS", wait=1, verbose=False):
@@ -238,7 +245,7 @@ def read_param(ser, noresp_counter, rf_values, param="STATUS", wait=1, verbose=F
     start_waiting = time.time()
     resp_len = 0
 
-    send_cmd_string(ser, param)
+    error = send_cmd_string(ser, param)
     while time.time() <= start_waiting + wait:
         r = ser.read(100)
         resp_len = len(r)
@@ -257,8 +264,7 @@ def read_param(ser, noresp_counter, rf_values, param="STATUS", wait=1, verbose=F
         rf_values = set_status_values(rf_values, payload_list, False)
         if verbose:
             print_rfdata(rf_values, 2)
-    return rf_values, noresp_counter
-    # return payload_list
+    return error, rf_values, noresp_counter
 
 
 def set_status_values (rf_values, payload_list, verbose=False):

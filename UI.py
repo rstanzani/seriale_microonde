@@ -1,261 +1,111 @@
 from PyQt5 import QtCore # QtGui, QtWidgets
+# from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, QThreadPool
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow #QWidget, QInputDialog, QLineEdit
-import time
-import datetime
+from PyQt5.QtCore import pyqtSignal # QThread
+
 import read_csv as rcsv
 import serial_RW as srw
+import plc_socket as plcsk
 from UI_raw import Ui_MainWindow
-import sys
-# from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, QThreadPool
-from PyQt5.QtCore import pyqtSignal # QThread
-import plc_communication as plcc
+import rf_utils as rfu
+
 import os
+import time
+import datetime
 import logging
 import psutil
+import zmq
+import sys
 
-name = "UI.exe"
+# TODO list:
+# (001) - do something when serial_error = True
 
-curr_dir = os.getcwd()
-logging.basicConfig(filename=f'{curr_dir}\\UI_err.log', level=logging.ERROR,
-                    format='%(asctime)s %(levelname)s %(name)s %(message)s')
-err_logger = logging.getLogger(__name__)
-
-# def stopwatch(timestamp_old):
-#     if time.time() - timestamp_old >= 2:
-#         print("Time exceeds 2s: {}-{}={}!".format(time.time(),timestamp_old,time.time() - timestamp_old))
-#     return time.time()
-# tmstmp = 0
-# tmstmp = stopwatch(tmstmp)
-
-# from threading import Thread
-# TODO: contollare se con il refresh rate attuale non passi troppo tempo tra un ping e l'altro e quindi
-# si spenga la comunicazione
-
-def read_config(filename="config.csv"):
-    csv_name = ""
-    with open(filename, 'r') as file:
-        line = file.readline()
-    file.close()
-    elem = line.split(";")
-    com = "COM"+str(elem[0])
-    if len(elem) >= 2:
-        csv_name = str(elem[1])
-        execution_from_config = 1 if str(elem[2])=="1" else 0
-
-        # Analyzing the filename...
-        if csv_name[-7:] == ".rf.csv": # not existant csv
-            if not os.path.isfile(csv_name):
-                print("ERROR: missing file, please check the file name.")
-                execution_from_config = 0
-        else:  #invalid csv
-            execution_from_config = 0
-    return com, csv_name, execution_from_config
-
-#TODO list:
-
-# File di log
-log_file = "log.txt"
-logger = os.path.expanduser('~\\Documents\\LOG\\logger_EATON.csv')
 config_file = "config.csv"
-
-comport, csv_name, execution_from_config = read_config(config_file)
-plc_thread_exec = True # used to stop the plc reading thread
-plc_status = 0
-old_plc_status = 0
-is_plot_present = False # tells if the csv plot is already present and therefore will be overwritten by another csv
-
-duration = 0
-freq_list = []
-power_list = []
-
-freq = 0
-
-turn_on = True
-just_turned_off = True   #when the user click STOP or RESET buttons
-min_refresh = 0.3  # minimum refresh rate
-
-# timestamp_old = 0
-
-cell_data = plcc.Cell_Data()
-
-class RFdata:
-    Temperature = "--"
-    PLL = "--"
-    Current = "--"
-    Voltage = "--"
-    Reflected_Power = "--"
-    Forward_Power= "--"
-    PWM = "--"
-    On_Off = "--"
-    Enable_foldback = "--"
-    Foldback_in = "--"
-    Error = "--"
-    cycle_count = 0
-    cycle_percentage = 0
-
-    def reset(self):
-        self.Temperature = "--"
-        self.PLL = "--"
-        self.Current = "--"
-        self.Voltage = "--"
-        self.Reflected_Power = "--"
-        self.Forward_Power= "--"
-        self.PWM = "--"
-        self.On_Off = "--"
-        self.Enable_foldback = "--"
-        self.Foldback_in = "--"
-        self.Error = "--"
-        self.cycle_count = 0
-        self.cycle_percentage = 0
-
-
-def set_configfile_exec(path, state):
-    '''Change the execution status in the config file (used for the next startup)'''
-    with open(path, 'r') as file:
-        line = file.readline()
-    file.close()
-    elem = line.split(";")
-    if len(elem) >=3:
-        elem[2] = state
-    lines = ""
-    for i in range(0, 3):
-        lines += elem[i] + ";"
-    with open(path, 'w') as file:
-        file.writelines(lines)
-    print("Config file execution set to {}".format(state))
-
-
-def write_to_file(filename, text):
-    try:
-        with open(filename, "r") as f:
-            content = f.read()
-    except FileNotFoundError:
-        content = ""
-    content = text + "\n" + content
-    with open(filename, "w") as f:
-        f.write(content)
-    f.close()
-
-
-def rf_log(text):
-  write_to_file(log_file, "{} {}".format(datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S"), text))
-
-
-def write_to_logger(filename, line):
-
-    if os.path.isfile(filename):
-        print("File exists")
-    else:
-        f = open(filename, "w")
-        f.write("data;;;MB13;MB15;;MB110;MB120;MB130;MB150;;MB70;MB80;MB140;MB170;;MW20;MW22;;MW24;MW26;;MW28;MW30;" + "\n") #name of the PLC values
-        f.write("data;;;SP_TAria;SP_TAcqua;;T_Comp1;T_Comp2;T_AriaRF;T_AriaNORF;;T_Bollitore;T_Basale;T_TerraRF;T_TerraNORF;;h_MotoComp;min_MotoComp;;h_SP_Raggiunto;min_SP_Raggiunto;;h_ScaldON;min_ScaldON;" + "\n")
-        print("Logger file created: {}".format(filename))
-        f.close()
-
-    f = open(filename, "a")
-    f.write(line + "\n")
-    f.close()
-
-rf_data = RFdata()
-index = 0
-interruption_type = "reset" # "stop" or "reset" (default value)
-num_executed_cycles = 1
-execution_time = 0
-prev_execution_time = 0
-serial_open = 0
-threshold_stop = False
-thres_status = ""
-
-prev_logging_time_SHORT = 0
-prev_logging_time_LONG = 0
-logging_period_LONG = 12 #minutes
-logging_period_SHORT = 10 #seconds
-
-execution = False
-
-class PLCWorker(QtCore.QObject):
-    global err_logger
-    # execution = False
-    messaged = pyqtSignal()
-    finished = pyqtSignal()
-
-    def start_execution(self):
-        global execution_from_config
-        global execution
-        if execution_from_config:
-            print("Started execution in PLCworker")
-            execution = True
-        else:
-            print("Execution set to Stop from the config file")
-
-    def run(self):
-        global plc_status
-        global plc_thread_exec
-        # global inizio
-
-        print("In run for plc communication...")
-        self.start_execution()
-
-        while plc_thread_exec:
-            try:
-                plc_status = plcc.is_plc_on_air()
-                self.messaged.emit()
-            except Exception as err:
-                err_logger.error(err)
-
-        print("plc communication finished")
-        self.messaged.emit()
-        self.finished.emit()
-
-no_resp_mode = False
+comport, csv_name, execution_from_config = rfu.read_config(config_file)
 
 class Worker(QtCore.QObject):
-    # execution = False
     messaged = pyqtSignal()
     finished = pyqtSignal()
+    ser = None
+    serial_open = 0
+    context = None
+    socket = None
     safe_mode_param = 1 # base value 1, in safe mode 2/3
+    duration = [0]
+    freq_list = []
+    power_list = []
+    power = 0
+    freq = 2450
+    index = 0
+    remaining_cycle_time = 60
     threshold_security_mode = False
     starttime_security_mode = 0
     duration_security_mode = 30 # seconds
     safety_mode_counter = 0
     force_change_pwr_safety = False
     noresp_counter = 0
+    min_refresh = 0.3  # minimum refresh rate
+    plc_status = 0
+    old_plc_status = 0
+    rf_data = rfu.RFdata()
+    threshold_stop = False
+    interruption_type = "reset" # "stop" or "reset" (default value)
+    num_executed_cycles = 1
+    execution_time = 0
+    prev_execution_time = 0
+    thres_status = ""
+    no_resp_mode = False
+    log_file = "log.txt"
+    thread_exec = True
+    execution = False
+    serial_error = False
+
+
+    def rf_log(self, text):
+      rfu.write_to_file(self.log_file, "{} {}".format(datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S"), text))
 
 
     def stop_worker_execution(self):
-        global execution
-        if execution:
-            execution = False
+        if self.execution:
+            self.execution = False
         else:
             print("Execution stopped.")
 
 
+    def close_socket(self):
+        self.socket.close()
+        self.context.term()
+        print("Socket closed")
+
+
+    def close_serial(self):
+        '''Close the serial connection'''
+        self.ser.close()
+        print("COM port correctly closed")
+
+
     def start_execution(self):
-        global execution
         print("Started execution in Worker")
-        execution = True
+        self.execution = True
 
 
     def check_thresholds(self, rf_data):
         '''Check the thresholds and return a bool'''
-        global thres_status
 
         thres_exceeded = False
         if rf_data.Temperature != "--" and rf_data.Voltage != "--" and rf_data.Current != "--" and rf_data.Reflected_Power != "--" and rf_data.Forward_Power != "--":
             if int(rf_data.Temperature) >= 65 or int(rf_data.Voltage) >= 33 or int(rf_data.Current) >= 18 or int(rf_data.Reflected_Power) >= 150 or int(rf_data.Forward_Power) >= 260:
-                thres_status = "Threshold Err. Temp {}C, Volt {}V, Curr {}A, R.Pow {}W, Pow {}W".format(rf_data.Temperature,rf_data.Voltage,rf_data.Current,rf_data.Reflected_Power,rf_data.Forward_Power)
+                self.thres_status = "Threshold Err. Temp {}C, Volt {}V, Curr {}A, R.Pow {}W, Pow {}W".format(rf_data.Temperature,rf_data.Voltage,rf_data.Current,rf_data.Reflected_Power,rf_data.Forward_Power)
                 thres_exceeded = True
         return thres_exceeded
 
 
     def safe_mode(self, rf_data):
-        global threshold_stop
-        global thres_status
         '''Change the state of the system based on the thresholds.'''
 
         if not self.threshold_security_mode:
             if self.check_thresholds(rf_data):
-                print("Entering SAFE MODE, status: {}".format(thres_status))
+                print("Entering SAFE MODE, status: {}".format(self.thres_status))
                 self.threshold_security_mode = True
 
         if self.threshold_security_mode: # not else because otherwise it skips the first
@@ -274,7 +124,7 @@ class Worker(QtCore.QObject):
                         print("Reduced value to {}".format(self.safe_mode_param))
                         if self.safety_mode_counter >= 3:
                             print("Stopping: unsafe parameters.")
-                            threshold_stop = True
+                            self.threshold_stop = True
                     else:
                         print("Exiting from Safe Mode.")
                         self.safe_mode_param = 1
@@ -284,134 +134,85 @@ class Worker(QtCore.QObject):
                         self.force_change_pwr_safety = True
 
 
-    def log_EATON_state(self, prev_logging_time_SHORT, prev_logging_time_LONG, logging_period_SHORT, logging_period_LONG):
-        if time.time() - prev_logging_time_SHORT >= logging_period_SHORT: # save each 10 s the value from the PLC
-            try:
-                read = plcc.get_values()
-                if not read[0]:
-                    cell_data.append_values(read[1])
-                else:
-                    print("Skipped because data is empty!")
-            except:
-                print("Error while reading from plc ")
-            prev_logging_time_SHORT = time.time()
-
-        if time.time() - prev_logging_time_LONG >= logging_period_LONG*60:  # save to logger and reset the list of values in cell_data
-            try:
-                logger_val_str = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";;;"+plcc.get_logger_values(cell_data)
-                write_to_logger(logger, logger_val_str)
-            except:
-                print("Error with PLC reading")
-            cell_data.reset()
-            prev_logging_time_LONG = time.time()
-
-        return prev_logging_time_SHORT, prev_logging_time_LONG
-
-
     def run(self):
         print("In run...")
-        global rf_data
         global comport
-        global index
-        global num_executed_cycles
-        global execution_time
-        global execution
-        global serial_open
-        # print("*** in run Execution is {}".format(execution))
-        global prev_execution_time
-        global interruption_type
-        global threshold_alarm
-        global thres_status
-        global plc_status
-        global old_plc_status
-        global log_file
-
-        global duration
-        global freq_list
-        global freq
-        global power_list
-
-        global turn_on
-        global just_turned_off
-        global prev_logging_time_SHORT
-        global prev_logging_time_LONG
-        global logging_period_SHORT
-        global logging_period_LONG
-        global min_refresh
-
-        global no_resp_mode
         first_no_resp = True
 
-        # global tmstmp
-        
-        # Default values
-        remaining_cycle_time = 60
-        freq = 2450
-        power = 0
+        turn_on = True
+        just_turned_off = True   #when the user click STOP or RESET buttons
 
         self.safe_mode_param = 1
         self.safety_mode_counter = 0
         self.threshold_security_mode = False
         self.starttime_security_mode = 0
 
-        # Initialize timers for PLC logging
-        prev_logging_time_SHORT = time.time()
-        prev_logging_time_LONG = time.time()
-
         prev_noresp_time = time.time()
 
-        print("Opening connection with RF...")
+        # Open subscriber socket
+        self.context, self.socket = plcsk.subscriber("5432", "1001")
 
         # Check the connection to the serial
-        ser, serial_open = srw.connect_serial(comport)  #TODO IMPLEMENTARE BOOLEANO SERIALE APERTA
+        print("Opening connection with RF...")
+        self.ser, self.serial_open = srw.connect_serial(comport)
 
-        while plc_thread_exec:
+        timestamp_plc_check = time.time()
+        plc_check_refresh = 0.5 # second
+
+        while self.thread_exec:
+
+            if time.time() >= timestamp_plc_check + plc_check_refresh:
+                try:
+                    string = self.socket.recv(zmq.NOBLOCK)
+                    _, self.plc_status = string.split()
+                    # total_value += int(messagedata)
+                    # print(f"PLC_status is {self.plc_status}")
+                except:
+                    self.plc_status = False
+                    print("No message from socket. PLC status set to False.")
+                timestamp_plc_check = time.time()
+
+
             stopwatch_START = time.time() # START for the stopwatch for the cycle
 
-            # Eaton logger
-            prev_logging_time_SHORT, prev_logging_time_LONG = self.log_EATON_state(prev_logging_time_SHORT, prev_logging_time_LONG, logging_period_SHORT, logging_period_LONG)
-
             # No response from serial Mode
-            if no_resp_mode:
+            if self.no_resp_mode:
                 if time.time() - prev_noresp_time >= 10:  # each 10 seconds it checks
                     print("In no response mode")
-                    if execution == False and not threshold_stop and plc_status: # restore execution after a stop from serial not responding
-                        execution = True
-                        srw.send_cmd_string(ser,"ON")
-                        # #tmstmp = stopwatch(tmstmp)
-                        print("restored from no_resp_mode")
+                    if self.execution == False and not self.threshold_stop and self.plc_status: # restore execution after a stop from serial not responding
+                        self.execution = True
+                        srw.send_cmd_string(self.ser,"ON")
+                        print("Restored from no_resp_mode")
                     prev_noresp_time = time.time()
 
             # ACTIVE STATUS
-            if execution and serial_open and not threshold_stop and plc_status:
-
+            if self.execution and self.serial_open and not self.threshold_stop and self.plc_status:
+                
                 # First turn on
                 if turn_on:
 
                     # Initialize or reset variables only after a Reset state
-                    if interruption_type == "reset":
-                        if isinstance(duration, list):
-                            remaining_cycle_time = duration[0]
-                            freq = freq_list[0]
-                            power = power_list[0]
-                        prev_execution_time = 0
+                    if self.interruption_type == "reset":
+                        if isinstance(self.duration, list):
+                            self.remaining_cycle_time = self.duration[0]
+                            self.freq = self.freq_list[0]
+                            self.power = self.power_list[0]
+                        self.prev_execution_time = 0
 
-                    
+
                     # Set parameters to the RF generator
-                    srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
-                    #tmstmp = stopwatch(tmstmp)
-                    srw.empty_buffer(ser, wait=1)
-                    srw.send_cmd_string(ser,"FLDBCK_ON", redundancy=3)
-                    srw.empty_buffer(ser, wait=0.5)
-                    srw.send_cmd_string(ser,"FLDBCK_VAL", 5, redundancy=3)
-                    srw.empty_buffer(ser, wait=0.5)
-                    srw.send_cmd_string(ser,"FREQ", freq, redundancy=1)
-                    #tmstmp = stopwatch(tmstmp)
+                    srw.send_cmd_string(self.ser,"PWR", self.power*self.safe_mode_param, redundancy=3)
+                    srw.empty_buffer(self.ser, wait=1)
+                    srw.send_cmd_string(self.ser,"FLDBCK_ON", redundancy=3)
+                    srw.empty_buffer(self.ser, wait=0.5)
+                    srw.send_cmd_string(self.ser,"FLDBCK_VAL", 5, redundancy=3)
+                    srw.empty_buffer(self.ser, wait=0.5)
+                    srw.send_cmd_string(self.ser,"FREQ", self.freq, redundancy=1)
 
-                    rf_log("RF on")
+                    self.rf_log("RF on")
 
-                    rf_data, self.noresp_counter = srw.read_param(ser, self.noresp_counter, rf_data, "STATUS", 1, False)
-                    #tmstmp = stopwatch(tmstmp)
+                    # TODO (001)
+                    self.serial_error, self.rf_data, self.noresp_counter = srw.read_param(self.ser, self.noresp_counter, self.rf_data, "STATUS", 1, False)
 
                     time.sleep(0.2)
 
@@ -421,115 +222,103 @@ class Worker(QtCore.QObject):
                     turn_on = False
                     just_turned_off = True
 
-                if rf_data.On_Off == 0:
+                if self.rf_data.On_Off == 0:
                     # This state can happen when the time between two messages on the serial where too long and the RF generator turned off.
                     print("Restore")
                     check = False
                     while check == False:
-                        srw.send_cmd_string(ser,"ON")
-                        #tmstmp = stopwatch(tmstmp)
+                        self.serial_error = srw.send_cmd_string(self.ser,"ON")
 
-                        rf_data, self.noresp_counter = srw.read_param(ser, self.noresp_counter, rf_data, "STATUS", 1, False)
+                        self.serial_error, self.rf_data, self.noresp_counter = srw.read_param(self.ser, self.noresp_counter, self.rf_data, "STATUS", 1, False)
                         time.sleep(1)
-                        if rf_data.On_Off == 1:
-                            srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
-                            #tmstmp = stopwatch(tmstmp)
+                        if self.rf_data.On_Off == 1:
+                            self.serial_error = srw.send_cmd_string(self.ser,"PWR", self.power*self.safe_mode_param, redundancy=3)
 
-                            srw.send_cmd_string(ser,"FREQ", freq, redundancy=3)
+                            self.serial_error = srw.send_cmd_string(self.ser,"FREQ", self.freq, redundancy=3)
                             check = True
-                            rf_data.Error = 0
+                            self.rf_data.Error = 0
 
                 # Normal cycle with the selected refresh rate
-                if time.time() >= timestamp + min_refresh:
+                if time.time() >= timestamp + self.min_refresh:
 
                     if self.noresp_counter >= 30:
                         if first_no_resp:
                             print("Exit: no Response from serial!")
                             first_no_resp = False
-                        if not no_resp_mode:
+                        if not self.no_resp_mode:
                             # Update log file
-                            rf_log("Stopped execution: no response from serial")
+                            self.rf_log("Stopped execution: no response from serial")
                             print("Stopped execution: no response from serial")
-                            no_resp_mode = True
-                            execution = False
-                            rf_data.On_Off = 0
-                            rf_data.reset()
-                            prev_execution_time = execution_time
+                            self.no_resp_mode = True
+                            self.execution = False
+                            self.rf_data.On_Off = 0
+                            self.rf_data.reset()
+                            self.prev_execution_time = self.execution_time
 
-                    self.safe_mode(rf_data)
+                    self.safe_mode(self.rf_data)
                     if self.force_change_pwr_safety:
-                        srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
-                        #tmstmp = stopwatch(tmstmp)
+                        self.serial_error = srw.send_cmd_string(self.ser,"PWR", self.power*self.safe_mode_param, redundancy=3)
 
                         self.force_change_pwr_safety = False
 
-                    if remaining_cycle_time <= 0:    # change the cycle position when the remaining time for this cycle is finished
-                        #print("Cycle changed!" )
-                        index += 1
-                        index = index % len(duration)  # set to 0 if is the last line in the csv
+                    if self.remaining_cycle_time <= 0:    # change the cycle position when the remaining time for this cycle is finished
+                        self.index += 1
+                        self.index = self.index % len(self.duration)  # set to 0 if is the last line in the csv
 
-                        remaining_cycle_time = duration[index]
-                        power = power_list[index]
-                        freq = freq_list[index]
-                        if index == 0:
-                            num_executed_cycles += 1
+                        self.remaining_cycle_time = self.duration[self.index]
+                        self.power = self.power_list[self.index]
+                        self.freq = self.freq_list[self.index]
+                        if self.index == 0:
+                            self.num_executed_cycles += 1
 
-                        srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
-                        #tmstmp = stopwatch(tmstmp)
+                        self.serial_error = srw.send_cmd_string(self.ser,"PWR", self.power*self.safe_mode_param, redundancy=3)
+                        self.serial_error = srw.send_cmd_string(self.ser,"FREQ", self.freq, redundancy=3)
 
-                        srw.send_cmd_string(ser,"FREQ", freq, redundancy=3)
-                        #tmstmp = stopwatch(tmstmp)
-
-
-                    rf_data, self.noresp_counter = srw.read_param(ser, self.noresp_counter, rf_data, "STATUS", 1, False)
-                    #tmstmp = stopwatch(tmstmp)
+                    print("Ask for status")
+                    self.serial_error, self.rf_data, self.noresp_counter = srw.read_param(self.ser, self.noresp_counter, self.rf_data, "STATUS", 1, False)
 
                     # Note: the self.noresp_counter almost never gives perfect 0 due to the various messages that can be lost
-                    if no_resp_mode:
+                    if self.no_resp_mode:
                         if self.noresp_counter <= 10:
-                            # print("No resp mode reset!")
-                            no_resp_mode = False
+                            self.no_resp_mode = False
                             first_no_resp = True
                             starttime = time.time()  # reset the timer count after a connection restore
-                    rf_data.cycle_count = num_executed_cycles
-                    rf_data.cycle_percentage = round(index/(len(duration))*100, 0)
+                    self.rf_data.cycle_count = self.num_executed_cycles
+                    self.rf_data.cycle_percentage = round(self.index/(len(self.duration))*100, 0)
                     self.messaged.emit()
                     timestamp = time.time()
 
-                    if not no_resp_mode:
-                        execution_time = prev_execution_time + (timestamp - starttime) # calculate the total execution time for the RF generator
-                    if rf_data.Error == 4:
+                    if not self.no_resp_mode:
+                        self.execution_time = self.prev_execution_time + (timestamp - starttime) # calculate the total execution time for the RF generator
+                    if self.rf_data.Error == 4:
                         print("Re-set parameters")
-                        srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param)
-                        #tmstmp = stopwatch(tmstmp)
+                        self.serial_error = srw.send_cmd_string(self.ser,"PWR", self.power*self.safe_mode_param)
 
-                        srw.send_cmd_string(ser,"FREQ", freq)
-                    if rf_data.Error == 203:   #writing not enabled (probably off?)
+                        self.serial_error = srw.send_cmd_string(self.ser,"FREQ", self.freq)
+                    if self.rf_data.Error == 203:   #writing not enabled (probably off?)
                         print("Restart")
 
                         check = False
                         while check == False:
-                            srw.send_cmd_string(ser,"ON")
-                            rf_data, self.noresp_counter = srw.read_param(ser, self.noresp_counter, rf_data, "STATUS", 1, False)
-                            #tmstmp = stopwatch(tmstmp)
+                            self.serial_error = srw.send_cmd_string(self.ser,"ON")
+                            self.serial_error, self.rf_data, self.noresp_counter = srw.read_param(self.ser, self.noresp_counter, self.rf_data, "STATUS", 1, False)
 
                             time.sleep(1)
-                            if rf_data.On_Off == 1:
-                                srw.send_cmd_string(ser,"PWR", power*self.safe_mode_param, redundancy=3)
-                                srw.send_cmd_string(ser,"FREQ", freq, redundancy=3)
+                            if self.rf_data.On_Off == 1:
+                                self.serial_error = srw.send_cmd_string(self.ser,"PWR", self.power*self.safe_mode_param, redundancy=3)
+                                self.serial_error = srw.send_cmd_string(self.ser,"FREQ", self.freq, redundancy=3)
                                 check = True
-                                rf_data.Error = 0
+                                self.rf_data.Error = 0
             elif just_turned_off:
                 print("\nShutting down...")
 
-                srw.send_cmd_string(ser,"PWM", 0, 2)
-                srw.send_cmd_string(ser,"OFF")
-                #tmstmp = stopwatch(tmstmp)
+                self.serial_error = srw.send_cmd_string(self.ser,"PWM", 0, 2)
+                self.serial_error = srw.send_cmd_string(self.ser,"OFF")
 
-                srw.empty_buffer(ser, wait=1)
+                self.serial_error = srw.empty_buffer(self.ser, wait=1)
 
-                prev_execution_time = execution_time
-                rf_data, self.noresp_counter = srw.read_param(ser, self.noresp_counter, rf_data, "STATUS", 1, False)
+                self.prev_execution_time = self.execution_time
+                self.serial_error, self.rf_data, self.noresp_counter = srw.read_param(self.ser, self.noresp_counter, self.rf_data, "STATUS", 1, False)
 
                 turn_on = True # used to re-set parameters in the next turn on
                 just_turned_off = False
@@ -538,30 +327,27 @@ class Worker(QtCore.QObject):
             else:
                 if not 'timestamp' in locals(): # timestamp is not defined if it does not enter in the previous IF (e.g. if pls_status is off when turning on)
                     timestamp = time.time()
-                if time.time() >= timestamp + min_refresh:
-                    rf_data, self.noresp_counter = srw.read_param(ser, self.noresp_counter, rf_data, "STATUS", 1, False)
+                if time.time() >= timestamp + self.min_refresh:
+                    # print("I am in IDLE mode!")
+                    self.serial_error, self.rf_data, self.noresp_counter = srw.read_param(self.ser, self.noresp_counter, self.rf_data, "STATUS", 1, False)
                     self.messaged.emit()
 
             # check plc variation
-            if old_plc_status != plc_status:
-                print("PLC status changes")
-                if plc_status:
-                    rf_log("PLC status ON.")
+            if self.old_plc_status != self.plc_status:
+                print("PLC status is changed.")
+                if self.plc_status:
+                    self.rf_log("PLC status ON.")
                 else:
-                    rf_log("PLC status OFF.")
-            old_plc_status = plc_status
+                    self.rf_log("PLC status OFF.")
+            self.old_plc_status = self.plc_status
             stopwatch_STOP = time.time()
-            if not no_resp_mode and str(rf_data.On_Off) == "1":
-                remaining_cycle_time -= stopwatch_STOP - stopwatch_START # reduce the time only when the RF is working
-
+            if not self.no_resp_mode and str(self.rf_data.On_Off) == "1":
+                self.remaining_cycle_time -= stopwatch_STOP - stopwatch_START # reduce the time only when the RF is working
 
         # Soft turn off
         print("Main thread killed by the user, shut down and close serial")
-        rf_data.reset()
+        self.rf_data.reset()
 
-        # Close ports
-        ser.close()
-        print("COM port correctly closed")
         self.messaged.emit()
         self.finished.emit()
 
@@ -571,26 +357,19 @@ class MainWindow(QMainWindow):
     error = ""
     msg = ""
     error_history = []
-    # timestamp_old = 0
-    # execution = True
     worker = None
-    plcworker = None
     thread = None
-    thread_plc = None
     last_status_update = 0
+    is_plot_present = False # tells if the csv plot is already present and therefore will be overwritten by another csv
 
 
     def __init__(self):
         global csv_name
-        global is_plot_present
-        global duration
-        global freq_list
-        global power_list
-        global execution
         global execution_from_config
 
         self.__thread = QtCore.QThread()
-        self.__thread_plc = QtCore.QThread()
+
+        self.worker = Worker()
 
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
@@ -599,13 +378,11 @@ class MainWindow(QMainWindow):
         self.ui.QOpen_CSV.clicked.connect(lambda: self.open_file("Open_CSV"))
         self.ui.Qexit.clicked.connect(lambda: self.close())
 
-        self.run_plc_check()
-
         # read from csv
-        duration, freq_list, power_list, self.error, self.msg  = rcsv.read_and_plot(self.ui, csv_name, is_plot_present)
+        self.worker.duration, self.worker.freq_list, self.worker.power_list, self.error, self.msg  = rcsv.read_and_plot(self.ui, csv_name, self.is_plot_present)
         if not self.error:
             self.ui.Qcsvpath.setText(csv_name)
-            is_plot_present = True
+            self.is_plot_present = True
             if not execution_from_config:
                 print("Enable play!")
                 self.enablePlayButton()
@@ -623,7 +400,7 @@ class MainWindow(QMainWindow):
             self.ui.QoutputLabel.setText(self.msg)
 
         else:
-            execution = False
+            self.worker.execution = False
             print("The path is invalid, values of duration, freq_list and others cannot be set.")
 
 		# Disable the X close button
@@ -633,18 +410,6 @@ class MainWindow(QMainWindow):
         self.ui.Qplay.clicked.connect(lambda: self.play_execution())
         self.ui.Qstop.clicked.connect(lambda: self.stop_execution())
         self.ui.Qreset.clicked.connect(lambda: self.reset_execution())
-
-
-    def run_plc_check(self):
-        if not self.__thread_plc.isRunning():
-            self.__thread_plc = self.__get_thread_plc()
-            self.__thread_plc.start()
-        else:
-            print("Thread already running, killing it")
-            self.__thread_plc.quit()
-            time.sleep(3)
-            self.__thread_plc = self.__get_thread_plc()
-            self.__thread_plc.start()
 
 
     def run_long_task(self):
@@ -660,31 +425,15 @@ class MainWindow(QMainWindow):
             self.__thread.start()
 
 
-    def __get_thread_plc(self):
-        self.thread_plc = QtCore.QThread()
-        self.plcworker = PLCWorker()
-        self.plcworker.moveToThread(self.thread_plc)
-
-        self.thread_plc.plcworker = self.plcworker
-
-        self.thread_plc.started.connect(self.plcworker.run)
-        self.plcworker.finished.connect(lambda: self.quit_thread_plc())
-        self.plcworker.messaged.connect(lambda: self.update_plc_status())
-        return self.thread_plc
-
-
     def __get_thread(self):
         self.thread = QtCore.QThread()
-        self.worker = Worker()
         self.worker.moveToThread(self.thread)
 
         # this is essential when worker is in local scope!
-        self.thread.worker =  self.worker
-
+        self.thread.worker = self.worker
         self.thread.started.connect(self.worker.run)
-        self.worker.finished.connect(lambda: self.quit_thread())
-
         self.worker.messaged.connect(lambda: self.update_status())
+        self.worker.finished.connect(lambda: self.quit_thread())
         return self.thread
 
 
@@ -692,18 +441,12 @@ class MainWindow(QMainWindow):
         self.thread.quit
 
 
-    def quit_thread_plc(self):
-        global plc_thread_exec
-        plc_thread_exec = False
-        self.thread_plc.quit
-
-
     def restore_buttons(self):
         self.enablePlayButton()
-        if interruption_type == "stop":
+        if self.worker.interruption_type == "stop":
             self.disableStopButton()
             self.ui.QoutputLabel.setText("Process stopped.")
-        elif interruption_type == "reset":
+        elif self.worker.interruption_type == "reset":
             self.disableResetButton()
             self.disableStopButton()
             self.enableOpenCSVButton()
@@ -746,11 +489,6 @@ class MainWindow(QMainWindow):
 
     def open_file(self, button_name):
         global csv_name
-        global is_plot_present
-        global duration
-        global freq_list
-        global power_list
-        global execution
 
         # Reads the file path from the prompt
         self.disablePlayButton()
@@ -761,11 +499,11 @@ class MainWindow(QMainWindow):
         # Read parameters from csv file
         if opened_path != "":
             self.ui.Qcsvpath.setText(opened_path)
-            duration, freq_list, power_list, self.error, self.msg  = rcsv.read_and_plot(self.ui, opened_path, is_plot_present)
+            self.worker.duration, self.worker.freq_list, self.worker.power_list, self.error, self.msg  = rcsv.read_and_plot(self.ui, opened_path, self.is_plot_present)
 
             self.ui.QoutputLabel.setText(self.msg)
             if not self.error:
-                is_plot_present = True
+                self.is_plot_present = True
                 if not execution_from_config:
                     self.enablePlayButton()
                     self.enableExitButton()
@@ -776,16 +514,31 @@ class MainWindow(QMainWindow):
                     self.disableOpenCSVButton()
                     self.disableExitButton()
             else:
-                execution = False
+                self.worker.execution = False
                 print("The path is invalid, values of duration, freq_list and others cannot be set.")
+
+
+    def set_configfile_exec(self, path, state):
+        '''Change the execution status in the config file (used for the next startup)'''
+        with open(path, 'r') as file:
+            line = file.readline()
+        file.close()
+        elem = line.split(";")
+        if len(elem) >=3:
+            elem[2] = state
+        lines = ""
+        for i in range(0, 3):
+            lines += elem[i] + ";"
+        with open(path, 'w') as file:
+            file.writelines(lines)
+        print("Config file execution set to {}".format(state))
 
 
     def open_window_init(self):
         global execution_from_config
-        global log_file
         self.ui.QoutputLabel.setText("Process started.")
         # Save log file
-        rf_log("Software ON, ready to start.")
+        self.worker.rf_log("Software ON, ready to start.")
         if execution_from_config:
             self.disablePlayButton()
             self.enableStopButton()
@@ -795,10 +548,9 @@ class MainWindow(QMainWindow):
         self.run_long_task()
 
     def play_execution(self):
-        global log_file
         global config_file
 
-        set_configfile_exec(config_file, "1")
+        self.set_configfile_exec(config_file, "1")
         self.disablePlayButton()
         self.enableStopButton()
         self.enableResetButton()
@@ -808,32 +560,26 @@ class MainWindow(QMainWindow):
 
 
     def reset_execution(self):
-        global index
-        global interruption_type
-        global num_executed_cycles
         global config_file
-        global no_resp_mode
 
-        no_resp_mode = False # restore this flag
-        set_configfile_exec(config_file, "0")
-        interruption_type = "reset"
-        num_executed_cycles = 1
-        rf_log("Reset")
+        self.worker.no_resp_mode = False # restore this flag
+        self.set_configfile_exec(config_file, "0")
+        self.worker.interruption_type = "reset"
+        self.worker.num_executed_cycles = 1
+        self.worker.rf_log("Reset")
         self.ui.QoutputLabel.setText("Process reset.")
         self.worker.stop_worker_execution()
-        index = 0
+        self.worker.index = 0
         self.restore_buttons()
 
 
     def stop_execution(self):
-        global interruption_type
         global config_file
-        global no_resp_mode
 
-        set_configfile_exec(config_file, "0")
-        no_resp_mode = False # restore this flag
-        interruption_type = "stop"
-        rf_log("Stop")
+        self.set_configfile_exec(config_file, "0")
+        self.worker.no_resp_mode = False # restore this flag
+        self.worker.interruption_type = "stop"
+        self.worker.rf_log("Stop")
         self.ui.QoutputLabel.setText("Process stopped.")
         self.worker.stop_worker_execution()
         self.restore_buttons()
@@ -880,38 +626,33 @@ class MainWindow(QMainWindow):
 
 
     def close(self):
-        global plc_thread_exec
-        global log_file
 
+        self.worker.thread_exec = False
         if self.thread:
             self.thread.quit
-        if self.thread_plc:
-            plc_thread_exec = False
-            self.thread_plc.quit
+
         time.sleep(3)
 
-        write_to_file(log_file, "{}".format("--"))
+        # Close socket and serial
+        self.worker.close_socket()
+        self.worker.close_serial()
+
+        # Identify the app closing on the log file
+        rfu.write_to_file(self.worker.log_file, "{}".format("--"))
         print("Window closing...")
         QApplication.quit()
 
 
     def update_status(self):
-        global rf_data
-        global execution_time
-        global threshold_stop
-        global thres_status
-        global interruption_type
-        global freq
-
         _translate = QtCore.QCoreApplication.translate
-        self.ui.Qtemperature_label.setText(_translate("MainWindow", str(rf_data.Temperature)+" °C"))
-        self.ui.Qpll_label.setText(_translate("MainWindow", str(rf_data.PLL)))
-        self.ui.Qcurrent_label.setText(_translate("MainWindow", str(rf_data.Current))+" A")
-        self.ui.Qvoltage_label.setText(_translate("MainWindow", str(rf_data.Voltage))+" V")
-        self.ui.Qreflectedpower_label.setText(_translate("MainWindow", str(rf_data.Reflected_Power)+" W"))
-        self.ui.Qforwardpower_label.setText(_translate("MainWindow", str(rf_data.Forward_Power)+" W"))
-        self.ui.Qpwm_label.setText(_translate("MainWindow", str(rf_data.PWM)))
-        if str(rf_data.On_Off) == "1":
+        self.ui.Qtemperature_label.setText(_translate("MainWindow", str(self.worker.rf_data.Temperature)+" °C"))
+        self.ui.Qpll_label.setText(_translate("MainWindow", str(self.worker.rf_data.PLL)))
+        self.ui.Qcurrent_label.setText(_translate("MainWindow", str(self.worker.rf_data.Current))+" A")
+        self.ui.Qvoltage_label.setText(_translate("MainWindow", str(self.worker.rf_data.Voltage))+" V")
+        self.ui.Qreflectedpower_label.setText(_translate("MainWindow", str(self.worker.rf_data.Reflected_Power)+" W"))
+        self.ui.Qforwardpower_label.setText(_translate("MainWindow", str(self.worker.rf_data.Forward_Power)+" W"))
+        self.ui.Qpwm_label.setText(_translate("MainWindow", str(self.worker.rf_data.PWM)))
+        if str(self.worker.rf_data.On_Off) == "1":
             self.ui.Qonoff_label.setText(_translate("MainWindow", "On"))
             self.ui.Qonoff_label.setStyleSheet("color: rgb(41, 45, 62);\n"
                                              "background-color: rgb(85, 255, 0);")
@@ -920,30 +661,27 @@ class MainWindow(QMainWindow):
             self.ui.Qonoff_label.setStyleSheet("color: rgb(41, 45, 62);\n"
                                              "background-color: rgb(255, 0, 0);")
 
-        if threshold_stop:
+        if self.worker.threshold_stop:
             self.ui.QoutputLabel.setText("THRESHOLD ALARM, see log file.")
-            rf_log(thres_status)
-            threshold_stop = False
-            interruption_type = "reset"
+            self.worker.rf_log(self.worker.thres_status)
+            self.worker.threshold_stop = False
+            self.worker.interruption_type = "reset"
 
-        self.ui.Qfrequency.setText(_translate("MainWindow", str(freq)))
+        self.ui.Qfrequency.setText(_translate("MainWindow", str(self.worker.freq)))
 
-        self.ui.Qenablefoldback_label.setText(_translate("MainWindow", str(rf_data.Enable_foldback)))
-        self.ui.Qfoldbackin_label.setText(_translate("MainWindow", str(rf_data.Foldback_in)+" W"))
-        self.ui.Qerror_label.setText(_translate("MainWindow", str(rf_data.Error)))
-        self.ui.Qcyclenumber.setText(_translate("MainWindow", str(rf_data.cycle_count)))
-        self.ui.Qcurrentcycle.setText(_translate("MainWindow", str(rf_data.cycle_percentage)))
-        self.ui.Qexecution_time.setText(_translate("MainWindow", str(datetime.timedelta(seconds = int(execution_time)))))
+        self.ui.Qenablefoldback_label.setText(_translate("MainWindow", str(self.worker.rf_data.Enable_foldback)))
+        self.ui.Qfoldbackin_label.setText(_translate("MainWindow", str(self.worker.rf_data.Foldback_in)+" W"))
+        self.ui.Qerror_label.setText(_translate("MainWindow", str(self.worker.rf_data.Error)))
+        self.ui.Qcyclenumber.setText(_translate("MainWindow", str(self.worker.rf_data.cycle_count)))
+        self.ui.Qcurrentcycle.setText(_translate("MainWindow", str(self.worker.rf_data.cycle_percentage)))
+        self.ui.Qexecution_time.setText(_translate("MainWindow", str(datetime.timedelta(seconds = int(self.worker.execution_time)))))
 
         if time.time() > self.last_status_update + 60:
-            self.status_log_file(log_file, "{} - cycle num: {} - cycle progress: {}%".format(datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S"), rf_data.cycle_count, rf_data.cycle_percentage))
+            self.status_log_file(self.worker.log_file, "{} - cycle num: {} - cycle progress: {}%".format(datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S"), self.worker.rf_data.cycle_count, self.worker.rf_data.cycle_percentage))
             self.last_status_update = time.time()
 
 
-    def update_plc_status(self):
-        global plc_status
-
-        if plc_status:
+        if self.worker.plc_status:
             self.ui.QPLCInfo.setStyleSheet("color: rgb(41, 45, 62);\n"
                                              "background-color: rgb(85, 255, 0);")
         else:
@@ -951,16 +689,11 @@ class MainWindow(QMainWindow):
                                              "background-color: rgb(255, 0, 0);")
 
 
-def update_progress(progress_bar, value):
-    progress_bar.setValue(value)
-
-    if value >= 100:
-        progress_bar.setVisible(False)
-    elif progress_bar.isHidden():
-        progress_bar.setVisible(True)
-
-
 if __name__ == "__main__":
+    name = "UI.exe"
+    logging.basicConfig(filename=f'{os.getcwd()}\\UI_err.log', level=logging.ERROR,
+                        format='%(asctime)s %(levelname)s %(name)s %(message)s')
+    err_logger = logging.getLogger(__name__)
     if not name in (p.name() for p in psutil.process_iter()):
         try:
             app = QApplication(sys.argv)
@@ -968,6 +701,7 @@ if __name__ == "__main__":
             window.show()
             sys.exit(app.exec())
         except Exception as err:
+            print("Exception occurred in __main__ execution! ")
             err_logger.error(err)
     else:
         err_logger.error(f"{name} is already open!")

@@ -58,11 +58,13 @@ def request(pTarget):
     h = httplib2.Http(timeout = 2)
     resp = ''
     content = ''
+    reachable = False
     try:
         resp, content = h.request(URL+pTarget, method="GET", headers=header)
+        reachable = True
     except:
         print("PLC error: No response from server. Check the connection.")
-    return resp, content
+    return resp, content, reachable
 
 # def isRunning():
 #     r = False
@@ -101,46 +103,57 @@ def get_val(content, letter="M"):
     return value
 
 def is_plc_on_air():
-    resp, content = getOp("M","23")
+    resp, content, reachable = getOp("M","23")
 
     time.sleep(.3)
     value = 0
     if content != "":
         value = get_val(content)
-    return value
+    return value, reachable
 
-def get_time_values():
+def get_time_values(simulate=False):
     global time_values
-    resp = [''] * len(time_values)
-    val = [0] * len(time_values)
-    resp[0] = getOp(time_values[0][0], time_values[0][1])[1]
-    if resp[0] != "":    # use the first value as a connection check
-        val[0] = get_val(resp[0], time_values[0][0])
-        for i in range(1, len(time_values)):
-            time.sleep(0.001)
-            resp[i] = getOp(time_values[i][0], time_values[i][1])[1]
-            val[i] = get_val(resp[i], time_values[i][0])
-    return val
+    
+    if simulate:
+        return [0] * len(time_values), True
+    else:
+        resp = [''] * len(time_values)
+        val = [0] * len(time_values)
+        operator = getOp(time_values[0][0], time_values[0][1])
+        resp[0] = operator[1] #the first of the tuple
+        reachable = operator[2]
+        if resp[0] != "":    # use the first value as a connection check
+            val[0] = get_val(resp[0], time_values[0][0])
+            for i in range(1, len(time_values)):
+                time.sleep(0.001)
+                resp[i] = getOp(time_values[i][0], time_values[i][1])[1]
+                val[i] = get_val(resp[i], time_values[i][0])
+        return val, reachable
 
-def get_values():
-    noresp = True
+def get_values(simulate=False):
     global values_to_average
-    resp = [''] * len(values_to_average)
-    val = [0] * len(values_to_average)
-    resp[0] = getOp(values_to_average[0][0], values_to_average[0][1])[1]
-    if resp[0] != "":    # use the first value as a connection check
-        noresp = False
-        val[0] = get_val(resp[0], values_to_average[0][0])
-        for i in range(1, 10):
-            time.sleep(0.001)
-            resp[i] = getOp(values_to_average[i][0], values_to_average[i][1])[1]
-            val[i] = get_val(resp[i], values_to_average[i][0])
-    return noresp, val
+    
+    if simulate:
+        return [0] * len(values_to_average), True
+    else:
+        resp = [''] * len(values_to_average)
+        val = [0] * len(values_to_average)
+        operator = getOp(values_to_average[0][0], values_to_average[0][1])
+        resp[0] = operator[1]
+        reachable = operator[2]
+        if resp[0] != "":    # use the first value as a connection check
+            val[0] = get_val(resp[0], values_to_average[0][0])
+            for i in range(1, 10):
+                time.sleep(0.001)
+                resp[i] = getOp(values_to_average[i][0], values_to_average[i][1])[1]
+                val[i] = get_val(resp[i], values_to_average[i][0])
+        return val, reachable
 
-def get_logger_values(cell_data):
+
+def get_logger_values(cell_data, simulate=False):
 
     avrg_val = cell_data.get_average()
-    time_val = get_time_values()
+    time_val, reachable = get_time_values(simulate)
     val = avrg_val + time_val
 
     # In string format for the csv file
