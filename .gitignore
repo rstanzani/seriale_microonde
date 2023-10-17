@@ -9,3 +9,4 @@ config.txt
 *.spec
 /build
 *.csv
+/materiale
