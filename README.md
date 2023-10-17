@@ -1,12 +1,12 @@
 
+
 # Note repository
 
 
 # Branch attivi
 |  Branch|  Descrizione|   
 |----------|----------| 
-|  `independent_logger`  | Creazione finestra di logging di sistema indipendente da UI. |
-|  `auto_start`  | Per automatizzare l'avvio del codice. |
+|  `sub_publisher`  | Finestra di logging di sistema indipendente da UI.| 
 |  `main`  | Branch principale. |
 
 # Release e Tag
@@ -17,6 +17,7 @@ I rilasci vengono effettuati solo dal branch **main**. I tag dei rilasci sono ri
 |  Nome  |  Descrizione  |   
 |----------|----------| 
 |    |   |
+|  `1.2.0`  | Stability improvement for first RUN. |
 |  `1.1.0`  | Auto-start e lettura da PLC. |
 |  `1.0.0`  | Prima release stabile. |
 
