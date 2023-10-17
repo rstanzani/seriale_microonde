@@ -62,7 +62,7 @@ background-color: rgb(41, 45, 62);</string>
                <string notr="true">color: rgb(255, 255, 255);</string>
               </property>
               <property name="text">
-               <string>PLC communication</string>
+               <string>PLC communication status:</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -125,7 +125,7 @@ background-color: rgb(255, 0, 0);</string>
              <string notr="true">color: rgb(255, 255, 255);</string>
             </property>
             <property name="text">
-             <string>Log file in: DocumentsLOG</string>
+             <string>Log file saved in &quot;Documents\LOG&quot;</string>
             </property>
            </widget>
           </item>
@@ -156,7 +156,7 @@ background-color: rgb(255, 0, 0);</string>
 :disabled {color:rgb(150, 150, 180); background-color:rgb(88, 96, 104) }</string>
             </property>
             <property name="text">
-             <string>EXIT</string>
+             <string>Exit</string>
             </property>
            </widget>
           </item>

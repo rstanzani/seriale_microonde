@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(337, 242)
+        MainWindow.resize(337, 267)
         MainWindow.setBaseSize(QtCore.QSize(0, 0))
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(":/icon/app_icon"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -107,10 +107,10 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "System logger"))
-        self.QinfoLabel_23.setText(_translate("MainWindow", "PLC communication"))
+        self.QinfoLabel_23.setText(_translate("MainWindow", "PLC communication status:"))
         self.QPLCInfo.setText(_translate("MainWindow", "Inactive"))
-        self.QinfoLabel_21.setText(_translate("MainWindow", "Log file in: DocumentsLOG"))
-        self.Qexit.setText(_translate("MainWindow", "EXIT"))
+        self.QinfoLabel_21.setText(_translate("MainWindow", "Log file saved in \"Documents\\LOG\""))
+        self.Qexit.setText(_translate("MainWindow", "Exit"))
 import res_rc
 
 
