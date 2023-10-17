@@ -2,6 +2,57 @@ import httplib2, base64, json, time
 URL = "http://192.168.200.1/"
 APIKEY = "0641cbefbfb63378999e572968c7259519b6457b12a797b7b3415079eed4b7eb248373c7bd914e80"
 
+values_to_average = [["MB","13"],["MB","15"],["MB","110"],["MB","120"],["MB","130"],["MB","150"],["MB","70"],["MB","80"],["MB","140"],["MB","170"]]
+time_values = [["MW","20"],["MW","22"],["MW","24"],["MW","26"],["MW","28"],["MW","30"]]
+
+def Average(lst):
+    avg = 0
+
+    if len(lst) > 0:
+        avg = round(sum(lst) / len(lst), 1)
+    return avg
+
+class Cell_Data:
+    MB13 = []
+    MB15 = []
+    MB110 = []
+    MB120 = []
+    MB130 = []
+    MB150 = []
+    MB70 = []
+    MB80 = []
+    MB140 = []
+    MB170 = []
+
+    def reset(self):
+        self.MB13 = []
+        self.MB15 = []
+        self.MB110 = []
+        self.MB120 = []
+        self.MB130 = []
+        self.MB150 = []
+        self.MB70 = []
+        self.MB80 = []
+        self.MB140 = []
+        self.MB170 = []
+
+    def append_values(self, val):
+        self.MB13.append(val[0])
+        self.MB15.append(val[1])
+        self.MB110.append(val[2])
+        self.MB120.append(val[3])
+        self.MB130.append(val[4])
+        self.MB150.append(val[5])
+        self.MB70.append(val[6])
+        self.MB80.append(val[7])
+        self.MB140.append(val[8])
+        self.MB170.append(val[9])
+
+    def get_average(self):
+        print("Avrg on {} values".format(len(self.MB13)))
+        return [Average(lst) for lst in [self.MB13,self.MB15,self.MB110,self.MB120,self.MB130,self.MB150,self.MB70,self.MB80,self.MB140,self.MB170]]
+
+
 def request(pTarget):
     header = {'Authorization': "Bearer %s" % APIKEY}
     h = httplib2.Http(timeout = 2)
@@ -13,15 +64,18 @@ def request(pTarget):
         print("PLC error: No response from server. Check the connection.")
     return resp, content
 
-def isRunning():
-    r = False
-    resp, content = request("api/get/data?elm=STATE");
-    try:
-        o = json. loads(content);
-        r = (o["SYSINFO"]["STATE"]) == "RUN"
-    except ValueError:
-        print ('JSON Decoding failed')
-    return r
+# def isRunning():
+#     r = False
+#     try:
+#         resp, content = request("api/get/data?elm=STATE");
+#     except:
+#         print("PLC error: No response from server. Check the connection.")
+#     try:
+#         o = json. loads(content);
+#         r = (o["SYSINFO"]["STATE"]) == "RUN"
+#     except ValueError:
+#         print ('JSON Decoding failed')
+#     return r
 
 def setOp(pOp, pIndex, pVal):
     url = "api/set/op?op="+pOp+"&index="+str(pIndex)+"&val="+str(pVal)
@@ -47,7 +101,7 @@ def get_val(content, letter="M"):
     return value
 
 def is_plc_on_air():
-    resp, content = getOp("M","17")
+    resp, content = getOp("M","23")
 
     time.sleep(.3)
     value = 0
@@ -55,62 +109,45 @@ def is_plc_on_air():
         value = get_val(content)
     return value
 
-
-def get_logger_values():
-    resp = ['','','','','','','']
-    val = [0,0,0,0,0,0,0]
-    resp[0] = getOp("MB","70")[1]
+def get_time_values():
+    global time_values
+    resp = [''] * len(time_values)
+    val = [0] * len(time_values)
+    resp[0] = getOp(time_values[0][0], time_values[0][1])[1]
     if resp[0] != "":    # use the first value as a connection check
-        time.sleep(0.001)
-        resp[1] = getOp("MB","80")[1]
-        time.sleep(0.001)
-        resp[2] = getOp("MB","110")[1]
-        time.sleep(0.001)
-        resp[3] = getOp("MB","120")[1]
-        time.sleep(0.001)
-        resp[4] = getOp("MB","130")[1]
-        time.sleep(0.001)
-        resp[5] = getOp("MB","140")[1]
-        time.sleep(0.001)
-        resp[6] = getOp("MB","150")[1]
-        time.sleep(.01)
-        val[0] = get_val(resp[0], "MB")
-        val[1] = get_val(resp[1], "MB")
-        val[2] = get_val(resp[2], "MB")
-        val[3] = get_val(resp[3], "MB")
-        val[4] = get_val(resp[4], "MB")
-        val[5] = get_val(resp[5], "MB")
-        val[6] = get_val(resp[6], "MB")
+        val[0] = get_val(resp[0], time_values[0][0])
+        for i in range(1, len(time_values)):
+            time.sleep(0.001)
+            resp[i] = getOp(time_values[i][0], time_values[i][1])[1]
+            val[i] = get_val(resp[i], time_values[i][0])
+    return val
+
+def get_values():
+    noresp = True
+    global values_to_average
+    resp = [''] * len(values_to_average)
+    val = [0] * len(values_to_average)
+    resp[0] = getOp(values_to_average[0][0], values_to_average[0][1])[1]
+    if resp[0] != "":    # use the first value as a connection check
+        noresp = False
+        val[0] = get_val(resp[0], values_to_average[0][0])
+        for i in range(1, 10):
+            time.sleep(0.001)
+            resp[i] = getOp(values_to_average[i][0], values_to_average[i][1])[1]
+            val[i] = get_val(resp[i], values_to_average[i][0])
+    return noresp, val
+
+def get_logger_values(cell_data):
+
+    avrg_val = cell_data.get_average()
+    time_val = get_time_values()
+    val = avrg_val + time_val
 
     # In string format for the csv file
     strng = ""
-    for el in val:
-        strng += str(el) + ";"
-    return val, strng
-
-
-# import time
-# import zmq
-
-# context = zmq.Context()
-# # context = zmq.Context()
-# socket = context.socket(zmq.REP)
-# socket.bind("tcp://*:5555")
-
-# def main():
-#     counter = 0
-#     # if(not isRunning()):
-#     #     resp, content = request("api/set/op=state&v1=RUN")
-#     #     time.sleep(.300)
-#     # resp, content = getOp("Q","4")
-#     while 1:
-#        value = is_plc_on_air()
-#        time.sleep(1)
-#        # print("Value is {}".format(value))
-#        # counter += 1
-
-# resp, content = getOp("MB", "26") #counter
-# print(get_val(content, "MB"))
-# main()
-
+    spaces_pos = [1, 5, 9, 11, 13]  # Index for empty column, as from requirements
+    for i in range(0, len(val)):
+        column_sign = ";;" if i in spaces_pos else ";"
+        strng += str(val[i]) + column_sign
+    return strng
 

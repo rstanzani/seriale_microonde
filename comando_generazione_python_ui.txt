@@ -1,7 +1,10 @@
-Nella cartella dove metto il codic e python e il file qt:
+Nella cartella dove metto il codice python e il file qt:
 
 
 pyuic5 -x .\main_window.ui -o UI_raw.py   # per la mainwindow
+
+pyuic5 -x .\logger.ui -o logger_raw.py   # per il logger
+
 pyrcc5 resource.qrc -o resource_rc.py  #per il file resource con l'icona
 
 
