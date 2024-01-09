@@ -11,6 +11,7 @@ import plc_socket as plcsk
 
 #TODO list:
 # (001) - enable/disable simulated values
+# (002) - enable/disable plc reading
 
 class PLCWorker(QtCore.QObject):
     messaged = pyqtSignal()
@@ -45,9 +46,9 @@ class PLCWorker(QtCore.QObject):
 
         if time.time() - prev_log_time_SHORT >= log_period_SHORT: # save each 10 s the value from the PLC
             try:
-                read, reachable = plcc.get_values(True)
+                read, reachable = plcc.get_values(simulate=False) # Simulate values for outside the lab
                 if reachable:
-                    self.cell_data.append_values(read[1])
+                    self.cell_data.append_values(read)
                 else:
                     print("Skipped because data is empty!")
             except:
@@ -56,7 +57,7 @@ class PLCWorker(QtCore.QObject):
 
         if time.time() - prev_log_time_LONG >= log_period_LONG*60:  # save to logger and reset the list of values in cell_data
             try:
-                logger_val_str = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";;;"+plcc.get_logger_values(self.cell_data, True) # TODO (001)
+                logger_val_str = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";;;"+plcc.get_logger_values(self.cell_data, False) # TODO (001)
                 self.write_to_logger(self.logger, logger_val_str)
             except:
                 print("Error with PLC reading")
@@ -77,17 +78,17 @@ class PLCWorker(QtCore.QObject):
         self.prev_log_time_LONG = time.time()
 
         # Check if plc is reachable:
-        # _, self.is_plc_reachable = plcc.is_plc_on_air()
-        _, self.is_plc_reachable = 1, True
+        _, self.is_plc_reachable = plcc.is_plc_on_air()
+        # _, self.is_plc_reachable = 1, True   # TODO 002
 
         while self.plc_thread_exec:
 
             # PLC status
-            # plc_status, self.is_plc_reachable = plcc.is_plc_on_air()
-            self.plc_status, self.is_plc_reachable = 1, True
+            plc_status, self.is_plc_reachable = plcc.is_plc_on_air() 
+            # self.plc_status, self.is_plc_reachable = 1, True # TODO 002
             try:
                 socket.send_string("{} {}".format(topic, self.plc_status))
-                print(f"Send socket msg with pls_status: {self.plc_status}")
+                print(f"Send socket msg with plc_status: {self.plc_status}")
             except:
                 print("Socket error: message not sent")
 
@@ -177,13 +178,15 @@ class MainWindow(QMainWindow):
 
 
     def update_plc_status(self):
-
+        _translate = QtCore.QCoreApplication.translate
         if self.plcworker.is_plc_reachable:
             self.ui.QPLCInfo.setStyleSheet("color: rgb(41, 45, 62);\n"
                                               "background-color: rgb(85, 255, 0);")
+            # self.ui.QPLCInfo.setText(_translate("MainWindow", "Active"))
         else:
             self.ui.QPLCInfo.setStyleSheet("color: rgb(41, 45, 62);\n"
                                               "background-color: rgb(255, 0, 0);")
+            self.ui.QPLCInfo.setText(_translate("MainWindow", "Inactive"))
 
 
 if __name__ == "__main__":
