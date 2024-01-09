@@ -20,7 +20,7 @@ class PLCWorker(QtCore.QObject):
     cell_data = plcc.Cell_Data()
     prev_log_time_SHORT = 0
     prev_log_time_LONG = 0
-    log_period_LONG = 2 # minutes
+    log_period_LONG = 12 # minutes
     log_period_SHORT = 12 # seconds
     plc_status = 0
     is_plc_reachable = False
@@ -182,7 +182,7 @@ class MainWindow(QMainWindow):
         if self.plcworker.is_plc_reachable:
             self.ui.QPLCInfo.setStyleSheet("color: rgb(41, 45, 62);\n"
                                               "background-color: rgb(85, 255, 0);")
-            # self.ui.QPLCInfo.setText(_translate("MainWindow", "Active"))
+            self.ui.QPLCInfo.setText(_translate("MainWindow", "Active"))
         else:
             self.ui.QPLCInfo.setStyleSheet("color: rgb(41, 45, 62);\n"
                                               "background-color: rgb(255, 0, 0);")
