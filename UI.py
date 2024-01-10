@@ -60,6 +60,13 @@ class Worker(QtCore.QObject):
     execution = False
     serial_error = False
 
+    # New variable to count the number of errors from the socket reading
+    sckt_err_count = 0
+
+    # Socket for sending rf data to logger
+    context_pub = None
+    socket_pub = None
+    topic_pub = None
 
     def rf_log(self, text):
       rfu.write_to_file(self.log_file, "{} {}".format(datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S"), text))
@@ -76,6 +83,12 @@ class Worker(QtCore.QObject):
         self.socket.close()
         self.context.term()
         print("Socket closed")
+
+
+    def close_socket_pub(self):
+        self.socket_pub.close()
+        self.context_pub.term()
+        print("Publisher socket closed")
 
 
     def close_serial(self):
@@ -152,26 +165,50 @@ class Worker(QtCore.QObject):
         # Open subscriber socket
         self.context, self.socket = plcsk.subscriber("5432", "1001")
 
+        # Start publisher socket
+        self.topic_pub = 2002
+        self.context_pub, self.socket_pub = plcsk.publisher("5433", self.topic_pub)
+
         # Check the connection to the serial
         print("Opening connection with RF...")
         self.ser, self.serial_open = srw.connect_serial(comport)
 
         timestamp_plc_check = time.time()
-        plc_check_refresh = 0.5 # second
+        plc_check_refresh = 1 # second
+
+        timestamp_rf_check = time.time()
+        rf_check_refresh = 6 # second(s) # for sending rf data to the logger, double of the reading frequency
 
         while self.thread_exec:
 
+            # Read PLC status from socket
             if time.time() >= timestamp_plc_check + plc_check_refresh:
+
+                # Read plc status from socket
                 try:
                     string = self.socket.recv(zmq.NOBLOCK)
-                    _, self.plc_status = string.split()
-                    # total_value += int(messagedata)
-                    # print(f"PLC_status is {self.plc_status}")
+                    _, skt_val = string.split()
+                    self.plc_status = False if str(skt_val) == "b'0'" else True
+                    sckt_err_count = 0
+                except zmq.error.Again:
+                    sckt_err_count += 1
+                    print("EAGAIN error from zmq (e.g. no message from publisher).")
                 except:
                     self.plc_status = False
                     print("No message from socket. PLC status set to False.")
                 timestamp_plc_check = time.time()
+                if sckt_err_count >= 2:
+                    self.plc_status = False
 
+            if time.time() >= timestamp_rf_check + rf_check_refresh:
+                # Send rf data to the logger
+                try:
+                    rfstr = self.rf_data.Temperature + " " + self.rf_data.Forward_Power + " " + self.rf_data.Current
+                    self.socket_pub.send_string("{} {}".format(self.topic_pub, rfstr))
+                    print("Sending rf data: {}".format(rfstr))
+                except:
+                    print("Socket error: message not sent")
+                timestamp_rf_check = time.time()
 
             stopwatch_START = time.time() # START for the stopwatch for the cycle
 
@@ -187,10 +224,9 @@ class Worker(QtCore.QObject):
 
             # ACTIVE STATUS
             if self.execution and self.serial_open and not self.threshold_stop and self.plc_status:
-                
+
                 # First turn on
                 if turn_on:
-
                     # Initialize or reset variables only after a Reset state
                     if self.interruption_type == "reset":
                         if isinstance(self.duration, list):
@@ -198,7 +234,6 @@ class Worker(QtCore.QObject):
                             self.freq = self.freq_list[0]
                             self.power = self.power_list[0]
                         self.prev_execution_time = 0
-
 
                     # Set parameters to the RF generator
                     srw.send_cmd_string(self.ser,"PWR", self.power*self.safe_mode_param, redundancy=3)
@@ -339,6 +374,7 @@ class Worker(QtCore.QObject):
                     self.rf_log("PLC status ON.")
                 else:
                     self.rf_log("PLC status OFF.")
+
             self.old_plc_status = self.plc_status
             stopwatch_STOP = time.time()
             if not self.no_resp_mode and str(self.rf_data.On_Off) == "1":
@@ -636,6 +672,7 @@ class MainWindow(QMainWindow):
         # Close socket and serial
         self.worker.close_socket()
         self.worker.close_serial()
+        self.worker.close_socket_pub()
 
         # Identify the app closing on the log file
         rfu.write_to_file(self.worker.log_file, "{}".format("--"))

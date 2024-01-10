@@ -8,6 +8,14 @@ Created on Fri Oct 13 16:42:24 2023
 import os
 
 
+def Average(lst):
+    avg = 0
+
+    if len(lst) > 0:
+        avg = round(sum(lst) / len(lst), 1)
+    return avg
+
+
 class RFdata:
     Temperature = "--"
     PLL = "--"
@@ -39,6 +47,41 @@ class RFdata:
         self.cycle_percentage = 0
 
 
+class RFdataLists:
+    '''Lists of the values used by logger.py'''
+
+    forward_Power = []
+    current = []
+    temperature = []
+
+    def reset(self):
+        self.forward_Power = []
+        self.current = []
+        self.temperature = []
+
+    def append_values(self, string):
+        if len(string) == 3:
+            if string[0] != "--": self.forward_Power.append(float(string[0]))
+            if string[1] != "--": self.current.append(float(string[1]))
+            if string[2] != "--": self.temperature.append(float(string[2]))
+        else:
+            print("Wrong string.")
+
+    def get_average(self):
+        print("Avrg on {} values".format(len(self.forward_Power)))
+        return [Average(lst) for lst in [self.forward_Power,self.current,self.temperature]]
+
+
+def get_logger_values(rfdata):
+    avrg_val = rfdata.get_average()
+
+    strng = ""
+    for i in range(0, len(avrg_val)):
+        column_sign = ";"
+        strng += str(avrg_val[i]) + column_sign
+    return strng
+
+
 def write_to_file(filename, text):
     try:
         with open(filename, "r") as f:
@@ -49,8 +92,8 @@ def write_to_file(filename, text):
     with open(filename, "w") as f:
         f.write(content)
     f.close()
-    
-    
+
+
 def read_config(filename="config.csv"):
     csv_name = ""
     with open(filename, 'r') as file:
@@ -69,4 +112,4 @@ def read_config(filename="config.csv"):
                 execution_from_config = 0
         else:  #invalid csv
             execution_from_config = 0
-    return com, csv_name, execution_from_config    
+    return com, csv_name, execution_from_config

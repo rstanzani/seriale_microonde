@@ -8,6 +8,8 @@ import sys
 import time
 import os
 import plc_socket as plcsk
+import zmq
+import rf_utils as rfu
 
 #TODO list:
 # (001) - enable/disable simulated values
@@ -25,15 +27,28 @@ class PLCWorker(QtCore.QObject):
     plc_status = 0
     is_plc_reachable = False
     plc_thread_exec = True # used to stop the plc reading thread
+    timestamp_rf_check = 0
+
+    # Variables for logging RF values
+    rf_log = rfu.RFdataLists()
+
+    # Publisher socket (to send: PLC_ON_AIR value)
+    topic = 1001
+    context = None
+    socket = None
+
+    # Subscriber socket (to receive: RF values)
+    topic_sbr = 2002
+    context_sbr = None
+    socket_sbr = None
 
     def write_to_logger(self, filename, line):
-
         if os.path.isfile(filename):
             print("File exists")
         else:
             f = open(filename, "w")
-            f.write("data;;;MB13;MB15;;MB110;MB120;MB130;MB150;;MB70;MB80;MB140;MB170;;MW20;MW22;;MW24;MW26;;MW28;MW30;" + "\n") #name of the PLC values
-            f.write("data;;;SP_TAria;SP_TAcqua;;T_Comp1;T_Comp2;T_AriaRF;T_AriaNORF;;T_Bollitore;T_Basale;T_TerraRF;T_TerraNORF;;h_MotoComp;min_MotoComp;;h_SP_Raggiunto;min_SP_Raggiunto;;h_ScaldON;min_ScaldON;" + "\n")
+            f.write("data;;;W;I;T;MB13;MB15;;MB110;MB120;MB130;MB150;;MB70;MB80;MB140;MB170;;MW20;MW22;;MW24;MW26;;MW28;MW30;" + "\n") #name of the PLC values
+            f.write("data;;;Potenza;Corrente;TempDispositivo;SP_TAria;SP_TAcqua;;T_Comp1;T_Comp2;T_AriaRF;T_AriaNORF;;T_Bollitore;T_Basale;T_TerraRF;T_TerraNORF;;h_MotoComp;min_MotoComp;;h_SP_Raggiunto;min_SP_Raggiunto;;h_ScaldON;min_ScaldON;" + "\n")
             print("Logger file created: {}".format(filename))
             f.close()
 
@@ -42,11 +57,26 @@ class PLCWorker(QtCore.QObject):
         f.close()
 
 
-    def log_EATON_state(self, prev_log_time_SHORT, prev_log_time_LONG, log_period_SHORT, log_period_LONG):
+    def log_on_file(self, prev_log_time_SHORT, prev_log_time_LONG):
+        '''Save of the log file for both EATON and the few RF values that are needed.'''
 
-        if time.time() - prev_log_time_SHORT >= log_period_SHORT: # save each 10 s the value from the PLC
+        # Read RF values from socket
+        if time.time() >= self.timestamp_rf_check + self.log_period_SHORT:  # Important: keep this reading frequency lower than the writing one to minimize reading errors from zmq library
             try:
-                read, reachable = plcc.get_values(simulate=False) # Simulate values for outside the lab
+                string = self.socket_sbr.recv(zmq.NOBLOCK) 
+                self.rf_log.append_values(string.split()[1:])
+
+                # print(" power current temp: {} {} {}".format(self.rf_log.forward_Power, self.rf_log.current, self.rf_log.temperature) )
+            except zmq.error.Again:
+                print("EAGAIN error from zmq (maybe no message from publisher).")
+            except:
+                print("No message from RF socket.")
+            self.timestamp_rf_check = time.time()
+
+        # Read plc values
+        if time.time() - prev_log_time_SHORT >= self.log_period_SHORT: # save each tot s the value from the PLC
+            try:
+                read, reachable = plcc.get_values(simulate=False) # Simulate values (for testing outside the lab)
                 if reachable:
                     self.cell_data.append_values(read)
                 else:
@@ -55,13 +85,15 @@ class PLCWorker(QtCore.QObject):
                 print("Error while reading from plc ")
             prev_log_time_SHORT = time.time()
 
-        if time.time() - prev_log_time_LONG >= log_period_LONG*60:  # save to logger and reset the list of values in cell_data
+        # Save values on the log file and reset lists
+        if time.time() - prev_log_time_LONG >= self.log_period_LONG*60:  # save to logger and reset the list of values in cell_data
             try:
-                logger_val_str = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";;;"+plcc.get_logger_values(self.cell_data, False) # TODO (001)
+                logger_val_str = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";;;"+ rfu.get_logger_values(self.rf_log)+plcc.get_logger_values(self.cell_data, False) # TODO (001)
                 self.write_to_logger(self.logger, logger_val_str)
             except:
                 print("Error with PLC reading")
             self.cell_data.reset()
+            self.rf_log.reset()
             prev_log_time_LONG = time.time()
 
         return prev_log_time_SHORT, prev_log_time_LONG
@@ -69,9 +101,11 @@ class PLCWorker(QtCore.QObject):
 
     def run(self):
 
-        # Open subscriber socket
-        topic = 1001
-        context, socket = plcsk.publisher("5432", topic)
+        # Initialize publisher context
+        self.context, self.socket = plcsk.publisher("5432", self.topic)
+
+        # Open subscriber socket (used for RF values)
+        self.context_sbr, self.socket_sbr = plcsk.subscriber("5433", str(self.topic_sbr))
 
         # Initialize timers for PLC logging
         self.prev_log_time_SHORT = time.time()
@@ -81,28 +115,33 @@ class PLCWorker(QtCore.QObject):
         _, self.is_plc_reachable = plcc.is_plc_on_air()
         # _, self.is_plc_reachable = 1, True   # TODO 002
 
+        self.timestamp_rf_check = time.time()
+
         while self.plc_thread_exec:
 
-            # PLC status
-            plc_status, self.is_plc_reachable = plcc.is_plc_on_air() 
+            # Write PLC status on socket
+            self.plc_status, self.is_plc_reachable = plcc.is_plc_on_air()
+            # print("## plc_status is {}".format(self.plc_status))
             # self.plc_status, self.is_plc_reachable = 1, True # TODO 002
             try:
-                socket.send_string("{} {}".format(topic, self.plc_status))
-                print(f"Send socket msg with plc_status: {self.plc_status}")
+                self.socket.send_string("{} {}".format(self.topic, self.plc_status))
+                # print(f"Send socket msg with plc_status: {self.plc_status}")
             except:
                 print("Socket error: message not sent")
 
-            # EATON logger
-            self.prev_log_time_SHORT, self.prev_log_time_LONG = self.log_EATON_state(self.prev_log_time_SHORT, self.prev_log_time_LONG, self.log_period_SHORT, self.log_period_LONG)
+            # Add values to log or save on log file (depending on the timestamp)
+            self.prev_log_time_SHORT, self.prev_log_time_LONG = self.log_on_file(self.prev_log_time_SHORT, self.prev_log_time_LONG)
 
-            time.sleep(1)
+            time.sleep(0.5)
             self.messaged.emit()
 
         print("PLC communication terminated")
         self.messaged.emit()
         self.finished.emit()
-        socket.close()
-        context.term()
+        self.socket.close()
+        self.context.term()
+        self.socket_sbr.close()
+        self.context_sbr.term()
         print("Socket closed")
 
 
@@ -162,7 +201,6 @@ class MainWindow(QMainWindow):
 
 
     def close(self):
-        print("")
 
         if self.thread_plc:
             self.plcworker.plc_thread_exec = False

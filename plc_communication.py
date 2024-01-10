@@ -113,7 +113,7 @@ def is_plc_on_air():
 
 def get_time_values(simulate=False):
     global time_values
-    
+
     if simulate:
         return [0] * len(time_values), True
     else:
@@ -132,7 +132,7 @@ def get_time_values(simulate=False):
 
 def get_values(simulate=False):
     global values_to_average
-    
+
     if simulate:
         return [0] * len(values_to_average), True
     else:
