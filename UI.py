@@ -203,9 +203,9 @@ class Worker(QtCore.QObject):
             if time.time() >= timestamp_rf_check + rf_check_refresh:
                 # Send rf data to the logger
                 try:
-                    rfstr = self.power + " " + self.rf_data.Forward_Power
+                    rfstr = str(self.power) + " " + str(self.rf_data.Forward_Power)
                     self.socket_pub.send_string("{} {}".format(self.topic_pub, rfstr))
-                    print("Sending rf data: {}".format(rfstr))
+                    # print("Sending rf data: {}".format(rfstr))
                 except:
                     print("Socket error: message not sent")
                 timestamp_rf_check = time.time()
@@ -309,7 +309,7 @@ class Worker(QtCore.QObject):
                         self.serial_error = srw.send_cmd_string(self.ser,"PWR", self.power*self.safe_mode_param, redundancy=3)
                         self.serial_error = srw.send_cmd_string(self.ser,"FREQ", self.freq, redundancy=3)
 
-                    print("Ask for status")
+                    # print("Ask for status")
                     self.serial_error, self.rf_data, self.noresp_counter = srw.read_param(self.ser, self.noresp_counter, self.rf_data, "STATUS", 1, False)
 
                     # Note: the self.noresp_counter almost never gives perfect 0 due to the various messages that can be lost

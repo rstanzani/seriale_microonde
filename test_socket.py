@@ -32,3 +32,16 @@ while i < 1000:
         timestamp_plc_check = time.time()
         print("Good vs bad: {} {}".format(good, bad) )
 
+# TEST scrittura
+topic_pub = 2002
+context_pub, socket_pub = plcsk.publisher("5433", topic_pub)
+
+rfstr = str(2) + " " + str(10)
+print("Rfstr type is: {}".format(type(rfstr)))
+try:
+    socket_pub.send_string("{} {}".format(topic_pub, rfstr))
+except:
+    print("Not working")
+
+print("Sending rf data: {}".format(rfstr))
+
