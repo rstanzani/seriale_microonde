@@ -47,8 +47,8 @@ class PLCWorker(QtCore.QObject):
             print("File exists")
         else:
             f = open(filename, "w")
-            f.write("data;;;W;I;T;MB13;MB15;;MB110;MB120;MB130;MB150;;MB70;MB80;MB140;MB170;;MW20;MW22;;MW24;MW26;;MW28;MW30;" + "\n") #name of the PLC values
-            f.write("data;;;Potenza;Corrente;TempDispositivo;SP_TAria;SP_TAcqua;;T_Comp1;T_Comp2;T_AriaRF;T_AriaNORF;;T_Bollitore;T_Basale;T_TerraRF;T_TerraNORF;;h_MotoComp;min_MotoComp;;h_SP_Raggiunto;min_SP_Raggiunto;;h_ScaldON;min_ScaldON;" + "\n")
+            f.write("data;;;RF_target;MB13;MB15;;RF_value;;MB110;MB120;MB130;MB150;;MB70;MB80;MB140;MB170;;MW20;MW22;;MW24;MW26;;MW28;MW30;" + "\n") #name of the PLC values
+            f.write("data;;;P_voluta;SP_TAria;SP_TAcqua;;P_fornita;;T_Comp1;T_Comp2;T_AriaRF;T_AriaNORF;;T_Bollitore;T_Basale;T_TerraRF;T_TerraNORF;;h_MotoComp;min_MotoComp;;h_SP_Raggiunto;min_SP_Raggiunto;;h_ScaldON;min_ScaldON;" + "\n")
             print("Logger file created: {}".format(filename))
             f.close()
 
@@ -56,6 +56,26 @@ class PLCWorker(QtCore.QObject):
         f.write(line + "\n")
         f.close()
 
+
+    def log_formatter(self, rf_string, plc_string):
+        rf_list = rf_string.split()
+        plc_list = plc_string.split()
+        
+        logger_val_str = "" 
+        logger_val_str += datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";;;"
+        logger_val_str += rf_list[0]+";"+plc_list[0]+";"+plc_list[1]+";;"+rf_list[1]+";;" 
+
+        # Compose second part of the string
+        strng = ""
+        spaces_pos = [5, 9, 11, 13]  # Index for empty column; It's [3, 7, 9, 11] but with +2 in the index 
+        column_sign = ";"
+        for i in range(2, len(plc_list)):
+            column_sign = ";;" if i in spaces_pos else ";"
+            strng += str(plc_list[i]) + column_sign
+
+        logger_val_str += strng
+        
+        return logger_val_str
 
     def log_on_file(self, prev_log_time_SHORT, prev_log_time_LONG):
         '''Save of the log file for both EATON and the few RF values that are needed.'''
@@ -66,9 +86,10 @@ class PLCWorker(QtCore.QObject):
                 string = self.socket_sbr.recv(zmq.NOBLOCK) 
                 self.rf_log.append_values(string.split()[1:])
 
-                # print(" power current temp: {} {} {}".format(self.rf_log.forward_Power, self.rf_log.current, self.rf_log.temperature) )
+                # print(" target_power rf_power: {} {}".format(self.rf_log.forward_Power, self.rf_log.current, self.rf_log.temperature) )
             except zmq.error.Again:
-                print("EAGAIN error from zmq (maybe no message from publisher).")
+                pass
+                # print("EAGAIN error from zmq (maybe no message from publisher).")
             except:
                 print("No message from RF socket.")
             self.timestamp_rf_check = time.time()
@@ -88,7 +109,7 @@ class PLCWorker(QtCore.QObject):
         # Save values on the log file and reset lists
         if time.time() - prev_log_time_LONG >= self.log_period_LONG*60:  # save to logger and reset the list of values in cell_data
             try:
-                logger_val_str = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";;;"+ rfu.get_logger_values(self.rf_log)+plcc.get_logger_values(self.cell_data, False) # TODO (001)
+                logger_val_str = self.log_formatter(rfu.get_logger_values(self.rf_log), plcc.get_logger_values(self.cell_data, False))  # TODO (001)
                 self.write_to_logger(self.logger, logger_val_str)
             except:
                 print("Error with PLC reading")

@@ -158,9 +158,7 @@ def get_logger_values(cell_data, simulate=False):
 
     # In string format for the csv file
     strng = ""
-    spaces_pos = [1, 5, 9, 11, 13]  # Index for empty column, as from requirements
+    separator = " "
     for i in range(0, len(val)):
-        column_sign = ";;" if i in spaces_pos else ";"
-        strng += str(val[i]) + column_sign
+        strng += str(val[i]) + separator
     return strng
-

@@ -203,7 +203,7 @@ class Worker(QtCore.QObject):
             if time.time() >= timestamp_rf_check + rf_check_refresh:
                 # Send rf data to the logger
                 try:
-                    rfstr = self.rf_data.Temperature + " " + self.rf_data.Forward_Power + " " + self.rf_data.Current
+                    rfstr = self.power + " " + self.rf_data.Forward_Power
                     self.socket_pub.send_string("{} {}".format(self.topic_pub, rfstr))
                     print("Sending rf data: {}".format(rfstr))
                 except:

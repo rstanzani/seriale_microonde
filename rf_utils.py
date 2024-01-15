@@ -50,35 +50,32 @@ class RFdata:
 class RFdataLists:
     '''Lists of the values used by logger.py'''
 
+    target_Power = []
     forward_Power = []
-    current = []
-    temperature = []
-
+    
     def reset(self):
+        self.target_Power = []
         self.forward_Power = []
-        self.current = []
-        self.temperature = []
 
     def append_values(self, string):
-        if len(string) == 3:
-            if string[0] != "--": self.forward_Power.append(float(string[0]))
-            if string[1] != "--": self.current.append(float(string[1]))
-            if string[2] != "--": self.temperature.append(float(string[2]))
+        if len(string) == 2:
+            if string[0] != "--": self.target_Power.append(float(string[0]))
+            if string[1] != "--": self.forward_Power.append(float(string[1]))
         else:
             print("Wrong string.")
 
     def get_average(self):
-        print("Avrg on {} values".format(len(self.forward_Power)))
-        return [Average(lst) for lst in [self.forward_Power,self.current,self.temperature]]
+        print("Avrg on {} values".format(len(self.target_Power)))
+        return [Average(lst) for lst in [self.target_Power,self.forward_Power]]
 
 
 def get_logger_values(rfdata):
     avrg_val = rfdata.get_average()
 
     strng = ""
+    separator = " "
     for i in range(0, len(avrg_val)):
-        column_sign = ";"
-        strng += str(avrg_val[i]) + column_sign
+        strng += str(avrg_val[i]) + separator
     return strng
 
 
