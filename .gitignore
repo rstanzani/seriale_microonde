@@ -11,3 +11,5 @@ config.txt
 *.csv
 /materiale
 UI_err.log
+*.txt
+*.zip
