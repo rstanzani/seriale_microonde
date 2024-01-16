@@ -124,6 +124,7 @@ class PLCWorker(QtCore.QObject):
 
         # Initialize publisher context
         self.context, self.socket = plcsk.publisher("5432", self.topic)
+        # self.socket.setsockopt(zmq.LINGER, 200) 
 
         # Open subscriber socket (used for RF values)
         self.context_sbr, self.socket_sbr = plcsk.subscriber("5433", str(self.topic_sbr))
@@ -137,15 +138,25 @@ class PLCWorker(QtCore.QObject):
         # _, self.is_plc_reachable = 1, True   # TODO 002
 
         self.timestamp_rf_check = time.time()
+        counter = 0
 
         while self.plc_thread_exec:
 
             # Write PLC status on socket
             self.plc_status, self.is_plc_reachable = plcc.is_plc_on_air()
-            # print("## plc_status is {}".format(self.plc_status))
             # self.plc_status, self.is_plc_reachable = 1, True # TODO 002
+            # After 3 not reachable, set plc status to 0
+            if not self.is_plc_reachable:
+                counter += 1
+            else:
+                counter = 0
+            if counter == 3:
+                self.plc_status = 0
+                print("PLC status to 0. Cause: no resp from server.")
+            # print("## plc_status is {}".format(self.plc_status))
             try:
                 self.socket.send_string("{} {}".format(self.topic, self.plc_status))
+                # print("Sending plc_status: {}".format(self.plc_status))
                 # print(f"Send socket msg with plc_status: {self.plc_status}")
             except:
                 print("Socket error: message not sent")
@@ -153,7 +164,7 @@ class PLCWorker(QtCore.QObject):
             # Add values to log or save on log file (depending on the timestamp)
             self.prev_log_time_SHORT, self.prev_log_time_LONG = self.log_on_file(self.prev_log_time_SHORT, self.prev_log_time_LONG)
 
-            time.sleep(0.5)
+            time.sleep(0.2)
             self.messaged.emit()
 
         print("PLC communication terminated")

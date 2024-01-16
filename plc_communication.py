@@ -55,7 +55,7 @@ class Cell_Data:
 
 def request(pTarget):
     header = {'Authorization': "Bearer %s" % APIKEY}
-    h = httplib2.Http(timeout = 2)
+    h = httplib2.Http(timeout = 1)
     resp = ''
     content = ''
     reachable = False
@@ -104,8 +104,7 @@ def get_val(content, letter="M"):
 
 def is_plc_on_air():
     resp, content, reachable = getOp("M","23")
-
-    time.sleep(.3)
+    time.sleep(.1)
     value = 0
     if content != "":
         value = get_val(content)

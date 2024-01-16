@@ -10,27 +10,44 @@ import zmq
 import time
 
 timestamp_plc_check = time.time()
-plc_check_refresh = 0.8 # second
+plc_check_refresh = 1 # second
 
 context, socket = plcsk.subscriber("5432", "1001")
+# socket.setsockopt(zmq.LINGER, 100) 
 
-good = 0
-bad = 0
+# good = 0
+# bad = 0
 i = 0
 while i < 1000:
     if time.time() >= timestamp_plc_check + plc_check_refresh:
+        # context, socket = plcsk.subscriber("5432", "1001")
 
         try:
             string = socket.recv(zmq.NOBLOCK)
+            print(string)
             # print(string)
             i += 1
-            good += 1
+            # good += 1
         except zmq.error.Again:
-            time.sleep(2)
             print("Error Again" )
-            bad +=1
+            time.sleep(0.1)
+            # bad +=1
+        except:
+            print("Error" )
+            time.sleep(0.1)
+        # socket.close()
         timestamp_plc_check = time.time()
-        print("Good vs bad: {} {}".format(good, bad) )
+        # socket.recv(zmq.NOBLOCK)
+        # socket.recv(zmq.NOBLOCK)
+        # socket.recv(zmq.NOBLOCK)
+        # socket.recv(zmq.NOBLOCK)
+        # socket.recv(zmq.NOBLOCK)
+        # socket.close()
+
+        # print("Good vs bad: {} {}".format(good, bad) )
+
+
+socket.close()
 
 # TEST scrittura
 topic_pub = 2002

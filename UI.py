@@ -19,6 +19,7 @@ import sys
 
 # TODO list:
 # (001) - do something when serial_error = True
+# (002) - check if it's useful or not
 
 config_file = "config.csv"
 comport, csv_name, execution_from_config = rfu.read_config(config_file)
@@ -168,6 +169,7 @@ class Worker(QtCore.QObject):
         # Start publisher socket
         self.topic_pub = 2002
         self.context_pub, self.socket_pub = plcsk.publisher("5433", self.topic_pub)
+        # self.socket_pub.setsockopt(zmq.LINGER, 100) # TODO (002)
 
         # Check the connection to the serial
         print("Opening connection with RF...")
@@ -188,16 +190,17 @@ class Worker(QtCore.QObject):
                 try:
                     string = self.socket.recv(zmq.NOBLOCK)
                     _, skt_val = string.split()
+                    
                     self.plc_status = False if str(skt_val) == "b'0'" else True
-                    sckt_err_count = 0
+                    self.sckt_err_count = 0
                 except zmq.error.Again:
-                    sckt_err_count += 1
+                    self.sckt_err_count += 1
                     print("EAGAIN error from zmq (e.g. no message from publisher).")
                 except:
                     self.plc_status = False
                     print("No message from socket. PLC status set to False.")
                 timestamp_plc_check = time.time()
-                if sckt_err_count >= 2:
+                if self.sckt_err_count >= 2:
                     self.plc_status = False
 
             if time.time() >= timestamp_rf_check + rf_check_refresh:
@@ -205,7 +208,6 @@ class Worker(QtCore.QObject):
                 try:
                     rfstr = str(self.power) + " " + str(self.rf_data.Forward_Power)
                     self.socket_pub.send_string("{} {}".format(self.topic_pub, rfstr))
-                    # print("Sending rf data: {}".format(rfstr))
                 except:
                     print("Socket error: message not sent")
                 timestamp_rf_check = time.time()
