@@ -53,7 +53,7 @@ class RFdata:
                 str(self.Error) + ";" + str(self.cycle_count) + ";" + str(self.cycle_percentage) + ";\n")
 
 
-def rf_time_values_log(filename, class_instance):
+def rf_time_values_log(filename, class_instance, verbose=False):
     if os.path.isfile(filename):
         pass
     else:
@@ -65,6 +65,8 @@ def rf_time_values_log(filename, class_instance):
         text = class_instance.to_csv_string()
         f.write(datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + ";" + text)
         f.close()
+        if verbose:
+            print("Logged at {}".format(datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")))
     except:
         pass # low priority log, so it is possible to skip in case something went wront (e.g. file opened by another program)
 

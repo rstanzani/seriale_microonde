@@ -251,7 +251,7 @@ class Worker(QtCore.QObject):
 
                     # TODO (001)
                     self.serial_error, self.rf_data, self.noresp_counter = srw.read_param(self.ser, self.noresp_counter, self.rf_data, "STATUS", 1, False)
-                    rfu.rf_time_values_log(self.rf_CSV_name, self.rf_data)
+                    rfu.rf_time_values_log(self.rf_CSV_name, self.rf_data, False)  # log rf values on file
 
                     time.sleep(0.2)
 
@@ -269,7 +269,6 @@ class Worker(QtCore.QObject):
                         self.serial_error = srw.send_cmd_string(self.ser,"ON")
 
                         self.serial_error, self.rf_data, self.noresp_counter = srw.read_param(self.ser, self.noresp_counter, self.rf_data, "STATUS", 1, False)
-                        rfu.rf_time_values_log(self.rf_CSV_name, self.rf_data)
                         time.sleep(1)
                         if self.rf_data.On_Off == 1:
                             self.serial_error = srw.send_cmd_string(self.ser,"PWR", self.power*self.safe_mode_param, redundancy=3)
@@ -316,7 +315,7 @@ class Worker(QtCore.QObject):
 
                     # print("Ask for status")
                     self.serial_error, self.rf_data, self.noresp_counter = srw.read_param(self.ser, self.noresp_counter, self.rf_data, "STATUS", 1, False)
-                    rfu.rf_time_values_log(self.rf_CSV_name, self.rf_data)
+                    rfu.rf_time_values_log(self.rf_CSV_name, self.rf_data, False) # log rf values on file
 
                     # Note: the self.noresp_counter almost never gives perfect 0 due to the various messages that can be lost
                     if self.no_resp_mode:
@@ -343,7 +342,6 @@ class Worker(QtCore.QObject):
                         while check == False:
                             self.serial_error = srw.send_cmd_string(self.ser,"ON")
                             self.serial_error, self.rf_data, self.noresp_counter = srw.read_param(self.ser, self.noresp_counter, self.rf_data, "STATUS", 1, False)
-                            rfu.rf_time_values_log(self.rf_CSV_name, self.rf_data)
 
                             time.sleep(1)
                             if self.rf_data.On_Off == 1:
@@ -361,7 +359,7 @@ class Worker(QtCore.QObject):
 
                 self.prev_execution_time = self.execution_time
                 self.serial_error, self.rf_data, self.noresp_counter = srw.read_param(self.ser, self.noresp_counter, self.rf_data, "STATUS", 1, False)
-                rfu.rf_time_values_log(self.rf_CSV_name, self.rf_data)
+                rfu.rf_time_values_log(self.rf_CSV_name, self.rf_data, False)  # log rf values on file
 
                 turn_on = True # used to re-set parameters in the next turn on
                 just_turned_off = False
@@ -373,7 +371,6 @@ class Worker(QtCore.QObject):
                 if time.time() >= timestamp + self.min_refresh:
                     # print("I am in IDLE mode!")
                     self.serial_error, self.rf_data, self.noresp_counter = srw.read_param(self.ser, self.noresp_counter, self.rf_data, "STATUS", 1, False)
-                    rfu.rf_time_values_log(self.rf_CSV_name, self.rf_data)
                     self.messaged.emit()
 
             # check plc variation
