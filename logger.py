@@ -47,8 +47,8 @@ class PLCWorker(QtCore.QObject):
             print("File exists")
         else:
             f = open(filename, "w")
-            f.write("data;;;RF_target;MB13;MB15;;RF_value;;MB110;MB120;MB130;MB150;;MB70;MB80;MB140;MB170;;MW20;MW22;;MW24;MW26;;MW28;MW30;" + "\n") #name of the PLC values
-            f.write("data;;;P_voluta;SP_TAria;SP_TAcqua;;P_fornita;;T_Comp1;T_Comp2;T_AriaRF;T_AriaNORF;;T_Bollitore;T_Basale;T_TerraRF;T_TerraNORF;;h_MotoComp;min_MotoComp;;h_SP_Raggiunto;min_SP_Raggiunto;;h_ScaldON;min_ScaldON;" + "\n")
+            f.write("data;;;RF;MB13;MB15;;RF;;MB110;MB120;MB130;MB150;;MB70;MB80;MB140;MB170;;MW20;MW22;;MW24;MW26;;MW28;MW30;" + "\n") #name of the PLC values
+            f.write("data;;;P_richiesta;SP_TAria;SP_TAcqua;;P_generata;;T_Comp1;T_Comp2;T_AriaRF;T_AriaNORF;;T_Bollitore;T_Basale;T_TerraRF;T_TerraNORF;;h_MotoComp;min_MotoComp;;h_SP_Raggiunto;min_SP_Raggiunto;;h_ScaldON;min_ScaldON;" + "\n")
             print("Logger file created: {}".format(filename))
             f.close()
 
@@ -60,21 +60,21 @@ class PLCWorker(QtCore.QObject):
     def log_formatter(self, rf_string, plc_string):
         rf_list = rf_string.split()
         plc_list = plc_string.split()
-        
-        logger_val_str = "" 
+
+        logger_val_str = ""
         logger_val_str += datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")+";;;"
-        logger_val_str += rf_list[0]+";"+plc_list[0]+";"+plc_list[1]+";;"+rf_list[1]+";;" 
+        logger_val_str += rf_list[0]+";"+plc_list[0]+";"+plc_list[1]+";;"+rf_list[1]+";;"
 
         # Compose second part of the string
         strng = ""
-        spaces_pos = [5, 9, 11, 13]  # Index for empty column; It's [3, 7, 9, 11] but with +2 in the index 
+        spaces_pos = [5, 9, 11, 13]  # Index for empty column; It's [3, 7, 9, 11] but with +2 in the index
         column_sign = ";"
         for i in range(2, len(plc_list)):
             column_sign = ";;" if i in spaces_pos else ";"
             strng += str(plc_list[i]) + column_sign
 
         logger_val_str += strng
-        
+
         return logger_val_str
 
     def log_on_file(self, prev_log_time_SHORT, prev_log_time_LONG):
@@ -83,7 +83,7 @@ class PLCWorker(QtCore.QObject):
         # Read RF values from socket
         if time.time() >= self.timestamp_rf_check + self.log_period_SHORT:  # Important: keep this reading frequency lower than the writing one to minimize reading errors from zmq library
             try:
-                string = self.socket_sbr.recv(zmq.NOBLOCK) 
+                string = self.socket_sbr.recv(zmq.NOBLOCK)
                 self.rf_log.append_values(string.split()[1:])
 
                 # print(" target_power rf_power: {} {}".format(self.rf_log.forward_Power, self.rf_log.current, self.rf_log.temperature) )
@@ -124,7 +124,7 @@ class PLCWorker(QtCore.QObject):
 
         # Initialize publisher context
         self.context, self.socket = plcsk.publisher("5432", self.topic)
-        # self.socket.setsockopt(zmq.LINGER, 200) 
+        # self.socket.setsockopt(zmq.LINGER, 200)
 
         # Open subscriber socket (used for RF values)
         self.context_sbr, self.socket_sbr = plcsk.subscriber("5433", str(self.topic_sbr))

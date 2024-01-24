@@ -6,6 +6,7 @@ Created on Fri Oct 13 16:42:24 2023
 """
 
 import os
+import datetime
 
 
 def Average(lst):
@@ -46,13 +47,47 @@ class RFdata:
         self.cycle_count = 0
         self.cycle_percentage = 0
 
+    def to_csv_string(self):
+        return (str(self.Temperature) + ";" + str(self.PLL) + ";" + str(self.Current) + ";" + str(self.Voltage) + ";" + str(self.Reflected_Power) + ";" +
+                str(self.Forward_Power) + ";" + str(self.PWM) + ";" + str(self.On_Off) + ";" + str(self.Enable_foldback) + ";" + str(self.Foldback_in) + ";" +
+                str(self.Error) + ";" + str(self.cycle_count) + ";" + str(self.cycle_percentage) + ";\n")
+
+
+def rf_time_values_log(filename, class_instance):
+    if os.path.isfile(filename):
+        pass
+    else:
+        f = open(filename, "w")
+        f.write("datatime;Temperature;PLL;Current;Voltage;Reflected_Power;Forward_Power;PWM;On_Off;Enable_foldback;Foldback_in;Error;cycle_count;cycle_percentage;" + "\n") #name of the PLC values
+        f.close()
+    try:
+        f = open(filename, "a")
+        text = class_instance.to_csv_string()
+        f.write(datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + ";" + text)
+        f.close()
+    except:
+        pass # low priority log, so it is possible to skip in case something went wront (e.g. file opened by another program)
+
+
+# def get_attributes(rfdata_instance,style="csv"): # not working if the values are not set, check
+#     if style == "csv":
+#         divider = ";"
+#     else:
+#         divider = " "
+#     attributes = vars(rfdata_instance).items()
+#     print("Attributes are {}".format(attributes))
+#     attributes = ""
+#     for key, attributes in attributes:
+#         attributes += str(key) + divider
+#     return attributes
+
 
 class RFdataLists:
     '''Lists of the values used by logger.py'''
 
     target_Power = []
     forward_Power = []
-    
+
     def reset(self):
         self.target_Power = []
         self.forward_Power = []
@@ -86,8 +121,12 @@ def write_to_file(filename, text):
     except FileNotFoundError:
         content = ""
     content = text + "\n" + content
-    with open(filename, "w") as f:
-        f.write(content)
+
+    try:
+        with open(filename, "w") as f:
+            f.write(content)
+    except:
+        pass
     f.close()
 
 
