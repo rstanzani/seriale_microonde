@@ -129,13 +129,13 @@ def send_cmd(ser, start, address, length, typee, operand, content):
     return error
 
 
-def send_cmd_string(ser, string, val=0, redundancy=1):
+def send_cmd_string(ser, string, val=0, redundancy=1, sleep_time=0.3):
     error = True
     for i in range(0, redundancy):
         value = val # do not remove, useful for the redundancy
         if string == "ON":
             error = send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0B, 0x00000001)
-            time.sleep(0.3)
+            time.sleep(sleep_time)
         elif string == "OFF":
             error = send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0B, 0x00000000)
         elif string == "STATUS":
@@ -172,7 +172,7 @@ def send_cmd_string(ser, string, val=0, redundancy=1):
                 value = 0x00000000
             value = literal_eval(float_to_hex(255)) if value >= literal_eval(float_to_hex(255)) else value # maximum value il 260 with a certain error (security)
             error = send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x0E,  value)
-            time.sleep(0.3)
+            time.sleep(sleep_time)
         elif string == "PWM":
             if value != 0:
                 value = hex(value)
@@ -180,15 +180,16 @@ def send_cmd_string(ser, string, val=0, redundancy=1):
             else:
                 value = 0x00000000
             error = send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x08,  value)
-            time.sleep(0.3)
+            time.sleep(sleep_time)
         elif string == "FREQ":
             if value != 0:
+                value = 2420 if value < 2420 else value # Note: to help the Leanfa generator, we send only values greater than 2420.
                 value = float_to_hex(value)
                 value = literal_eval(value)
             else:
                 value = 0x00000000
             error = send_cmd(ser, 0x55, 0x01, 0x01, 0x02, 0x09,  value)
-            time.sleep(0.3)
+            time.sleep(sleep_time)
         else:
             print("Command not recognized!")
     return error
