@@ -252,7 +252,7 @@ class Worker(QtCore.QObject):
 
                     # TODO (001)
                     self.serial_error, self.rf_data, self.noresp_counter = srw.read_param(self.ser, self.noresp_counter, self.rf_data, "STATUS", 1, False)
-                    rfu.rf_time_values_log(self.rf_CSV_name, self.rf_data, False)  # log rf values on file
+                    rfu.rf_time_values_log(self.rf_CSV_name, self.rf_data, False, self.freq)  # log rf values on file
 
                     time.sleep(0.2)
 
@@ -321,7 +321,7 @@ class Worker(QtCore.QObject):
 
                     # print("Ask for status")
                     self.serial_error, self.rf_data, self.noresp_counter = srw.read_param(self.ser, self.noresp_counter, self.rf_data, "STATUS", 1, False)
-                    rfu.rf_time_values_log(self.rf_CSV_name, self.rf_data, False) # log rf values on file
+                    rfu.rf_time_values_log(self.rf_CSV_name, self.rf_data, False, self.freq) # log rf values on file
 
                     # Note: the self.noresp_counter almost never gives perfect 0 due to the various messages that can be lost
                     if self.no_resp_mode:
@@ -368,7 +368,7 @@ class Worker(QtCore.QObject):
 
                 self.prev_execution_time = self.execution_time
                 self.serial_error, self.rf_data, self.noresp_counter = srw.read_param(self.ser, self.noresp_counter, self.rf_data, "STATUS", 1, False)
-                rfu.rf_time_values_log(self.rf_CSV_name, self.rf_data, False)  # log rf values on file
+                rfu.rf_time_values_log(self.rf_CSV_name, self.rf_data, False, self.freq)  # log rf values on file
 
                 turn_on = True # used to re-set parameters in the next turn on
                 just_turned_off = False

@@ -50,19 +50,19 @@ class RFdata:
     def to_csv_string(self):
         return (str(self.Temperature) + ";" + str(self.PLL) + ";" + str(self.Current) + ";" + str(self.Voltage) + ";" + str(self.Reflected_Power) + ";" +
                 str(self.Forward_Power) + ";" + str(self.PWM) + ";" + str(self.On_Off) + ";" + str(self.Enable_foldback) + ";" + str(self.Foldback_in) + ";" +
-                str(self.Error) + ";" + str(self.cycle_count) + ";" + str(self.cycle_percentage) + ";\n")
+                str(self.Error) + ";" + str(self.cycle_count) + ";" + str(self.cycle_percentage) + ";")
 
 
-def rf_time_values_log(filename, class_instance, verbose=False):
+def rf_time_values_log(filename, class_instance, verbose=False, frequency=0):
     if os.path.isfile(filename):
         pass
     else:
         f = open(filename, "w")
-        f.write("datatime;Temperature;PLL;Current;Voltage;Reflected_Power;Forward_Power;PWM;On_Off;Enable_foldback;Foldback_in;Error;cycle_count;cycle_percentage;" + "\n") #name of the PLC values
+        f.write("datatime;Temperature;PLL;Current;Voltage;Reflected_Power;Forward_Power;PWM;On_Off;Enable_foldback;Foldback_in;Error;cycle_count;cycle_percentage;Frequency;" + "\n") #name of the PLC values
         f.close()
     try:
         f = open(filename, "a")
-        text = class_instance.to_csv_string()
+        text = class_instance.to_csv_string() + str(frequency) + ";\n"
         f.write(datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + ";" + text)
         f.close()
         if verbose:
