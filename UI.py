@@ -300,7 +300,7 @@ class Worker(QtCore.QObject):
 
                     self.safe_mode(self.rf_data)
                     if self.force_change_pwr_safety:
-                        self.serial_error = srw.send_cmd_string(self.ser,"PWR", self.power*self.safe_mode_param, redundancy=3, sleep_time=0.3)
+                        self.serial_error = srw.send_cmd_string(self.ser,"PWR", self.power*self.safe_mode_param, redundancy=3, sleep_time=0.2)
 
                         self.force_change_pwr_safety = False
 
@@ -315,9 +315,9 @@ class Worker(QtCore.QObject):
                             self.num_executed_cycles += 1
 
                         # Change frequency cycle: power to 0W > set frequency > set desired power
-                        self.serial_error = srw.send_cmd_string(self.ser,"PWR", 0, redundancy=3, sleep_time=0.1)
-                        self.serial_error = srw.send_cmd_string(self.ser,"FREQ", self.freq, redundancy=3, sleep_time=0.3)
-                        self.serial_error = srw.send_cmd_string(self.ser,"PWR", self.power*self.safe_mode_param, redundancy=3, sleep_time=0.1)
+                        self.serial_error = srw.send_cmd_string(self.ser,"PWR", 0, redundancy=3, sleep_time=0.05)
+                        self.serial_error = srw.send_cmd_string(self.ser,"FREQ", self.freq, redundancy=3, sleep_time=0.1)
+                        self.serial_error = srw.send_cmd_string(self.ser,"PWR", self.power*self.safe_mode_param, redundancy=3, sleep_time=0.05)
 
                     # print("Ask for status")
                     self.serial_error, self.rf_data, self.noresp_counter = srw.read_param(self.ser, self.noresp_counter, self.rf_data, "STATUS", 1, False)
@@ -338,9 +338,9 @@ class Worker(QtCore.QObject):
                         self.execution_time = self.prev_execution_time + (timestamp - starttime) # calculate the total execution time for the RF generator
                     if self.rf_data.Error == 4:
                         print("Re-set parameters")
-                        self.serial_error = srw.send_cmd_string(self.ser,"PWR", 0, redundancy=3, sleep_time=0.1)
-                        self.serial_error = srw.send_cmd_string(self.ser,"FREQ", self.freq, redundancy=3)
-                        self.serial_error = srw.send_cmd_string(self.ser,"PWR", self.power*self.safe_mode_param, redundancy=3, sleep_time=0.1)
+                        self.serial_error = srw.send_cmd_string(self.ser,"PWR", 0, redundancy=3, sleep_time=0.05)
+                        self.serial_error = srw.send_cmd_string(self.ser,"FREQ", self.freq, redundancy=3, sleep_time=0.1)
+                        self.serial_error = srw.send_cmd_string(self.ser,"PWR", self.power*self.safe_mode_param, redundancy=3, sleep_time=0.05)
 
                         
                     if self.rf_data.Error == 203:   #writing not enabled (probably off?)
@@ -353,9 +353,9 @@ class Worker(QtCore.QObject):
 
                             time.sleep(1)
                             if self.rf_data.On_Off == 1:
-                                self.serial_error = srw.send_cmd_string(self.ser,"PWR", 0, redundancy=3, sleep_time=0.1)
-                                self.serial_error = srw.send_cmd_string(self.ser,"FREQ", self.freq, redundancy=3)
-                                self.serial_error = srw.send_cmd_string(self.ser,"PWR", self.power*self.safe_mode_param, redundancy=3, sleep_time=0.1)
+                                self.serial_error = srw.send_cmd_string(self.ser,"PWR", 0, redundancy=3, sleep_time=0.05)
+                                self.serial_error = srw.send_cmd_string(self.ser,"FREQ", self.freq, redundancy=3, sleep_time=0.1)
+                                self.serial_error = srw.send_cmd_string(self.ser,"PWR", self.power*self.safe_mode_param, redundancy=3, sleep_time=0.05)
                                 check = True
                                 self.rf_data.Error = 0
             elif just_turned_off:
